@@ -5,7 +5,7 @@ import {Button} from "@/components/ui/button";
 export function NavigationBar() {
 
     return (
-        <div className={"fixed top-0 left-0 w-full h-[68px] flex justify-center"}>
+        <div className={"fixed top-0 left-0 w-full h-[68px] flex justify-center backdrop-blur-lg z-50"}>
             <div
                 className={" w-full h-full max-w-[1800px] px-[25px] lg:px-[100px] flex items-center"}>
                 <Image src={"/assets/images/logo/logo.png"} alt={"logo"} height={60} width={210}
