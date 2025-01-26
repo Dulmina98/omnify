@@ -1,10 +1,11 @@
 import type {Metadata} from "next";
 import {Urbanist} from "next/font/google";
 import "./globals.css";
+import {NavigationBar} from "@/app/components/navigation/navigation-bar";
 
 // Import Urbanist font
 const urbanist = Urbanist({
-    variable: "--font-urbanist",
+    variable: "--font-urbanist", // Define the CSS variable
     subsets: ["latin"],
 });
 
@@ -20,7 +21,11 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-        <body className={`${urbanist.variable} antialiased`}>
+        <body
+            className={`${urbanist.variable} antialiased bg-black`}
+            style={{fontFamily: urbanist.style.fontFamily}} // Apply the font family
+        >
+        <NavigationBar/>
         {children}
         </body>
         </html>
