@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export function WhyOmnify() {
 
     return (
@@ -6,26 +8,46 @@ export function WhyOmnify() {
                 className={"text-theme-crimson"}>Omnify?</span></div>
             <div className={"flex flex-wrap justify-between px-[125px] gap-y-[90px]"}>
                 <div>
-                    <div className={"text-white mb-[35px] text-[32px]"}>Transparency</div>
-                    <div className={"text-muted-white text-[16px] max-w-[450px]"}>Every transaction and match result is
+                    <div className={"flex items-center gap-[15px] mb-[35px]"}>
+                        <Image src={"/assets/images/icons/why-omnify/transparency.png"} alt={"icon"} width={30}
+                               height={30} className={"w-[30px] h-[30px]"}/>
+                        <div className={"text-white text-[32px] "}>Transparency</div>
+                    </div>
+                    <div className={"text-muted-white text-[16px] max-w-[450px] leading-[16px]"}>Every transaction and
+                        match result is
                         recorded on the blockchain, ensuring complete transparency for all participants.
                     </div>
                 </div>
                 <div>
-                    <div className={"text-white mb-[35px] text-[32px]"}>Security</div>
-                    <div className={"text-muted-white text-[16px] max-w-[450px]"}>Decentralized architecture eliminates
+                    <div className={"flex items-center gap-[15px] mb-[35px]"}>
+                        <Image src={"/assets/images/icons/why-omnify/protection.png"} alt={"icon"} width={30}
+                               height={30} className={"w-[30px] h-[30px]"}/>
+                        <div className={"text-white text-[32px] "}>Transparency</div>
+                    </div>
+                    <div className={"text-muted-white text-[16px] max-w-[450px] leading-[16px]"}>Decentralized
+                        architecture eliminates
                         single points of failure, protecting against hacks and fraud.
                     </div>
                 </div>
                 <div>
-                    <div className={"text-white mb-[35px] text-[32px]"}>Fairness</div>
-                    <div className={"text-muted-white text-[16px] max-w-[450px]"}>Automated smart contracts ensure
+                    <div className={"flex items-center gap-[15px] mb-[35px]"}>
+                        <Image src={"/assets/images/icons/why-omnify/fair.png"} alt={"icon"} width={30} height={30}
+                               className={"w-[30px] h-[30px]"}/>
+                        <div className={"text-white text-[32px] "}>Transparency</div>
+                    </div>
+                    <div className={"text-muted-white text-[16px] max-w-[450px] leading-[16px]"}>Automated smart
+                        contracts ensure
                         unbiased decision-making and fair prize distribution.
                     </div>
                 </div>
                 <div>
-                    <div className={"text-white mb-[35px] text-[32px]"}>Efficiency</div>
-                    <div className={"text-muted-white text-[16px] max-w-[450px]"}>Streamline tournament operations like
+                    <div className={"flex items-center gap-[15px] mb-[35px]"}>
+                        <Image src={"/assets/images/icons/why-omnify/speed.png"} alt={"icon"} width={30} height={30}
+                               className={"w-[30px] h-[30px]"}/>
+                        <div className={"text-white text-[32px] "}>Transparency</div>
+                    </div>
+                    <div className={"text-muted-white text-[16px] max-w-[450px] leading-[16px]"}>Streamline tournament
+                        operations like
                         player registration, match scheduling, and prize distribution with automation.
                     </div>
                 </div>
