@@ -3,7 +3,7 @@ import Image from "next/image";
 export function WhyLoveOmnify() {
 
     return (
-        <div className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[200px]"}>
+        <div className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-20 py-[200px]"}>
             <div className={"w-full flex justify-center"}>
                 <div className={"text-[64px] text-white text-center w-[750px] mb-[125px]"}><span
                     className="text-theme-crimson">Why</span> Gamers and Organizers <span
