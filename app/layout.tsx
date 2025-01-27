@@ -3,6 +3,7 @@ import {Urbanist} from "next/font/google";
 import "./globals.css";
 import {NavigationBar} from "@/app/components/navigation/navigation-bar";
 import {Footer} from "@/app/components/navigation/footer";
+import {ClerkProvider} from "@clerk/nextjs";
 
 // Import Urbanist font
 const urbanist = Urbanist({
@@ -21,15 +22,17 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
-        <body
-            className={`${urbanist.variable} antialiased bg-black`}
-            style={{fontFamily: urbanist.style.fontFamily}} // Apply the font family
-        >
-        <NavigationBar/>
-        {children}
-        <Footer/>
-        </body>
-        </html>
+        <ClerkProvider>
+            <html lang="en">
+            <body
+                className={`${urbanist.variable} antialiased bg-black`}
+                style={{fontFamily: urbanist.style.fontFamily}} // Apply the font family
+            >
+            <NavigationBar/>
+            {children}
+            <Footer/>
+            </body>
+            </html>
+        </ClerkProvider>
     );
 }
