@@ -2,6 +2,7 @@ import type {Metadata} from "next";
 import {Urbanist} from "next/font/google";
 import "./globals.css";
 import {NavigationBar} from "@/app/components/navigation/navigation-bar";
+import {Footer} from "@/app/components/navigation/footer";
 
 // Import Urbanist font
 const urbanist = Urbanist({
@@ -27,6 +28,7 @@ export default function RootLayout({
         >
         <NavigationBar/>
         {children}
+        <Footer/>
         </body>
         </html>
     );
