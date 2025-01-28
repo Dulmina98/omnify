@@ -12,6 +12,8 @@ export default {
           colors: {
               'theme-crimson': 'var(--theme-crimson)',
               'muted-white': 'var(--muted-white)',
+              'outline-gray': 'var(--outline-gray)',
+              'muted-gray': 'var(--muted-gray)',
               background: 'hsl(var(--background))',
               foreground: 'hsl(var(--foreground))',
               card: {
