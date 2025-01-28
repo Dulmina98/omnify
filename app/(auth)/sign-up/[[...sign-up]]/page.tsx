@@ -13,7 +13,6 @@ export default function Page() {
     useEffect(() => {
         if (isLoaded && isSignedIn) {
             setSignUpComplete(true);
-            // Redirect to the desired page after sign-up is complete
             router.push('/become-a-member');
         }
     }, [isLoaded, isSignedIn, router]);
