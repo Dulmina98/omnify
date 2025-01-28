@@ -54,7 +54,7 @@ export default function Page() {
                 </div>
             </div>
             <div className={"w-1/2 min-h-screen h-full flex flex-col justify-center"}>
-                <div className={"max-w-[900px] w-full px-[25px] lg:px-[100px] py-[100px]"}>
+                <div className={"max-w-[900px] w-full px-[25px] lg:px-[100px] py-[200px]"}>
                     <div className={"mb-[60px]"}>
                         <div className={"text-[64px] text-white"}>Become a member</div>
                         <TabBar
