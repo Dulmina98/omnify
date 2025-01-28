@@ -1,23 +1,29 @@
-'use client'
+"use client";
 
 import {useForm} from "react-hook-form";
 import TabBar from "@/app/components/tab-bar/tab-bar";
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
-import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select";
+import {useApiMutation} from "@/hooks/use-api-mutation";
+import {useUser} from "@clerk/nextjs";
+import {api} from "@/convex/_generated/api";
 
 type FormData = {
     firstName: string;
     lastName: string;
     mobileNumber: string;
     gameAlias: string;
-    gameLevel: string;
+    gameLevel: number;
     preferredGame: string;
     platform: string;
 };
 
 export default function Page() {
+    const {mutate} = useApiMutation(api.users.createUser);
+    const {user, isLoaded, isSignedIn} = useUser();
+
     const tabs = [
         {name: "Players"},
         {name: "Organizers"},
@@ -29,15 +35,50 @@ export default function Page() {
             lastName: "",
             mobileNumber: "",
             gameAlias: "",
-            gameLevel: "",
+            gameLevel: 0,
             preferredGame: "",
             platform: "",
         },
     });
 
-    const onSubmit = (data: FormData) => {
-        console.log("Form submitted with data:", data);
+
+    const onSubmit = async (data: FormData) => {
+        try {
+            if (!user) {
+                console.error("User is not signed in.");
+                return;
+            }
+
+            const userData = {...data};
+
+            const userEmail =
+                user.emailAddresses?.find(email => email.id === user.primaryEmailAddressId)?.emailAddress ?? "";
+
+            mutate({
+                user_id: user.id,
+                first_name: userData.firstName,
+                last_name: userData.lastName,
+                mobile_num: userData.mobileNumber,
+                ign: userData.gameAlias,
+                level: userData.gameLevel,
+                game: userData.preferredGame,
+                platform: userData.platform,
+                email: userEmail,
+            }).then(() => {
+                console.log("User created successfully");
+            });
+        } catch (error) {
+            console.log(error);
+        }
     };
+
+    if (!isLoaded) {
+        return <div>Loading...</div>;
+    }
+
+    if (!isSignedIn) {
+        return <div>Please sign in to become a member.</div>;
+    }
 
     return (
         <div className={"w-full min-h-screen relative flex "}>
@@ -131,8 +172,13 @@ export default function Page() {
                                         <FormLabel className={"text-white text-[16px] mb-[10px]"}>Game
                                             Level/Rank</FormLabel>
                                         <FormControl>
-                                            <Input className={"h-[46px]"}
-                                                   placeholder="Enter your game level/rank" {...field} />
+                                            <Input
+                                                type="number"
+                                                className="h-[46px]"
+                                                placeholder="Enter your game level/rank"
+                                                value={field.value}
+                                                onChange={(e) => field.onChange(parseInt(e.target.value, 10))}
+                                            />
                                         </FormControl>
                                         <FormMessage/>
                                     </FormItem>
@@ -191,8 +237,6 @@ export default function Page() {
                                 )}
                             />
                             <div className={"flex  gap-[20px] pt-[60px]"}>
-                                <Button className={"h-[46px] w-[215px] text-[18px]"} variant={"secondary"}>Connect
-                                    Wallet</Button>
                                 <Button className={"h-[46px] w-[215px] text-[18px]"} type={"submit"}>Become a
                                     member</Button>
                             </div>
