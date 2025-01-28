@@ -17,8 +17,16 @@ export function NavigationBar() {
                         <Link href={"/"} className={"text-white text-[16px] font-medium"}>Contact Us</Link>
                     </div>
                     <div className={"flex items-center gap-[20px]"}>
-                        <Button className={"w-[175px] h-[36px]"}>Join a Tournament</Button>
-                        <Button className={"w-[175px] h-[36px]"} variant={"secondary"}>Create a Tournament</Button>
+                        <Link href="/sign-in" passHref>
+                            <Button className={"w-[125px] h-[36px]"} variant={"secondary"}>
+                                Connect wallet
+                            </Button>
+                        </Link>
+                        <Link href="/sign-up" passHref>
+                            <Button className={"w-[125px] h-[36px]"}>
+                                Sign up
+                            </Button>
+                        </Link>
                     </div>
                 </div>
             </div>
