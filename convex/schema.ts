@@ -3,14 +3,26 @@ import {v} from "convex/values";
 
 export default defineSchema({
     players: defineTable({
-        user_id: v.string(),
-        first_name: v.string(),
-        last_name: v.string(),
-        mobile_num: v.string(),
+        userId: v.string(),
+        firstName: v.string(),
+        lastName: v.string(),
+        mobileNum: v.string(),
         ign: v.string(),
         level: v.number(),
         game: v.string(),
         platform: v.string(),
+        email: v.string(),
+    }),
+    organizers: defineTable({
+        userId: v.string(),
+        firstName: v.string(),
+        lastName: v.string(),
+        mobileNum: v.string(),
+        organizationName: v.string(),
+        role: v.string(),
+        country: v.string(),
+        websiteUrl: v.optional(v.string()),
+        preferredCommunicationChannel: v.string(),
         email: v.string(),
     }),
 });
