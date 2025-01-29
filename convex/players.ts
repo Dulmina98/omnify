@@ -4,9 +4,9 @@ import {v} from "convex/values";
 export const createPlayer = mutation({
     args: {
         clerkId: v.string(),
-        first_name: v.string(),
-        last_name: v.string(),
-        mobile_num: v.string(),
+        firstName: v.string(),
+        lastName: v.string(),
+        mobileNum: v.string(),
         ign: v.string(),
         level: v.number(),
         game: v.string(),
@@ -15,10 +15,10 @@ export const createPlayer = mutation({
     },
     handler: async (ctx, args) => {
         return await ctx.db.insert("players", {
-            user_id: args.clerkId,
-            first_name: args.first_name,
-            last_name: args.last_name,
-            mobile_num: args.mobile_num,
+            userId: args.clerkId,
+            firstName: args.firstName,
+            lastName: args.lastName,
+            mobileNum: args.mobileNum,
             ign: args.ign,
             level: args.level,
             game: args.game,
