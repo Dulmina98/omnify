@@ -7,10 +7,16 @@ type Tab = {
 type TabBarProps = {
     tabs: Tab[];
     initialActiveTab: string;
+    onTabChange: (tabName: string) => void;
 };
 
-function TabBar({tabs, initialActiveTab}: TabBarProps) {
+export function TabBar({tabs, initialActiveTab, onTabChange}: TabBarProps) {
     const [activeTab, setActiveTab] = useState(initialActiveTab);
+
+    const handleTabClick = (tabName: string) => {
+        setActiveTab(tabName);
+        onTabChange(tabName);
+    };
 
     return (
         <>
@@ -19,7 +25,7 @@ function TabBar({tabs, initialActiveTab}: TabBarProps) {
                     {tabs.map((tab) => (
                         <div
                             key={tab.name}
-                            onClick={() => setActiveTab(tab.name)}
+                            onClick={() => handleTabClick(tab.name)}
                             className={`cursor-pointer text-center px-4 font-[16px] leading-[16px] transition ease-in-out ${
                                 activeTab === tab.name
                                     ? 'text-theme-crimson font-bold border-b-2 border-theme-crimson'
@@ -38,5 +44,3 @@ function TabBar({tabs, initialActiveTab}: TabBarProps) {
         </>
     );
 }
-
-export default TabBar;
