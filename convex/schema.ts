@@ -2,7 +2,7 @@ import {defineSchema, defineTable} from "convex/server";
 import {v} from "convex/values";
 
 export default defineSchema({
-    users: defineTable({
+    players: defineTable({
         user_id: v.string(),
         first_name: v.string(),
         last_name: v.string(),
@@ -12,5 +12,5 @@ export default defineSchema({
         game: v.string(),
         platform: v.string(),
         email: v.string(),
-    })
+    }),
 });

@@ -21,7 +21,7 @@ type FormData = {
 };
 
 export default function Page() {
-    const {mutate} = useApiMutation(api.users.createUser);
+    const {mutate} = useApiMutation(api.users.createPlayer);
     const {user, isLoaded, isSignedIn} = useUser();
 
     const tabs = [
@@ -55,7 +55,7 @@ export default function Page() {
                 user.emailAddresses?.find(email => email.id === user.primaryEmailAddressId)?.emailAddress ?? "";
 
             mutate({
-                user_id: user.id,
+                clerkId: user.id,
                 first_name: userData.firstName,
                 last_name: userData.lastName,
                 mobile_num: userData.mobileNumber,

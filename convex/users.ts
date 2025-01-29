@@ -1,9 +1,9 @@
 import {mutation} from "@/convex/_generated/server";
 import {v} from "convex/values";
 
-export const createUser = mutation({
+export const createPlayer = mutation({
     args: {
-        user_id: v.string(),
+        clerkId: v.string(),
         first_name: v.string(),
         last_name: v.string(),
         mobile_num: v.string(),
@@ -14,8 +14,8 @@ export const createUser = mutation({
         email: v.string(),
     },
     handler: async (ctx, args) => {
-        return await ctx.db.insert("users", {
-            user_id: args.user_id,
+        return await ctx.db.insert("players", {
+            user_id: args.clerkId,
             first_name: args.first_name,
             last_name: args.last_name,
             mobile_num: args.mobile_num,
