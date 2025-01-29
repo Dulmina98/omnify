@@ -8,7 +8,11 @@
  * @module
  */
 
-import type {ApiFromModules, FilterApi, FunctionReference,} from "convex/server";
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
 import type * as organizers from "../organizers.js";
 import type * as players from "../players.js";
 
@@ -25,10 +29,10 @@ declare const fullApi: ApiFromModules<{
   players: typeof players;
 }>;
 export declare const api: FilterApi<
-    typeof fullApi,
-    FunctionReference<any, "public">
+  typeof fullApi,
+  FunctionReference<any, "public">
 >;
 export declare const internal: FilterApi<
-    typeof fullApi,
-    FunctionReference<any, "internal">
+  typeof fullApi,
+  FunctionReference<any, "internal">
 >;

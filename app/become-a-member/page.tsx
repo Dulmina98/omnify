@@ -1,7 +1,6 @@
 "use client";
 
 import {useForm} from "react-hook-form";
-import TabBar from "@/app/components/tab-bar/tab-bar";
 import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
 import {Button} from "@/components/ui/button";
@@ -9,8 +8,10 @@ import {Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVal
 import {useApiMutation} from "@/hooks/use-api-mutation";
 import {useUser} from "@clerk/nextjs";
 import {api} from "@/convex/_generated/api";
+import {TabBar} from "@/app/components/tab-bar/tab-bar";
+import {useState} from "react";
 
-type FormData = {
+type PlayersFormData = {
     firstName: string;
     lastName: string;
     mobileNumber: string;
@@ -20,16 +21,29 @@ type FormData = {
     platform: string;
 };
 
+type OrganizersFormData = {
+    firstName: string;
+    lastName: string;
+    mobileNumber: string;
+    organizationName: string;
+    roleInOrganization: string;
+    countryRegion: string;
+    websiteUrl: string;
+    preferredCommunicationChannel: string;
+};
+
 export default function Page() {
-    const {mutate} = useApiMutation(api.users.createPlayer);
+    const {mutate: playerMutate} = useApiMutation(api.players.createPlayer);
+    const {mutate: organizerMutate} = useApiMutation(api.organizers.createOrganizer);
     const {user, isLoaded, isSignedIn} = useUser();
+    const [activeTab, setActiveTab] = useState("Players");
 
     const tabs = [
         {name: "Players"},
         {name: "Organizers"},
     ];
 
-    const form = useForm<FormData>({
+    const form = useForm<PlayersFormData>({
         defaultValues: {
             firstName: "",
             lastName: "",
@@ -41,8 +55,21 @@ export default function Page() {
         },
     });
 
+    const organizersForm = useForm<OrganizersFormData>({
+        defaultValues: {
+            firstName: "",
+            lastName: "",
+            mobileNumber: "",
+            organizationName: "",
+            roleInOrganization: "",
+            countryRegion: "",
+            websiteUrl: "",
+            preferredCommunicationChannel: "",
+        },
+    });
 
-    const onSubmit = async (data: FormData) => {
+
+    const onSubmit = async (data: PlayersFormData) => {
         try {
             if (!user) {
                 console.error("User is not signed in.");
@@ -54,11 +81,11 @@ export default function Page() {
             const userEmail =
                 user.emailAddresses?.find(email => email.id === user.primaryEmailAddressId)?.emailAddress ?? "";
 
-            mutate({
+            playerMutate({
                 clerkId: user.id,
-                first_name: userData.firstName,
-                last_name: userData.lastName,
-                mobile_num: userData.mobileNumber,
+                firstName: userData.firstName,
+                lastName: userData.lastName,
+                mobileNum: userData.mobileNumber,
                 ign: userData.gameAlias,
                 level: userData.gameLevel,
                 game: userData.preferredGame,
@@ -66,6 +93,35 @@ export default function Page() {
                 email: userEmail,
             }).then(() => {
                 console.log("User created successfully");
+            });
+        } catch (error) {
+            console.log(error);
+        }
+    };
+
+    const onOrganizersSubmit = async (data: OrganizersFormData) => {
+        try {
+            if (!user) {
+                console.error("User is not signed in.");
+                return;
+            }
+
+            const userEmail =
+                user.emailAddresses?.find(email => email.id === user.primaryEmailAddressId)?.emailAddress ?? "";
+
+            organizerMutate({
+                clerkId: user.id,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                mobileNum: data.mobileNumber,
+                organizationName: data.organizationName,
+                role: data.roleInOrganization,
+                country: data.countryRegion,
+                websiteUrl: data.websiteUrl,
+                preferredCommunicationChannel: data.preferredCommunicationChannel,
+                email: userEmail,
+            }).then(() => {
+                console.log("Organizer created successfully");
             });
         } catch (error) {
             console.log(error);
@@ -97,14 +153,16 @@ export default function Page() {
             <div className={"w-1/2 min-h-screen h-full flex flex-col justify-center"}>
                 <div className={"max-w-[900px] w-full px-[25px] lg:px-[100px] py-[200px]"}>
                     <div className={"mb-[60px]"}>
-                        <div className={"text-[64px] text-white"}>Become a member</div>
+                        <div
+                            className={"text-[64px] text-white"}>Become {activeTab === "Players" ? "a Player" : "an Organizer"}</div>
                         <TabBar
                             tabs={tabs}
                             initialActiveTab="Players"
+                            onTabChange={(tabName) => setActiveTab(tabName)} // Pass the handler
                         />
                     </div>
 
-                    <Form {...form}>
+                    {activeTab === "Players" && <Form {...form}>
                         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-[35px]">
                             <FormField
                                 control={form.control}
@@ -238,10 +296,152 @@ export default function Page() {
                             />
                             <div className={"flex  gap-[20px] pt-[60px]"}>
                                 <Button className={"h-[46px] w-[215px] text-[18px]"} type={"submit"}>Become a
-                                    member</Button>
+                                    player</Button>
                             </div>
                         </form>
                     </Form>
+                    }
+                    {activeTab === "Organizers" && (
+                        <Form {...organizersForm}>
+                            <form onSubmit={organizersForm.handleSubmit(onOrganizersSubmit)} className="space-y-[35px]">
+                                <FormField
+                                    control={organizersForm.control}
+                                    name="firstName"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>First
+                                                Name</FormLabel>
+                                            <FormControl>
+                                                <Input className={"h-[46px]"}
+                                                       placeholder="Enter your first name" {...field} />
+                                            </FormControl>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={organizersForm.control}
+                                    name="lastName"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Last
+                                                Name</FormLabel>
+                                            <FormControl>
+                                                <Input className={"h-[46px]"}
+                                                       placeholder="Enter your last name" {...field} />
+                                            </FormControl>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={organizersForm.control}
+                                    name="mobileNumber"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Mobile
+                                                Number</FormLabel>
+                                            <FormControl>
+                                                <Input className={"h-[46px]"}
+                                                       placeholder="Enter your mobile number" {...field} />
+                                            </FormControl>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={organizersForm.control}
+                                    name="organizationName"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Organization/Company
+                                                Name</FormLabel>
+                                            <FormControl>
+                                                <Input className={"h-[46px]"}
+                                                       placeholder="Enter your organization/company name" {...field} />
+                                            </FormControl>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={organizersForm.control}
+                                    name="roleInOrganization"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Role/Position in
+                                                the Organization</FormLabel>
+                                            <FormControl>
+                                                <Input className={"h-[46px]"}
+                                                       placeholder="Enter your role/position" {...field} />
+                                            </FormControl>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={organizersForm.control}
+                                    name="countryRegion"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel
+                                                className={"text-white text-[16px] mb-[10px]"}>Country/Region</FormLabel>
+                                            <FormControl>
+                                                <Input className={"h-[46px]"}
+                                                       placeholder="Enter your country/region" {...field} />
+                                            </FormControl>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={organizersForm.control}
+                                    name="websiteUrl"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Website URL (if
+                                                applicable)</FormLabel>
+                                            <FormControl>
+                                                <Input className={"h-[46px]"}
+                                                       placeholder="Enter your website URL" {...field} />
+                                            </FormControl>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={organizersForm.control}
+                                    name="preferredCommunicationChannel"
+                                    render={({field}) => (
+                                        <FormItem>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Preferred
+                                                Communication Channel</FormLabel>
+                                            <Select onValueChange={field.onChange} value={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectValue
+                                                            placeholder="Select your preferred communication channel"/>
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectGroup>
+                                                        <SelectItem value="email">Email</SelectItem>
+                                                        <SelectItem value="discord">Discord</SelectItem>
+                                                        <SelectItem value="other">Other</SelectItem>
+                                                    </SelectGroup>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+                                <div className={"flex gap-[20px] pt-[60px]"}>
+                                    <Button className={"h-[46px] w-[215px] text-[18px]"} type={"submit"}>Become an
+                                        organizer</Button>
+                                </div>
+                            </form>
+                        </Form>
+                    )}
                 </div>
             </div>
         </div>
