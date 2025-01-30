@@ -1,8 +1,15 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
+import {useCurrentUser} from "@/services/user-service";
+import {useUser} from "@clerk/nextjs";
+import {ProfileDropdown} from "@/app/components/navigation/profile-dropdown";
 
 export function NavigationBar() {
+    const {user, isSignedIn: isConvexSigned} = useCurrentUser();
+    const {isSignedIn: isClerkSigned} = useUser();
 
     return (
         <div className={"fixed top-0 left-0 w-full h-[68px] flex justify-center backdrop-blur-lg z-50"}>
@@ -17,16 +24,24 @@ export function NavigationBar() {
                         <Link href={"/"} className={"text-white text-[16px] font-medium"}>Contact Us</Link>
                     </div>
                     <div className={"flex items-center gap-[20px]"}>
-                        <Link href="/sign-in" passHref>
-                            <Button className={"w-[125px] h-[36px]"} variant={"secondary"}>
-                                Connect wallet
+                        {(isConvexSigned && isClerkSigned) && <>
+                            <Link href="/sign-in" passHref>
+                                <Button className={"w-[150px] h-[36px]"} variant={"secondary"}>
+                                    Connect wallet
+                                </Button>
+                            </Link>
+                        </>}
+                        {isClerkSigned && !user && <Link href="/become-a-member" passHref>
+                            <Button className={"w-[150px] h-[36px]"}>
+                                Become a member
                             </Button>
-                        </Link>
-                        <Link href="/sign-up" passHref>
-                            <Button className={"w-[125px] h-[36px]"}>
+                        </Link>}
+                        {!isClerkSigned && <Link href="/sign-up" passHref>
+                            <Button className={"w-[150px] h-[36px]"}>
                                 Sign up
                             </Button>
-                        </Link>
+                        </Link>}
+                        {(isConvexSigned && isClerkSigned) && <ProfileDropdown/>}
                     </div>
                 </div>
             </div>

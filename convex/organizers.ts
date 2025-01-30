@@ -1,4 +1,4 @@
-import {mutation} from "@/convex/_generated/server";
+import {mutation, query} from "@/convex/_generated/server";
 import {v} from "convex/values";
 
 export const createOrganizer = mutation({
@@ -28,5 +28,15 @@ export const createOrganizer = mutation({
             preferredCommunicationChannel: args.preferredCommunicationChannel,
             email: args.email,
         });
+    },
+});
+
+export const getOrganizerByUserId = query({
+    args: {userId: v.string()},
+    handler: async (ctx, args) => {
+        return await ctx.db
+            .query('organizers')
+            .withIndex('by_userId', (q) => q.eq('userId', args.userId))
+            .unique();
     },
 });

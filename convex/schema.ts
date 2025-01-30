@@ -12,7 +12,7 @@ export default defineSchema({
         game: v.string(),
         platform: v.string(),
         email: v.string(),
-    }),
+    }).index('by_userId', ['userId']),
     organizers: defineTable({
         userId: v.string(),
         firstName: v.string(),
@@ -24,5 +24,5 @@ export default defineSchema({
         websiteUrl: v.optional(v.string()),
         preferredCommunicationChannel: v.string(),
         email: v.string(),
-    }),
+    }).index('by_userId', ['userId']),
 });
