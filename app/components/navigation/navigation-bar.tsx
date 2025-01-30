@@ -6,10 +6,13 @@ import {Button} from "@/components/ui/button";
 import {useCurrentUser} from "@/services/user-service";
 import {useUser} from "@clerk/nextjs";
 import {ProfileDropdown} from "@/app/components/navigation/profile-dropdown";
+import {useEthereum} from "@/hooks/use-ethereum";
+import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 
 export function NavigationBar() {
     const {user, isSignedIn: isConvexSigned} = useCurrentUser();
     const {isSignedIn: isClerkSigned} = useUser();
+    const {provider, signer, address, isConnected, connectWallet, disconnectWallet} = useEthereum();
 
     return (
         <div className={"fixed top-0 left-0 w-full h-[68px] flex justify-center backdrop-blur-lg z-50"}>
@@ -25,11 +28,28 @@ export function NavigationBar() {
                     </div>
                     <div className={"flex items-center gap-[20px]"}>
                         {(isConvexSigned && isClerkSigned) && <>
-                            <Link href="/sign-in" passHref>
-                                <Button className={"w-[150px] h-[36px]"} variant={"secondary"}>
-                                    Connect wallet
-                                </Button>
-                            </Link>
+                            <>
+                                {isConnected ? (
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant={"secondary"} className={"w-[150px] h-[36px]"}
+                                                        onClick={disconnectWallet}>Disconnect Wallet</Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent
+                                                className={"bg-black/35 backdrop-blur-lg text-white border-muted-gray"}
+                                                side={"bottom"} align={"end"}>
+                                                <div>{address}</div>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+                                ) : (
+
+                                    <Button variant={"secondary"} className={"w-[150px] h-[36px]"}
+                                            onClick={connectWallet}>Connect Wallet</Button>
+
+                                )}
+                            </>
                         </>}
                         {isClerkSigned && !user && <Link href="/become-a-member" passHref>
                             <Button className={"w-[150px] h-[36px]"}>
