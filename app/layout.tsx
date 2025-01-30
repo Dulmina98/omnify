@@ -4,6 +4,7 @@ import "./globals.css";
 import {NavigationBar} from "@/app/components/navigation/navigation-bar";
 import {Footer} from "@/app/components/navigation/footer";
 import {ClerkProvider} from "@clerk/nextjs";
+import {ConvexClientProvider} from "./ConvexClientProvider";
 
 // Import Urbanist font
 const urbanist = Urbanist({
@@ -23,16 +24,18 @@ export default function RootLayout({
 }>) {
     return (
         <ClerkProvider>
-            <html lang="en">
-            <body
-                className={`${urbanist.variable} antialiased bg-black`}
-                style={{fontFamily: urbanist.style.fontFamily}} // Apply the font family
-            >
-            <NavigationBar/>
-            {children}
-            <Footer/>
-            </body>
-            </html>
+            <ConvexClientProvider>
+                <html lang="en">
+                <body
+                    className={`${urbanist.variable} antialiased bg-black`}
+                    style={{fontFamily: urbanist.style.fontFamily}} // Apply the font family
+                >
+                <NavigationBar/>
+                {children}
+                <Footer/>
+                </body>
+                </html>
+            </ConvexClientProvider>
         </ClerkProvider>
     );
 }
