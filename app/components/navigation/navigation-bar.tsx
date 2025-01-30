@@ -23,7 +23,7 @@ export function NavigationBar() {
                 <div className={"flex justify-between w-full"}>
                     <div className={"flex gap-[25px] items-center w-full"}>
                         <Link href={"/"} className={"text-white text-[16px] font-medium"}>Home</Link>
-                        <Link href={"/"} className={"text-white text-[16px] font-medium"}>Tournaments</Link>
+                        <Link href={"/"} className={"text-white text-[16px] font-medium"}>Create Tournament</Link>
                         <Link href={"/"} className={"text-white text-[16px] font-medium"}>Contact Us</Link>
                     </div>
                     <div className={"flex items-center gap-[20px]"}>
