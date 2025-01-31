@@ -8,13 +8,10 @@
  * @module
  */
 
-import type {
-  ApiFromModules,
-  FilterApi,
-  FunctionReference,
-} from "convex/server";
+import type {ApiFromModules, FilterApi, FunctionReference,} from "convex/server";
 import type * as organizers from "../organizers.js";
 import type * as players from "../players.js";
+import type * as tournaments from "../tournaments.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -27,6 +24,7 @@ import type * as players from "../players.js";
 declare const fullApi: ApiFromModules<{
   organizers: typeof organizers;
   players: typeof players;
+  tournaments: typeof tournaments;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

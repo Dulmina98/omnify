@@ -26,6 +26,7 @@ export default defineSchema({
         email: v.string(),
     }).index('by_userId', ['userId']),
     tournaments: defineTable({
+        userId: v.id("organizers"),
         tournamentName: v.string(),
         gameTitle: v.string(),
         description: v.optional(v.string()),
