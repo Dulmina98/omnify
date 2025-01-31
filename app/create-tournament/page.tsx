@@ -13,6 +13,7 @@ type TournamentFormData = {
     description: string;
     tournamentType: string;
     teamSize: string;
+    numberOfPlayersRequired: string;
     startDate: number;
     endDate: number;
     entryFee: number;
@@ -21,9 +22,14 @@ type TournamentFormData = {
     minLevel: number;
     totalPrizePool: number;
     prizeDistributionMethod: string;
-    ruleset: string;
+    gameMode: string;
+    stageSelection: string;
+    characterSelectionRules: string;
+    bannedCharactersItems: string;
+    disconnectPolicy: string;
+    matchDisputeResolution: string;
+    pauseBreakRules: string;
 };
-
 export default function CreateTournament() {
     const form = useForm<TournamentFormData>({
         defaultValues: {
@@ -32,6 +38,7 @@ export default function CreateTournament() {
             description: "",
             tournamentType: "",
             teamSize: "",
+            numberOfPlayersRequired: "",
             startDate: 0,
             endDate: 0,
             entryFee: 0,
@@ -40,7 +47,13 @@ export default function CreateTournament() {
             minLevel: 0,
             totalPrizePool: 0,
             prizeDistributionMethod: "",
-            ruleset: "",
+            gameMode: "",
+            stageSelection: "",
+            characterSelectionRules: "",
+            bannedCharactersItems: "",
+            disconnectPolicy: "",
+            matchDisputeResolution: "",
+            pauseBreakRules: "",
         },
     });
 
@@ -137,7 +150,7 @@ export default function CreateTournament() {
                                         control={form.control}
                                         name="tournamentType"
                                         render={({field}) => (
-                                            <FormItem className={"flex-[1_1_45%]"}>
+                                            <FormItem className={"flex-[1_1_30%]"}>
                                                 <FormLabel className={"text-white text-[16px] mb-[10px]"}>Tournament
                                                     Type</FormLabel>
                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -164,7 +177,7 @@ export default function CreateTournament() {
                                         control={form.control}
                                         name="teamSize"
                                         render={({field}) => (
-                                            <FormItem className={"flex-[1_1_45%]"}>
+                                            <FormItem className={"flex-[1_1_30%]"}>
                                                 <FormLabel className={"text-white text-[16px] mb-[10px]"}>Team
                                                     Size</FormLabel>
                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
@@ -177,6 +190,32 @@ export default function CreateTournament() {
                                                         <SelectItem value="1v1">1v1</SelectItem>
                                                         <SelectItem value="2v2">2v2</SelectItem>
                                                         <SelectItem value="5v5">5v5</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                                <FormMessage/>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Number of Players Required (Select Dropdown) */}
+                                    <FormField
+                                        control={form.control}
+                                        name="numberOfPlayersRequired"
+                                        render={({field}) => (
+                                            <FormItem className={"flex-[1_1_30%]"}>
+                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>
+                                                    Number of Players Required
+                                                </FormLabel>
+                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                    <FormControl>
+                                                        <SelectTrigger className={"h-[46px]"}>
+                                                            <SelectValue placeholder="Select number of players"/>
+                                                        </SelectTrigger>
+                                                    </FormControl>
+                                                    <SelectContent>
+                                                        <SelectItem value="4">4</SelectItem>
+                                                        <SelectItem value="8">8</SelectItem>
+                                                        <SelectItem value="16">16</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                                 <FormMessage/>
@@ -349,29 +388,165 @@ export default function CreateTournament() {
                                         )}
                                     />
                                 </div>
+                            </div>
 
-                                <div
-                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>Match
-                                    Rules & Settings
-                                </div>
+                            <div
+                                className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>Match
+                                Rules & Settings
+                            </div>
 
-                                {/* Ruleset (Select Input) */}
+                            <div className={"flex w-full gap-[30px] flex-wrap"}>
+
+                                {/* Game Mode/Ruleset (Select Input) */}
                                 <FormField
                                     control={form.control}
-                                    name="ruleset"
+                                    name="gameMode"
                                     render={({field}) => (
-                                        <FormItem>
-                                            <FormLabel
-                                                className={"text-white text-[16px] mb-[10px]"}>Ruleset</FormLabel>
+                                        <FormItem className={"flex-[1_1_45%]"}>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Game
+                                                Mode/Ruleset</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger className={"h-[46px]"}>
-                                                        <SelectValue placeholder="Select ruleset"/>
+                                                        <SelectValue placeholder="Select game mode"/>
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    <SelectItem value="standard">Standard</SelectItem>
-                                                    <SelectItem value="custom">Custom</SelectItem>
+                                                    <SelectItem value="bo3">Best of 3 (BO3)</SelectItem>
+                                                    <SelectItem value="bo5">Best of 5 (BO5)</SelectItem>
+                                                    <SelectItem value="time-limit">Time Limit</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Stage Selection (Select Input) */}
+                                <FormField
+                                    control={form.control}
+                                    name="stageSelection"
+                                    render={({field}) => (
+                                        <FormItem className={"flex-[1_1_45%]"}>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Stage
+                                                Selection</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectValue placeholder="Select stage selection"/>
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="random">Random</SelectItem>
+                                                    <SelectItem value="players-choice">Player’s Choice</SelectItem>
+                                                    <SelectItem value="pre-selected">Pre-Selected (Organizer
+                                                        Decides)</SelectItem>
+                                                    <SelectItem value="register-order">Register Order</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Character Selection Rules (Select Input) */}
+                                <FormField
+                                    control={form.control}
+                                    name="characterSelectionRules"
+                                    render={({field}) => (
+                                        <FormItem className={"flex-[1_1_45%]"}>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Character
+                                                Selection Rules</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectValue placeholder="Select character selection rules"/>
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="any-character">Any Character Allowed</SelectItem>
+                                                    <SelectItem value="same-character">Same Character for Entire
+                                                        Tournament</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Banned Characters/Items (Select Input) */}
+                                <FormField
+                                    control={form.control}
+                                    name="bannedCharactersItems"
+                                    render={({field}) => (
+                                        <FormItem className={"flex-[1_1_45%]"}>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Banned
+                                                Characters/Items</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectValue placeholder="Select banned characters/items"/>
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="no-guest-characters">No Guest
+                                                        Characters</SelectItem>
+                                                    <SelectItem value="no-special-characters">No Special
+                                                        Characters</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+
+                                {/* Disconnect Policy (Select Input) */}
+                                <FormField
+                                    control={form.control}
+                                    name="disconnectPolicy"
+                                    render={({field}) => (
+                                        <FormItem className={"flex-[1_1_45%]"}>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Disconnect
+                                                Policy</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectValue placeholder="Select disconnect policy"/>
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="immediate-loss">Immediate Loss</SelectItem>
+                                                    <SelectItem value="rematch-before-round-1">Rematch if Occurs Before
+                                                        Round 1 Ends</SelectItem>
+                                                    <SelectItem value="organizer-decision">Organizer
+                                                        Decision</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
+
+
+                                {/* Pause/Break Rules (Select Input) */}
+                                <FormField
+                                    control={form.control}
+                                    name="pauseBreakRules"
+                                    render={({field}) => (
+                                        <FormItem className={"flex-[1_1_45%]"}>
+                                            <FormLabel className={"text-white text-[16px] mb-[10px]"}>Pause/Break
+                                                Rules</FormLabel>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                    <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectValue placeholder="Select pause/break rules"/>
+                                                    </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                    <SelectItem value="technical-issues-only">Pausing is only allowed
+                                                        for technical issues</SelectItem>
+                                                    <SelectItem value="one-pause-per-match">One pause per
+                                                        match</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage/>
