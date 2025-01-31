@@ -26,7 +26,7 @@ export default defineSchema({
         email: v.string(),
     }).index('by_userId', ['userId']),
     tournaments: defineTable({
-        userId: v.id("organizers"),
+        userId: v.string(),
         tournamentName: v.string(),
         gameTitle: v.string(),
         description: v.optional(v.string()),
@@ -48,5 +48,6 @@ export default defineSchema({
         disconnectPolicy: v.string(),
         matchDisputeResolution: v.string(),
         pauseBreakRules: v.string(),
+        isApproved: v.boolean(),
     })
 });
