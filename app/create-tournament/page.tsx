@@ -6,6 +6,9 @@ import {Input} from "@/components/ui/input";
 import {Textarea} from "@/components/ui/textarea";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Button} from "@/components/ui/button";
+import {useApiMutation} from "@/hooks/use-api-mutation";
+import {api} from "@/convex/_generated/api";
+import {useCurrentUser} from "@/services/user-service";
 
 type TournamentFormData = {
     tournamentName: string;
@@ -31,6 +34,9 @@ type TournamentFormData = {
     pauseBreakRules: string;
 };
 export default function CreateTournament() {
+    const {mutate} = useApiMutation(api.tournaments.createTournament);
+    const {user} = useCurrentUser();
+
     const form = useForm<TournamentFormData>({
         defaultValues: {
             tournamentName: "",
@@ -58,7 +64,51 @@ export default function CreateTournament() {
     });
 
     const onSubmit = (data: TournamentFormData) => {
-        console.log(data); // Handle form submission
+        try {
+            if (!user) {
+                console.error("User is not signed in.");
+                return;
+            }
+
+            const startDateTimestamp = new Date(data.startDate).getTime();
+            const endDateTimestamp = new Date(data.endDate).getTime();
+            const deadlineTimestamp = new Date(data.deadline).getTime();
+
+            const tournamentData = {
+                ...data, startDate: startDateTimestamp,
+                endDate: endDateTimestamp,
+                deadline: deadlineTimestamp,
+            };
+
+            mutate({
+                userId: user.userId,
+                tournamentName: tournamentData.tournamentName,
+                gameTitle: tournamentData.gameTitle,
+                description: tournamentData.description,
+                tournamentType: tournamentData.tournamentType,
+                teamSize: tournamentData.teamSize,
+                numberOfPlayersRequired: tournamentData.numberOfPlayersRequired,
+                startDate: tournamentData.startDate,
+                endDate: tournamentData.endDate,
+                entryFee: tournamentData.entryFee,
+                paymentMethod: tournamentData.paymentMethod,
+                deadline: tournamentData.deadline,
+                minLevel: tournamentData.minLevel,
+                totalPrizePool: tournamentData.totalPrizePool,
+                prizeDistributionMethod: tournamentData.prizeDistributionMethod,
+                gameMode: tournamentData.gameMode,
+                stageSelection: tournamentData.stageSelection,
+                characterSelectionRules: tournamentData.characterSelectionRules,
+                bannedCharactersItems: tournamentData.bannedCharactersItems,
+                disconnectPolicy: tournamentData.disconnectPolicy,
+                matchDisputeResolution: tournamentData.matchDisputeResolution,
+                pauseBreakRules: tournamentData.pauseBreakRules,
+            }).then(() => {
+                console.log("Tournament created successfully")
+            });
+        } catch (error) {
+            console.log(error)
+        }
     };
 
     return (
@@ -232,7 +282,12 @@ export default function CreateTournament() {
                                                 <FormLabel className={"text-white text-[16px] mb-[10px]"}>Start
                                                     Date</FormLabel>
                                                 <FormControl>
-                                                    <Input type="date" className={"h-[46px]"} {...field} />
+                                                    <Input
+                                                        type="date"
+                                                        className={"h-[46px]"}
+                                                        {...field}
+                                                        value={field.value || ""}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
@@ -248,7 +303,12 @@ export default function CreateTournament() {
                                                 <FormLabel className={"text-white text-[16px] mb-[10px]"}>End
                                                     Date</FormLabel>
                                                 <FormControl>
-                                                    <Input type="date" className={"h-[46px]"} {...field} />
+                                                    <Input
+                                                        type="date"
+                                                        className={"h-[46px]"}
+                                                        {...field}
+                                                        value={field.value || ""}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
@@ -271,8 +331,14 @@ export default function CreateTournament() {
                                                 <FormLabel className={"text-white text-[16px] mb-[10px]"}>Entry
                                                     Fee</FormLabel>
                                                 <FormControl>
-                                                    <Input type="number" className={"h-[46px]"}
-                                                           placeholder="Enter entry fee" {...field} />
+                                                    <Input
+                                                        type="number"
+                                                        className={"h-[46px]"}
+                                                        placeholder="Enter entry fee"
+                                                        {...field}
+                                                        value={field.value || ""}
+                                                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
@@ -313,7 +379,12 @@ export default function CreateTournament() {
                                                 <FormLabel
                                                     className={"text-white text-[16px] mb-[10px]"}>Deadline</FormLabel>
                                                 <FormControl>
-                                                    <Input type="date" className={"h-[46px]"} {...field} />
+                                                    <Input
+                                                        type="date"
+                                                        className={"h-[46px]"}
+                                                        {...field}
+                                                        value={field.value || ""}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
@@ -329,8 +400,14 @@ export default function CreateTournament() {
                                                 <FormLabel className={"text-white text-[16px] mb-[10px]"}>Minimum
                                                     Level</FormLabel>
                                                 <FormControl>
-                                                    <Input type="number" className={"h-[46px]"}
-                                                           placeholder="Enter minimum level" {...field} />
+                                                    <Input
+                                                        type="number"
+                                                        className={"h-[46px]"}
+                                                        placeholder="Enter minimum level"
+                                                        {...field}
+                                                        value={field.value || ""}
+                                                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
@@ -353,8 +430,14 @@ export default function CreateTournament() {
                                                 <FormLabel className={"text-white text-[16px] mb-[10px]"}>Total Prize
                                                     Pool</FormLabel>
                                                 <FormControl>
-                                                    <Input type="number" className={"h-[46px]"}
-                                                           placeholder="Enter total prize pool" {...field} />
+                                                    <Input
+                                                        type="number"
+                                                        className={"h-[46px]"}
+                                                        placeholder="Enter total prize pool"
+                                                        {...field}
+                                                        value={field.value || ""}
+                                                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                                    />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
