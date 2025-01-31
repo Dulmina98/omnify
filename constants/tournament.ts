@@ -1,8 +1,8 @@
 export const GAMES = [
-    "Mortal Kombat",
-    "Fortnite",
-    "Doom Eternal",
-    "Diablo",
+    "Mortal Kombat 1",
+    "Injustice 2",
+    "Tekken 8",
+    "Street Fighter 6",
 ] as const;
 
 export const TOURNAMENT_TYPES = [
