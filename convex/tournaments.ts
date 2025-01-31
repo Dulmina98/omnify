@@ -3,7 +3,7 @@ import {v} from "convex/values";
 
 export const createTournament = mutation({
     args: {
-        userId: v.id("organizers"),
+        userId: v.string(),
         tournamentName: v.string(),
         gameTitle: v.string(),
         description: v.optional(v.string()),
@@ -50,6 +50,7 @@ export const createTournament = mutation({
             disconnectPolicy: args.disconnectPolicy,
             matchDisputeResolution: args.matchDisputeResolution,
             pauseBreakRules: args.pauseBreakRules,
+            isApproved: false,
         })
     }
 })
