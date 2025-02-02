@@ -1,4 +1,4 @@
-import {mutation} from "@/convex/_generated/server";
+import {mutation, query} from "@/convex/_generated/server";
 import {v} from "convex/values";
 
 export const createTournament = mutation({
@@ -54,3 +54,11 @@ export const createTournament = mutation({
         })
     }
 })
+
+export const getAllTournaments = query({
+    handler: async (ctx) => {
+        return await ctx.db
+            .query("tournaments")
+            .collect();
+    }
+});
