@@ -49,5 +49,12 @@ export default defineSchema({
         matchDisputeResolution: v.string(),
         pauseBreakRules: v.string(),
         isApproved: v.boolean(),
+    }),
+    tournamentParticipants: defineTable({
+        tournamentId: v.string(),
+        userId: v.string(),
+        status: v.string(),
     })
+        .index("by_tournament", ["tournamentId"])
+        .index("by_user", ["userId"])
 });
