@@ -4,7 +4,7 @@ import {useCurrentUser} from "@/services/user-service";
 import {isPlayer} from "@/utils/user-util";
 import {Input} from "@/components/ui/input";
 
-export const PlayerAccountDetails = () => {
+export const AccountDetails = () => {
     const {user} = useCurrentUser();
 
     if (!user) {
