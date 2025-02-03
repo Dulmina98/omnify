@@ -9,7 +9,7 @@ export const createTournament = mutation({
         description: v.optional(v.string()),
         tournamentType: v.string(),
         teamSize: v.string(),
-        numberOfPlayersRequired: v.string(),
+        numberOfPlayersRequired: v.number(),
         startDate: v.number(),
         endDate: v.number(),
         entryFee: v.number(),

@@ -7,7 +7,7 @@ export interface Tournament {
     description: string;
     tournamentType: string;
     teamSize: string;
-    numberOfPlayersRequired: string;
+    numberOfPlayersRequired: number;
     startDate: number;
     endDate: number;
     entryFee: number;
