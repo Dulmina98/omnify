@@ -6,12 +6,42 @@ import tekken from "@/public/assets/images/games/tekken.png";
 import {formatDate, getRemainingDays} from "@/utils/date-formatter";
 import {Button} from "@/components/ui/button";
 import {Tournament} from "@/types/tournaments-type";
+import {useApiMutation} from "@/hooks/use-api-mutation";
+import {api} from "@/convex/_generated/api";
+import {useCurrentUser} from "@/services/user-service";
+import {isPlayer} from "@/utils/user-util";
 
 type JoinTournamentCardProps = {
     tournament: Tournament
 }
 
 export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
+    const {mutate} = useApiMutation(api.tournament_participants.joinTournament);
+    const {user} = useCurrentUser();
+
+    const handleJoinPress = async () => {
+        try {
+            if (!user) {
+                console.error("User is not signed in.");
+                return;
+            }
+
+            if (!isPlayer(user)) {
+                console.log("Only players can joined to the tournaments");
+                return;
+            }
+
+            mutate({
+                tournamentId: tournament._id,
+                userId: user.userId,
+            }).then(() => {
+                console.log("Player joined to tournament successfully!")
+            })
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     return <div
         className={"w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-[#DA006D]/5"}
     >
@@ -136,7 +166,7 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                 <div className={"text-theme-crimson font-bold italic text-[20px]"}>
                     {getRemainingDays(tournament.deadline)} days left. Hurry Up!
                 </div>
-                <Button className={"text-[16px]"}>Join Tournament</Button>
+                <Button className={"text-[16px]"} onClick={handleJoinPress}>Join Tournament</Button>
             </div>
         </div>
     </div>;
