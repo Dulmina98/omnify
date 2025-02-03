@@ -3,6 +3,7 @@
 import {TabBar} from "@/app/components/tab-bar/tab-bar";
 import {useState} from "react";
 import {AccountDetails} from "@/app/user-profile/components/account-details";
+import {Dashboard} from "@/app/user-profile/components/dashboard";
 
 const tabs = [
     {name: "Dashboard"},
@@ -25,6 +26,11 @@ export default function Player() {
                     />
                 </div>
                 <div className={"w-full"}>
+                    {activeTab === "Dashboard" && <><h2
+                        className="text-[40px] mb-6 text-white w-full pb-2 border-b-2 border-b-muted-gray">Dashboard</h2>
+                        <Dashboard/>
+                    </>
+                    }
                     {activeTab === "Account details" && <><h2
                         className="text-[40px] mb-6 text-white w-full pb-2 border-b-2 border-b-muted-gray">Account
                         Details</h2>
