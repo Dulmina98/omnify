@@ -16,7 +16,7 @@ type TournamentFormData = {
     description: string;
     tournamentType: string;
     teamSize: string;
-    numberOfPlayersRequired: string;
+    numberOfPlayersRequired: number;
     startDate: number;
     endDate: number;
     entryFee: number;
@@ -44,7 +44,7 @@ export default function CreateTournament() {
             description: "",
             tournamentType: "",
             teamSize: "",
-            numberOfPlayersRequired: "",
+            numberOfPlayersRequired: 0,
             startDate: 0,
             endDate: 0,
             entryFee: 0,
@@ -256,7 +256,8 @@ export default function CreateTournament() {
                                                 <FormLabel className={"text-white text-[16px] mb-[10px]"}>
                                                     Number of Players Required
                                                 </FormLabel>
-                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <Select onValueChange={(value) => field.onChange(value)}
+                                                        defaultValue={field.value?.toString()}>
                                                     <FormControl>
                                                         <SelectTrigger className={"h-[46px]"}>
                                                             <SelectValue placeholder="Select number of players"/>
@@ -272,6 +273,7 @@ export default function CreateTournament() {
                                             </FormItem>
                                         )}
                                     />
+
 
                                     {/* Start Date */}
                                     <FormField

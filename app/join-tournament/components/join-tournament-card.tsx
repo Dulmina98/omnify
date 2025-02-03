@@ -10,6 +10,8 @@ import {useApiMutation} from "@/hooks/use-api-mutation";
 import {api} from "@/convex/_generated/api";
 import {useCurrentUser} from "@/services/user-service";
 import {isPlayer} from "@/utils/user-util";
+import {useQuery} from "convex/react";
+import Link from "next/link";
 
 type JoinTournamentCardProps = {
     tournament: Tournament
@@ -18,6 +20,11 @@ type JoinTournamentCardProps = {
 export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
     const {mutate} = useApiMutation(api.tournament_participants.joinTournament);
     const {user} = useCurrentUser();
+
+    const allParticipants = useQuery(
+        api.tournament_participants.getAllParticipants,
+        {tournamentId: tournament._id}
+    );
 
     const handleJoinPress = async () => {
         try {
@@ -164,9 +171,28 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
             {/* Join Button */}
             <div className={"w-full flex justify-end mt-16 items-center gap-10"}>
                 <div className={"text-theme-crimson font-bold italic text-[20px]"}>
+                    {(tournament.numberOfPlayersRequired - (allParticipants?.length ?? 0))} seats left.&nbsp;
                     {getRemainingDays(tournament.deadline)} days left. Hurry Up!
                 </div>
-                <Button className={"text-[16px]"} onClick={handleJoinPress}>Join Tournament</Button>
+                {!allParticipants?.some(participant => participant.userId === user?.userId) && (
+                    <Button
+                        className={"text-[16px]"}
+                        onClick={handleJoinPress}
+                        disabled={(allParticipants?.length || 0) >= tournament.numberOfPlayersRequired}
+                    >
+                        Join Tournament
+                    </Button>
+                )}
+                {allParticipants?.some(participant => participant.userId === user?.userId) && (
+                    <Link href={"/user-profile"}>
+                        <Button
+                            className={"text-[16px]"}
+                        >
+                            View Status
+                        </Button>
+                    </Link>
+                )}
+
             </div>
         </div>
     </div>;
