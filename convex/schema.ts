@@ -25,4 +25,36 @@ export default defineSchema({
         preferredCommunicationChannel: v.string(),
         email: v.string(),
     }).index('by_userId', ['userId']),
+    tournaments: defineTable({
+        userId: v.string(),
+        tournamentName: v.string(),
+        gameTitle: v.string(),
+        description: v.optional(v.string()),
+        tournamentType: v.string(),
+        teamSize: v.string(),
+        numberOfPlayersRequired: v.number(),
+        startDate: v.number(),
+        endDate: v.number(),
+        entryFee: v.number(),
+        paymentMethod: v.string(),
+        deadline: v.number(),
+        minLevel: v.number(),
+        totalPrizePool: v.number(),
+        prizeDistributionMethod: v.string(),
+        gameMode: v.string(),
+        stageSelection: v.string(),
+        characterSelectionRules: v.string(),
+        bannedCharactersItems: v.string(),
+        disconnectPolicy: v.string(),
+        matchDisputeResolution: v.string(),
+        pauseBreakRules: v.string(),
+        isApproved: v.boolean(),
+    }),
+    tournamentParticipants: defineTable({
+        tournamentId: v.string(),
+        userId: v.string(),
+        status: v.string(),
+    })
+        .index("by_tournament", ["tournamentId"])
+        .index("by_user", ["userId"])
 });
