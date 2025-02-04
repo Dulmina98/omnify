@@ -8,7 +8,11 @@
  * @module
  */
 
-import type {ApiFromModules, FilterApi, FunctionReference,} from "convex/server";
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
 import type * as admins from "../admins.js";
 import type * as organizers from "../organizers.js";
 import type * as players from "../players.js";
