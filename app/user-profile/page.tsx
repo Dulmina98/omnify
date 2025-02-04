@@ -13,9 +13,9 @@ const tabs = [
 export default function Player() {
     const [activeTab, setActiveTab] = useState("Dashboard");
 
-
     return (
-        <div className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[150px] mx-auto"}>
+        <div
+            className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[150px] min-h-[calc(100vh-556px)] mx-auto"}>
             <div className={"w-full flex gap-x-8"}>
                 <div className={"w-[250px] border-r-2 border-r-muted-gray pr-5"}>
                     <TabBar

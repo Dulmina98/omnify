@@ -15,7 +15,7 @@ type JoinTournamentCardProps = {
 
 export function DashboardTournamentCard({tournament, status}: JoinTournamentCardProps) {
     const allParticipants = useQuery(
-        api.tournament_participants.getAllParticipants,
+        api.tournament_invitations.getPlayersInTournament,
         {tournamentId: tournament._id}
     );
     return <div
@@ -46,7 +46,7 @@ export function DashboardTournamentCard({tournament, status}: JoinTournamentCard
                     </div>
                 </div>
                 <div
-                    className={"capitalize h-[46px] rounded-[5px] bg-red-700/10 border border-red-700 flex justify-center items-center px-8 font-bold text-red-700"}>
+                    className={`capitalize h-[46px] rounded-[5px]  border  flex justify-center items-center px-8 font-bold ${status === "pending" && "text-yellow-500 bg-yellow-500/10 border-yellow-500"} ${status === "approved" && "text-green-500 bg-green-500/10 border-green-500"}`}>
                     {status}
                 </div>
             </div>
