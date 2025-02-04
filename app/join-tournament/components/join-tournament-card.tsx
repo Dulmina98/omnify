@@ -9,7 +9,6 @@ import {Tournament} from "@/types/tournaments-type";
 import {useApiMutation} from "@/hooks/use-api-mutation";
 import {api} from "@/convex/_generated/api";
 import {useCurrentUser} from "@/services/user-service";
-import {isPlayer} from "@/utils/user-util";
 import {useQuery} from "convex/react";
 import Link from "next/link";
 
@@ -18,11 +17,11 @@ type JoinTournamentCardProps = {
 }
 
 export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
-    const {mutate} = useApiMutation(api.tournament_participants.joinTournament);
-    const {user} = useCurrentUser();
+    const {mutate} = useApiMutation(api.tournament_invitations.sendInvitation);
+    const {user, role} = useCurrentUser();
 
     const allParticipants = useQuery(
-        api.tournament_participants.getAllParticipants,
+        api.tournament_invitations.getPlayersInTournament,
         {tournamentId: tournament._id}
     );
 
@@ -33,7 +32,7 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                 return;
             }
 
-            if (!isPlayer(user)) {
+            if (role !== "player") {
                 console.log("Only players can joined to the tournaments");
                 return;
             }
@@ -192,7 +191,6 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                         </Button>
                     </Link>
                 )}
-
             </div>
         </div>
     </div>;
