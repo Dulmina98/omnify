@@ -17,6 +17,8 @@ export function ProfileDropdown() {
     const {user} = useCurrentUser();
     const {signOut} = useClerk();
 
+    const randomImageNum = Math.floor(Math.random() * (35 - 20 + 1)) + 20;
+
     return (
         <>
             <div className={'hidden md:block'}>
@@ -24,7 +26,7 @@ export function ProfileDropdown() {
                     <DropdownMenuTrigger asChild>
                         <div className={'w-[30px] md:w-10 h-[30px] md:h-10 cursor-pointer'}>
                             <Image
-                                src={"https://avatar.iran.liara.run/public/33"}
+                                src={`https://avatar.iran.liara.run/public/${randomImageNum}`}
                                 alt={'avatar'}
                                 width={40}
                                 height={40}
@@ -41,7 +43,7 @@ export function ProfileDropdown() {
                             <div className={'flex gap-2'}>
                                 <div className={'w-10 h-10'}>
                                     <Image
-                                        src={"https://avatar.iran.liara.run/public/33"}
+                                        src={`https://avatar.iran.liara.run/public/${randomImageNum}`}
                                         alt={'avatar'}
                                         width={40}
                                         height={40}
