@@ -8,10 +8,9 @@ import {useUser} from "@clerk/nextjs";
 import {ProfileDropdown} from "@/app/components/navigation/profile-dropdown";
 import {useEthereum} from "@/hooks/use-ethereum";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
-import {isOrganizer, isPlayer} from "@/utils/user-util";
 
 export function NavigationBar() {
-    const {user, isSignedIn: isConvexSigned} = useCurrentUser();
+    const {user, isSignedIn: isConvexSigned, role} = useCurrentUser();
     const {isSignedIn: isClerkSigned} = useUser();
     const {provider, signer, address, isConnected, connectWallet, disconnectWallet} = useEthereum();
 
@@ -24,9 +23,9 @@ export function NavigationBar() {
                 <div className={"flex justify-between w-full"}>
                     <div className={"flex gap-[25px] items-center w-full"}>
                         <Link href={"/"} className={"text-white text-[16px] font-medium"}>Home</Link>
-                        {user && isOrganizer(user) &&
+                        {user && role === "organizer" &&
                             <Link href={"/"} className={"text-white text-[16px] font-medium"}>Create Tournament</Link>}
-                        {user && isPlayer(user) &&
+                        {user && role === "player" &&
                             <Link href={"/join-tournament"} className={"text-white text-[16px] font-medium"}>Join
                                 Tournament</Link>}
                         <Link href={"/"} className={"text-white text-[16px] font-medium"}>Contact Us</Link>
@@ -56,7 +55,7 @@ export function NavigationBar() {
                                 )}
                             </>
                         </>}
-                        {isClerkSigned && !user && <Link href="/become-a-member" passHref>
+                        {isClerkSigned && !user && role !== "admin" && <Link href="/become-a-member" passHref>
                             <Button className={"w-[150px] h-[36px]"}>
                                 Become a member
                             </Button>

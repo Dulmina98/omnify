@@ -30,7 +30,7 @@ export default function RootLayout({
                     <html lang="en">
                     <body
                         className={`${urbanist.variable} antialiased bg-black`}
-                        style={{fontFamily: urbanist.style.fontFamily}} // Apply the font family
+                        style={{fontFamily: urbanist.style.fontFamily}}
                     >
                     <NavigationBar/>
                     {children}
