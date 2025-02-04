@@ -2,6 +2,14 @@ import {defineSchema, defineTable} from "convex/server";
 import {v} from "convex/values";
 
 export default defineSchema({
+    admins: defineTable({
+        userId: v.string(),
+        firstName: v.string(),
+        lastName: v.string(),
+        mobileNum: v.string(),
+        email: v.string(),
+        approved: v.boolean(),
+    }).index('by_userId', ['userId']),
     players: defineTable({
         userId: v.string(),
         firstName: v.string(),
@@ -50,7 +58,7 @@ export default defineSchema({
         pauseBreakRules: v.string(),
         isApproved: v.boolean(),
     }),
-    tournamentParticipants: defineTable({
+    tournamentInvitations: defineTable({
         tournamentId: v.string(),
         userId: v.string(),
         status: v.string(),
