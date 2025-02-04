@@ -62,3 +62,21 @@ export const getAllTournaments = query({
             .collect();
     }
 });
+
+export const getTournamentById = query({
+    args: {
+        tournamentId: v.id("tournaments"),
+    },
+    handler: async (ctx, args) => {
+        const tournament = await ctx.db
+            .query("tournaments")
+            .filter(q => q.eq(q.field("_id"), args.tournamentId))
+            .first();
+
+        if (!tournament) {
+            throw new Error("Tournament not found");
+        }
+
+        return tournament;
+    },
+});
