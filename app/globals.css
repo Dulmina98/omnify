@@ -6,6 +6,10 @@ body {
   font-family: "Urbanist", serif;
 }
 
+.image-border {
+    filter: drop-shadow(-3px -3px 0 black) drop-shadow(3px -3px 0 black) drop-shadow(-3px 3px 0 black) drop-shadow(3px 3px 0 black);
+}
+
 @layer base {
   :root {
     --theme-crimson: #DA006D;

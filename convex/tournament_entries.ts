@@ -2,13 +2,13 @@ import {mutation, query} from "@/convex/_generated/server";
 import {v} from "convex/values";
 import {Id} from "@/convex/_generated/dataModel";
 
-export const sendInvitation = mutation({
+export const enterTournament = mutation({
     args: {
         userId: v.string(),
         tournamentId: v.string(),
     },
     handler: async (ctx, args) => {
-        return await ctx.db.insert("tournamentInvitations", {
+        return await ctx.db.insert("tournamentEntries", {
             tournamentId: args.tournamentId,
             userId: args.userId,
             status: "pending",
@@ -22,19 +22,19 @@ export const getPlayersInTournament = query({
     },
     handler: async (ctx, args) => {
         return await ctx.db
-            .query("tournamentInvitations")
+            .query("tournamentEntries")
             .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
             .collect();
     },
 });
 
-export const getPlayerTournamentsWithStatus = query({
+export const getPlayerTournamentsWithStatusAndPayment = query({
     args: {
         userId: v.string(),
     },
     handler: async (ctx, {userId}) => {
         const participants = await ctx.db
-            .query("tournamentInvitations")
+            .query("tournamentEntries")
             .withIndex("by_user", (q) => q.eq("userId", userId))
             .collect();
 
@@ -49,6 +49,7 @@ export const getPlayerTournamentsWithStatus = query({
                 return {
                     ...tournament,
                     status: p.status,
+                    paymentStatus: p.payment ?? false,
                 };
             })
         );
@@ -57,27 +58,52 @@ export const getPlayerTournamentsWithStatus = query({
     },
 });
 
-export const getAllPendingTournamentInvitations = query({
+export const getAllPendingTournamentEntries = query({
     handler: async (ctx) => {
         return await ctx.db
-            .query("tournamentInvitations")
+            .query("tournamentEntries")
             .filter((q) => q.eq(q.field("status"), "pending"))
             .collect();
     }
 });
 
-export const getAllApprovedTournamentInvitations = query({
+export const getAllApprovedTournamentEntries = query({
     handler: async (ctx) => {
         return await ctx.db
-            .query("tournamentInvitations")
+            .query("tournamentEntries")
             .filter((q) => q.eq(q.field("status"), "approved"))
             .collect();
     }
 });
 
-export const approveInvitation = mutation({
+export const getUserTournamentEntry = query({
     args: {
-        invitationId: v.id("tournamentInvitations")
+        tournamentId: v.string(),
+        userId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        try {
+            const invitations = await ctx.db
+                .query("tournamentEntries")
+                .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+                .filter((q) => q.eq(q.field("userId"), args.userId))
+                .collect();
+
+            if (invitations.length > 0) {
+                return invitations[0];
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Error fetching user invitation for tournament:", error);
+            throw error;
+        }
+    },
+});
+
+export const approveEntry = mutation({
+    args: {
+        invitationId: v.id("tournamentEntries")
     },
     handler: async (ctx, args) => {
         await ctx.db.patch(args.invitationId, {

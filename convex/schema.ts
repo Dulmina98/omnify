@@ -58,10 +58,11 @@ export default defineSchema({
         pauseBreakRules: v.string(),
         isApproved: v.boolean(),
     }),
-    tournamentInvitations: defineTable({
+    tournamentEntries: defineTable({
         tournamentId: v.string(),
         userId: v.string(),
         status: v.string(),
+        payment: v.optional(v.boolean()),
     })
         .index("by_tournament", ["tournamentId"])
         .index("by_user", ["userId"]),

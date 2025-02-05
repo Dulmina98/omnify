@@ -21,7 +21,7 @@ export function InvitationCard({invitationData}: InvitationCardProps) {
 
     const handleApprove = async () => {
         try {
-            await mutate({invitationId: invitationData._id as Id<"tournamentInvitations">});
+            await mutate({invitationId: invitationData._id as Id<"tournamentEntries">});
             alert("Invitation approved successfully!");
         } catch (error) {
             console.error("Error approving invitation:", error);

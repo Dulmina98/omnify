@@ -16,11 +16,11 @@ export function Dashboard() {
     const {user, role} = useCurrentUser();
     const [activeTab, setActiveTab] = useState("Pending");
     const userTournamentsWithStatus = useQuery(
-        api.tournament_invitations.getPlayerTournamentsWithStatus,
+        api.tournament_entries.getPlayerTournamentsWithStatusAndPayment,
         {userId: user ? user.userId : "skip"}
     );
-    const allPendingInvitations = useQuery(api.tournament_invitations.getAllPendingTournamentInvitations);
-    const allApprovedInvitations = useQuery(api.tournament_invitations.getAllApprovedTournamentInvitations);
+    const allPendingInvitations = useQuery(api.tournament_entries.getAllPendingTournamentEntries);
+    const allApprovedInvitations = useQuery(api.tournament_entries.getAllApprovedTournamentEntries);
 
     if (!userTournamentsWithStatus) {
         return <div>Loading...</div>;
@@ -30,7 +30,8 @@ export function Dashboard() {
         <div>
             {role === "player" && userTournamentsWithStatus.map((tournament, index) => (
                 <div key={index} className="mt-20">
-                    <DashboardTournamentCard tournament={tournament as Tournament} status={tournament.status}/>
+                    <DashboardTournamentCard tournament={tournament as Tournament} status={tournament.status}
+                                             paymentStatus={tournament.paymentStatus}/>
                 </div>
             ))}
             {role === "admin" && <div className={"mt-10"}>

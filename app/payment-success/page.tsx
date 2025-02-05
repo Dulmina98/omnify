@@ -21,12 +21,17 @@ export default function PaymentSuccess() {
     const {user} = useCurrentUser();
     const tournament = useQuery(api.tournaments.getTournamentById, {tournamentId: tournamentId as Id<"tournaments">})
 
-    const {mutate} = useApiMutation(api.transactions.createTransaction);
+    const {mutate: transactionMutate} = useApiMutation(api.transactions.createTransaction);
+    const tournamentEntry = useQuery(api.tournament_entries.getUserTournamentEntry, {
+        tournamentId: tournamentId ? tournamentId : 'skip',
+        userId: user ? user.userId : "skip"
+    })
+    const {mutate: invitationMutate} = useApiMutation(api.tournament_entries.approveEntry)
 
     useEffect(() => {
         async function recordTransaction() {
             try {
-                if (!user || !tournamentId || !amount || !role || !paymentIntent) {
+                if (!user || !tournamentId || !amount || !role || !paymentIntent || !tournamentEntry) {
                     console.warn("Missing required data; transaction not recorded.");
                     return;
                 }
@@ -42,13 +47,23 @@ export default function PaymentSuccess() {
                 sessionStorage.setItem(storageKey, "pending");
 
                 console.log("Recording transaction for payment intent:", paymentIntent);
-                await mutate({
+                await transactionMutate({
                     tournamentId,
                     userId: user.userId,
                     amount: Number(amount),
                     role: role,
                     type: paymentType,
                 });
+
+                if (tournamentEntry && tournamentEntry._id) {
+                    await invitationMutate({
+                        invitationId: tournamentEntry._id as Id<"tournamentEntries">
+                    });
+                    console.log("Transaction recorded and invitation approved.");
+                } else {
+                    console.warn("No valid tournament invitation found.");
+                }
+
                 console.log("Transaction recorded successfully.");
 
                 sessionStorage.setItem(storageKey, "true");
@@ -60,7 +75,7 @@ export default function PaymentSuccess() {
         }
 
         recordTransaction();
-    }, [user, tournamentId, amount, role, paymentIntent, mutate]);
+    }, [user, tournamentId, amount, role, paymentIntent, transactionMutate, tournamentEntry]);
 
     return (
         <div

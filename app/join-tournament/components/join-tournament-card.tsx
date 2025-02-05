@@ -17,11 +17,11 @@ type JoinTournamentCardProps = {
 }
 
 export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
-    const {mutate} = useApiMutation(api.tournament_invitations.sendInvitation);
+    const {mutate} = useApiMutation(api.tournament_entries.enterTournament);
     const {user, role} = useCurrentUser();
 
     const allParticipants = useQuery(
-        api.tournament_invitations.getPlayersInTournament,
+        api.tournament_entries.getPlayersInTournament,
         {tournamentId: tournament._id}
     );
 
