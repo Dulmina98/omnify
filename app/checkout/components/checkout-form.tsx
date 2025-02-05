@@ -6,10 +6,13 @@ import convertToSubcurrency from "@/lib/convert-to-subcurrency";
 import {Button} from "@/components/ui/button";
 
 type CheckoutProps = {
-    amount: number
+    amount: number;
+    tournamentId?: string;
+    role?: string;
+    type?: string
 }
 
-export function CheckoutForm({amount}: CheckoutProps) {
+export function CheckoutForm({amount, tournamentId, role, type}: CheckoutProps) {
     const stripe = useStripe();
     const elements = useElements();
 
@@ -49,7 +52,7 @@ export function CheckoutForm({amount}: CheckoutProps) {
             elements,
             clientSecret,
             confirmParams: {
-                return_url: `http://www.localhost:3000/payment-success?amount=${amount}`,
+                return_url: `http://www.localhost:3000/payment-success?tournamentId=${tournamentId}&amount=${amount}&role=${role}&type=${type}`,
             },
         });
 
@@ -78,14 +81,12 @@ export function CheckoutForm({amount}: CheckoutProps) {
     }
 
     return (
-        <div className={"py-40 px-[500px]"}>
-            <div className={"bg-white p-10 rounded-xl"}>
-                <form onSubmit={handleSubmit}>
-                    {clientSecret && <PaymentElement/>}
-                    <Button disabled={!stripe || loading} variant={"secondary"}
-                            className={"text-black mt-8"}>{!loading ? `Pay $${amount}` : "Processing..."}</Button>
-                </form>
-            </div>
+        <div className={"bg-white p-10 rounded-xl w-[600px]"}>
+            <form onSubmit={handleSubmit}>
+                {clientSecret && <PaymentElement/>}
+                <Button disabled={!stripe || loading}
+                        className={"text-white mt-8 text-[16px] font-bold w-full bg-theme-crimson"}>{!loading ? `Pay $${amount}` : "Processing..."}</Button>
+            </form>
         </div>
     )
 }

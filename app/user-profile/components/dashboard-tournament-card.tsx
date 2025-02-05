@@ -7,6 +7,9 @@ import {Tournament} from "@/types/tournaments-type";
 import {api} from "@/convex/_generated/api";
 import {useQuery} from "convex/react";
 import {getRemainingDays} from "@/utils/date-formatter";
+import {Button} from "@/components/ui/button";
+import {useRouter} from "next/navigation";
+import {PaymentTypes} from "@/types/payment-types";
 
 type JoinTournamentCardProps = {
     tournament: Tournament
@@ -14,10 +17,16 @@ type JoinTournamentCardProps = {
 }
 
 export function DashboardTournamentCard({tournament, status}: JoinTournamentCardProps) {
+    const router = useRouter();
     const allParticipants = useQuery(
         api.tournament_invitations.getPlayersInTournament,
         {tournamentId: tournament._id}
     );
+
+    const handlePay = () => {
+        router.push(`/checkout?tournamentId=${tournament._id}&amount=${tournament.entryFee}&role=player&type=${PaymentTypes.ENTRY_FEE}`);
+    }
+
     return <div
         className={"w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-[#DA006D]/5"}
     >
@@ -45,9 +54,14 @@ export function DashboardTournamentCard({tournament, status}: JoinTournamentCard
                         Remaining days: {getRemainingDays(tournament.deadline)}
                     </div>
                 </div>
-                <div
-                    className={`capitalize h-[46px] rounded-[5px]  border  flex justify-center items-center px-8 font-bold ${status === "pending" && "text-yellow-500 bg-yellow-500/10 border-yellow-500"} ${status === "approved" && "text-green-500 bg-green-500/10 border-green-500"}`}>
-                    {status}
+                <div className={"flex gap-x-5"}>
+                    <Button
+                        className={"font-semibold text-[16px] h-[46px]"} onClick={handlePay}>Pay
+                        ${tournament.entryFee} Entry Fee</Button>
+                    <div
+                        className={`capitalize h-[46px] rounded-[5px]  border  flex justify-center items-center px-8 font-bold ${status === "pending" && "text-yellow-500 bg-yellow-500/10 border-yellow-500"} ${status === "approved" && "text-green-500 bg-green-500/10 border-green-500"}`}>
+                        {status}
+                    </div>
                 </div>
             </div>
         </div>
