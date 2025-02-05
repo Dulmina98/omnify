@@ -64,5 +64,14 @@ export default defineSchema({
         status: v.string(),
     })
         .index("by_tournament", ["tournamentId"])
-        .index("by_user", ["userId"])
+        .index("by_user", ["userId"]),
+    transactions: defineTable({
+        tournamentId: v.string(),
+        userId: v.string(),
+        amount: v.number(),
+        role: v.string(),
+        type: v.string()
+    })
+        .index('by_tournament', ['tournamentId'])
+        .index('by_user', ['userId'])
 });
