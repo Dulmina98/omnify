@@ -37,3 +37,17 @@ export const getPlayerByUserId = query({
             .unique();
     },
 })
+
+export const getPlayersByUserIds = query({
+    args: {userIds: v.array(v.string())},
+    handler: async (ctx, args) => {
+        return await Promise.all(
+            args.userIds.map(userId =>
+                ctx.db
+                    .query('players')
+                    .withIndex('by_userId', (q) => q.eq('userId', userId))
+                    .unique()
+            )
+        );
+    },
+});
