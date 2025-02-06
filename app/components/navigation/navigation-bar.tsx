@@ -28,6 +28,8 @@ export function NavigationBar() {
                         {user && role === "player" &&
                             <Link href={"/join-tournament"} className={"text-white text-[16px] font-medium"}>Join
                                 Tournament</Link>}
+                        <Link href={"/view-tournaments"} className={"text-white text-[16px] font-medium"}>View
+                            Tournaments</Link>
                         <Link href={"/"} className={"text-white text-[16px] font-medium"}>Contact Us</Link>
                     </div>
                     <div className={"flex items-center gap-[20px]"}>
