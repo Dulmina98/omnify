@@ -49,7 +49,7 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
     }
 
     return <div
-        className={"w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-[#DA006D]/5"}
+        className={"w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-black/40"}
     >
         {/* Game Banner */}
         <div
@@ -173,6 +173,9 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                     {(tournament.numberOfPlayersRequired - (allParticipants?.length ?? 0))} seats left.&nbsp;
                     {getRemainingDays(tournament.deadline)} days left. Hurry Up!
                 </div>
+                <Link href={`/view-tournaments/${tournament._id}`}>
+                    <Button className="text-[16px]">View Tournament</Button>
+                </Link>
                 {!allParticipants?.some(participant => participant.userId === user?.userId) && (
                     <Button
                         className={"text-[16px]"}
