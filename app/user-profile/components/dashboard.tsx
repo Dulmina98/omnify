@@ -5,7 +5,7 @@ import {Tournament} from "@/types/tournaments-type";
 import {DashboardTournamentCard} from "@/app/user-profile/components/dashboard-tournament-card";
 import {TabBar} from "@/app/components/tab-bar/tab-bar";
 import {useState} from "react";
-import {InvitationCard} from "@/app/user-profile/components/InvitationCard";
+import {TournamentApprovalCard} from "@/app/user-profile/components/TournamentApprovalCard";
 
 const tabs = [
     {name: "Pending"},
@@ -19,8 +19,8 @@ export function Dashboard() {
         api.tournament_entries.getPlayerTournamentsWithStatusAndPayment,
         {userId: user ? user.userId : "skip"}
     );
-    const allPendingInvitations = useQuery(api.tournament_entries.getAllPendingTournamentEntries);
-    const allApprovedInvitations = useQuery(api.tournament_entries.getAllApprovedTournamentEntries);
+    const approvedTournaments = useQuery(api.tournaments.getApprovedTournaments)
+    const notApprovedTournaments = useQuery(api.tournaments.getNotApprovedTournaments)
 
     if (!userTournamentsWithStatus) {
         return <div>Loading...</div>;
@@ -34,6 +34,7 @@ export function Dashboard() {
                                              paymentStatus={tournament.paymentStatus}/>
                 </div>
             ))}
+
             {role === "admin" && <div className={"mt-10"}>
                 <TabBar
                     tabs={tabs}
@@ -41,24 +42,25 @@ export function Dashboard() {
                     onTabChange={(tabName) => setActiveTab(tabName)}
                 />
                 {activeTab === "Pending" && <div className={"mt-20 flex flex-col gap-y-8 pb-20"}>
-                    {allPendingInvitations && allPendingInvitations.length > 0 ? (
-                        allPendingInvitations.map((invitation, index) => (
-                            <InvitationCard invitationData={invitation} key={index}/>
+                    {notApprovedTournaments && notApprovedTournaments.length > 0 ? (
+                        notApprovedTournaments.map((tournament, index) => (
+                            <TournamentApprovalCard tournamentData={tournament} key={index}/>
                         ))
                     ) : (
                         <div className="text-center text-muted-white py-40">No pending invitations</div>
                     )}
                 </div>}
                 {activeTab === "Approved" && <div className={"mt-20 flex flex-col gap-y-8 pb-20"}>
-                    {allApprovedInvitations && allApprovedInvitations.length > 0 ? (
-                        allApprovedInvitations.map((invitation, index) => (
-                            <InvitationCard invitationData={invitation} key={index}/>
+                    {approvedTournaments && approvedTournaments.length > 0 ? (
+                        approvedTournaments.map((tournament, index) => (
+                            <TournamentApprovalCard tournamentData={tournament} key={index}/>
                         ))
                     ) : (
                         <div className="text-center text-muted-white py-40">No approved invitations</div>
                     )}
                 </div>}
             </div>}
+
         </div>
     );
 }

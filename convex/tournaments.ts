@@ -78,3 +78,32 @@ export const getTournamentById = query({
         return tournament;
     },
 });
+
+export const getApprovedTournaments = query({
+    handler: async (ctx) => {
+        return await ctx.db
+            .query("tournaments")
+            .filter(q => q.eq(q.field("isApproved"), true))
+            .collect()
+    }
+})
+
+export const getNotApprovedTournaments = query({
+    handler: async (ctx) => {
+        return await ctx.db
+            .query("tournaments")
+            .filter(q => q.eq(q.field("isApproved"), false))
+            .collect()
+    }
+})
+
+export const approveTournament = mutation({
+    args: {
+        tournamentId: v.id("tournaments"),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.tournamentId, {
+            isApproved: true
+        })
+    }
+})

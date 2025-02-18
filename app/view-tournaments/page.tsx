@@ -6,7 +6,7 @@ import {Tournament} from "@/types/tournaments-type";
 import {ViewTournamentCard} from "@/app/view-tournaments/components/view-tournament-card";
 
 export default function ViewTournaments() {
-    const allTournaments = useQuery(api.tournaments.getAllTournaments);
+    const allTournaments = useQuery(api.tournaments.getApprovedTournaments);
 
     return (
         <div className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
