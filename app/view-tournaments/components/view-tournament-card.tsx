@@ -21,26 +21,20 @@ export function ViewTournamentCard({tournament}: ViewTournamentCardProps) {
             {/* Game Banner */}
             <div
                 className={"absolute top-[-75px] right-[50px] z-0 w-[400px] flex justify-center items-center h-[150px] backdrop-blur-lg px-5"}>
-                {tournament.gameTitle === "Mortal Kombat 1" &&
+                {tournament.gameTitle === "mortal-kombat" &&
                     <Image src={mk} alt={"mortal kombat"} width={2000} height={2000} className={"w-full"}/>}
-                {tournament.gameTitle === "Street Fighter 6" &&
+                {tournament.gameTitle === "street-fighter" &&
                     <Image src={sf} alt={"street fighter"} width={2000} height={2000} className={"w-full"}/>}
-                {tournament.gameTitle === "Injustice 2" &&
+                {tournament.gameTitle === "injustice" &&
                     <Image src={injustice} alt={"injustice"} width={2000} height={2000} className={"w-full"}/>}
-                {tournament.gameTitle === "Tekken 8" &&
+                {tournament.gameTitle === "tekken" &&
                     <Image src={tekken} alt={"tekken"} width={2000} height={2000} className={"w-full mb-5"}/>}
             </div>
 
-            {/* Tournament Details */}
             <div className={"py-[30px] px-[30px] relative z-10 w-full"}>
-                {/* Tournament Name */}
                 <div className={"font-bold text-white text-[30px]"}>{tournament.tournamentName}</div>
-
-                {/* Tournament Description */}
                 <div className={"text-muted-white text-[16px] mt-4"}>{tournament.description}</div>
-
                 <div className={"flex justify-between mt-8"}>
-                    {/* Basic Info Section */}
                     <div className={"my-5"}>
                         <div className={"text-white text-[20px] font-semibold mb-3"}>Basic Info</div>
                         <div className={"flex flex-col gap-y-2"}>
@@ -81,9 +75,6 @@ export function ViewTournamentCard({tournament}: ViewTournamentCardProps) {
                             </li>
                             <li className={"text-white text-[16px]"}>
                                 <span className={"font-semibold"}>Deadline:</span> {formatDate(tournament.deadline)}
-                            </li>
-                            <li className={"text-white text-[16px]"}>
-                                <span className={"font-semibold"}>Minimum Level:</span> {tournament.minLevel}
                             </li>
                         </div>
                     </div>

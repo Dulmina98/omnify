@@ -39,16 +39,16 @@ export function DashboardTournamentCard({tournament, status, paymentStatus}: Joi
     >
         <div
             className="absolute top-[-75px] right-[50px] z-0 w-[400px] flex justify-center items-center h-[150px] px-5">
-            {tournament.gameTitle === "Mortal Kombat 1" && (
+            {tournament.gameTitle === "mortal-kombat" && (
                 <Image src={mk} alt="mortal kombat" width={2000} height={2000} className="w-full image-border"/>
             )}
-            {tournament.gameTitle === "Street Fighter 6" && (
+            {tournament.gameTitle === "street-fighter" && (
                 <Image src={sf} alt="street fighter" width={2000} height={2000} className="w-full image-border"/>
             )}
-            {tournament.gameTitle === "Injustice 2" && (
+            {tournament.gameTitle === "injustice" && (
                 <Image src={injustice} alt="injustice" width={2000} height={2000} className="w-full image-border"/>
             )}
-            {tournament.gameTitle === "Tekken 8" && (
+            {tournament.gameTitle === "tekken" && (
                 <Image src={tekken} alt="tekken" width={2000} height={2000} className="w-full mb-5 image-border"/>
             )}
         </div>

@@ -13,7 +13,6 @@ export interface Tournament {
     entryFee: number;
     paymentMethod: string;
     deadline: number;
-    minLevel: number;
     totalPrizePool: number;
     prizeDistributionMethod: string;
     gameMode: string;

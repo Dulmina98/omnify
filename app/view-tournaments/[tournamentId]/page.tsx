@@ -73,13 +73,13 @@ export default function TournamentInfo() {
         <div className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
             <div className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[100px] mx-auto"}>
                 <div className={"w-full flex flex-col items-center justify-center"}>
-                    {tournament.gameTitle === "Mortal Kombat 1" &&
+                    {tournament.gameTitle === "mortal-kombat" &&
                         <Image src={mk} alt={"mortal kombat"} width={2000} height={2000} className={"w-[700px]"}/>}
-                    {tournament.gameTitle === "Street Fighter 6" &&
+                    {tournament.gameTitle === "street-fighter" &&
                         <Image src={sf} alt={"street fighter"} width={2000} height={2000} className={"w-[700px]"}/>}
-                    {tournament.gameTitle === "Injustice 2" &&
+                    {tournament.gameTitle === "injustice" &&
                         <Image src={injustice} alt={"injustice"} width={2000} height={2000} className={"w-[700px]"}/>}
-                    {tournament.gameTitle === "Tekken 8" &&
+                    {tournament.gameTitle === "tekken" &&
                         <Image src={tekken} alt={"tekken"} width={2000} height={2000} className={"w-[700px]"}/>}
                     <div className={"flex gap-x-5 items-center"}>
                         <div className={"text-[40px]"}>{tournament.tournamentName} - <span
