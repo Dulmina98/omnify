@@ -8,8 +8,7 @@ import {api} from "@/convex/_generated/api";
 import {useQuery} from "convex/react";
 import {getRemainingDays} from "@/utils/date-formatter";
 import {Button} from "@/components/ui/button";
-import {useRouter} from "next/navigation";
-import {PaymentTypes} from "@/types/payment-types";
+import {useTournamentPayment} from "@/hooks/use-tournament-payment";
 
 type JoinTournamentCardProps = {
     tournament: Tournament
@@ -18,14 +17,21 @@ type JoinTournamentCardProps = {
 }
 
 export function DashboardTournamentCard({tournament, status, paymentStatus}: JoinTournamentCardProps) {
-    const router = useRouter();
     const allParticipants = useQuery(
         api.tournament_entries.getPlayersInTournament,
         {tournamentId: tournament._id}
     );
+    const {payEntryFee, isLoading, isSuccess, hasPaid} = useTournamentPayment(
+        tournament._id,
+        tournament.entryFee
+    )
 
-    const handlePay = () => {
-        router.push(`/checkout?tournamentId=${tournament._id}&amount=${tournament.entryFee}&role=player&type=${PaymentTypes.ENTRY_FEE}`);
+    const handlePay = async () => {
+        try {
+            await payEntryFee?.()
+        } catch (error) {
+            console.error('Payment error:', error)
+        }
     }
 
     return <div
@@ -65,11 +71,17 @@ export function DashboardTournamentCard({tournament, status, paymentStatus}: Joi
                         className={`capitalize h-[46px] rounded-[5px]  border  flex justify-center items-center px-8 font-bold text-green-500 bg-green-500/10 border-green-500`}>
                         Entry Confirmed
                     </div>}
-
-                    {!paymentStatus && <Button
-                        className={"font-semibold text-[16px] h-[46px]"} disabled={status !== "approved"}
-                        onClick={handlePay}>Pay
-                        ${tournament.entryFee} Entry Fee</Button>}
+                    {paymentStatus && <div>Entry Confirmed</div>}
+                    {!hasPaid && !paymentStatus && (
+                        <Button
+                            className={"font-semibold text-[16px] h-[46px]"}
+                            onClick={handlePay}
+                            disabled={status !== "approved" || isLoading}
+                        >
+                            {isLoading ? 'Processing...' : `Pay ${tournament.entryFee} ETH`}
+                        </Button>
+                    )}
+                    {!paymentStatus && !isLoading && <div>Payment pending confirmation...</div>}
                     <div
                         className={`capitalize h-[46px] rounded-[5px]  border  flex justify-center items-center px-8 font-bold ${status === "pending" && "text-yellow-500 bg-yellow-500/10 border-yellow-500"} ${status === "approved" && "text-green-500 bg-green-500/10 border-green-500"}`}>
                         {status}

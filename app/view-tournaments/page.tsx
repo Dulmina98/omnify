@@ -10,7 +10,7 @@ export default function ViewTournaments() {
 
     return (
         <div className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
-            <div className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] py-[150px]"}>
+            <div className={"max-w-[1800px] mx-auto w-full px-[25px] lg:px-[100px] py-[150px]"}>
                 <div className={"text-[64px] text-white text-center w-full"}>
                     <span className={"text-theme-crimson"}>Battle</span> for Glory
                 </div>

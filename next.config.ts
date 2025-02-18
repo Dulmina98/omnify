@@ -1,6 +1,6 @@
 // next.config.js
 module.exports = {
     images: {
-        domains: ['source.unsplash.com', 'avatar.iran.liara.run'],
+        domains: ['images.unsplash.com', 'avatar.iran.liara.run'],
     },
 };

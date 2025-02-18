@@ -111,3 +111,25 @@ export const approveEntry = mutation({
         });
     }
 });
+
+export const updateTransactionId = mutation({
+    args: {
+        tournamentId: v.id("tournaments"),
+        userId: v.string(),
+        transactionId: v.id("transactions")
+    },
+    handler: async (ctx, args) => {
+        const entry = await ctx.db
+            .query("tournamentEntries")
+            .withIndex("by_user", q => q.eq("userId", args.userId))
+            .filter(q => q.eq(q.field("tournamentId"), args.tournamentId))
+            .unique();
+
+        if (!entry) throw new Error("Tournament entry not found");
+
+        await ctx.db.patch(entry._id, {
+            transactionId: args.transactionId,
+            status: "processing"
+        });
+    }
+});

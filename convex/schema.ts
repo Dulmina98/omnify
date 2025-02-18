@@ -63,16 +63,27 @@ export default defineSchema({
         userId: v.string(),
         status: v.string(),
         payment: v.optional(v.boolean()),
+        transactionId: v.optional(v.id("transactions")),
     })
         .index("by_tournament", ["tournamentId"])
-        .index("by_user", ["userId"]),
+        .index("by_user", ["userId"])
+        .index("by_transaction", ["transactionId"]),
     transactions: defineTable({
-        tournamentId: v.string(),
+        transactionHash: v.string(),
+        tournamentId: v.id("tournaments"),
         userId: v.string(),
         amount: v.number(),
-        role: v.string(),
-        type: v.string()
+        status: v.union(
+            v.literal("pending"),
+            v.literal("confirmed"),
+            v.literal("failed")
+        ),
+        blockNumber: v.optional(v.number()),
+        fromAddress: v.string(),
+        toAddress: v.string()
     })
-        .index('by_tournament', ['tournamentId'])
-        .index('by_user', ['userId'])
+        .index("by_transactionHash", ["transactionHash"])
+        .index("by_tournament", ["tournamentId"])
+        .index("by_user", ["userId"])
+        .index("by_status", ["status"])
 });

@@ -5,6 +5,7 @@ import {loadStripe} from "@stripe/stripe-js";
 import convertToSubcurrency from "@/lib/convert-to-subcurrency";
 import {CheckoutForm} from "@/app/checkout/components/checkout-form";
 import {useSearchParams} from "next/navigation";
+import {useTournamentPayment} from "@/hooks/use-tournament-payment";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -14,6 +15,11 @@ export default function Checkout() {
     const role = searchParams.get("role") || "";
     const tournamentId = searchParams.get("tournamentId");
     const type = searchParams.get("type") || "unknown";
+
+    const {payEntryFee, isLoading, isSuccess} = useTournamentPayment(
+        tournamentId!,
+        amount
+    )
 
     if (!tournamentId) return null;
 
