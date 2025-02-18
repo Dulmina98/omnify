@@ -9,6 +9,7 @@ import {Button} from "@/components/ui/button";
 import {useApiMutation} from "@/hooks/use-api-mutation";
 import {api} from "@/convex/_generated/api";
 import {useCurrentUser} from "@/services/user-service";
+import {GameTypes} from "@/types/game-types";
 
 type TournamentFormData = {
     tournamentName: string;
@@ -19,10 +20,9 @@ type TournamentFormData = {
     numberOfPlayersRequired: number;
     startDate: number;
     endDate: number;
-    entryFee: number;
+    entryFee: string;
     paymentMethod: string;
     deadline: number;
-    minLevel: number;
     totalPrizePool: number;
     prizeDistributionMethod: string;
     gameMode: string;
@@ -47,10 +47,9 @@ export default function CreateTournament() {
             numberOfPlayersRequired: 0,
             startDate: 0,
             endDate: 0,
-            entryFee: 0,
+            entryFee: "",
             paymentMethod: "",
             deadline: 0,
-            minLevel: 0,
             totalPrizePool: 0,
             prizeDistributionMethod: "",
             gameMode: "",
@@ -78,6 +77,7 @@ export default function CreateTournament() {
                 ...data, startDate: startDateTimestamp,
                 endDate: endDateTimestamp,
                 deadline: deadlineTimestamp,
+                entryFee: parseFloat(data.entryFee) || 0,
             };
 
             mutate({
@@ -93,7 +93,6 @@ export default function CreateTournament() {
                 entryFee: tournamentData.entryFee,
                 paymentMethod: tournamentData.paymentMethod,
                 deadline: tournamentData.deadline,
-                minLevel: tournamentData.minLevel,
                 totalPrizePool: tournamentData.totalPrizePool,
                 prizeDistributionMethod: tournamentData.prizeDistributionMethod,
                 gameMode: tournamentData.gameMode,
@@ -162,9 +161,11 @@ export default function CreateTournament() {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        <SelectItem value="game1">Game 1</SelectItem>
-                                                        <SelectItem value="game2">Game 2</SelectItem>
-                                                        <SelectItem value="game3">Game 3</SelectItem>
+                                                        {Object.entries(GameTypes).map(([key, value]) => (
+                                                            <SelectItem key={key} value={value}>
+                                                                {value.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                                            </SelectItem>
+                                                        ))}
                                                     </SelectContent>
                                                 </Select>
                                                 <FormMessage/>
@@ -257,8 +258,7 @@ export default function CreateTournament() {
                                                 <FormLabel className={"text-white text-[16px] mb-[10px]"}>
                                                     Number of Players Required
                                                 </FormLabel>
-                                                <Select onValueChange={(value) => field.onChange(value)}
-                                                        defaultValue={field.value?.toString()}>
+                                                <Select onValueChange={(value) => field.onChange(parseInt(value, 10))}>
                                                     <FormControl>
                                                         <SelectTrigger className={"h-[46px]"}>
                                                             <SelectValue placeholder="Select number of players"/>
@@ -331,23 +331,29 @@ export default function CreateTournament() {
                                         name="entryFee"
                                         render={({field}) => (
                                             <FormItem className={"flex-[1_1_45%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Entry
-                                                    Fee</FormLabel>
+                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Entry Fee
+                                                    (ETH)</FormLabel>
                                                 <FormControl>
                                                     <Input
-                                                        type="number"
+                                                        type="text"
                                                         className={"h-[46px]"}
-                                                        placeholder="Enter entry fee"
+                                                        placeholder="Enter entry fee (e.g., 0.005)"
                                                         {...field}
-                                                        value={field.value || ""}
-                                                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (/^-?\d*\.?\d*$/.test(value)) {
+                                                                field.onChange(value === '' ? '' : value);
+                                                            } else {
+                                                                e.preventDefault();
+                                                            }
+                                                        }}
+                                                        value={field.value === '' ? '0' : field.value}
                                                     />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
                                         )}
                                     />
-
                                     {/* Payment Method (Select Input) */}
                                     <FormField
                                         control={form.control}
@@ -394,28 +400,6 @@ export default function CreateTournament() {
                                         )}
                                     />
 
-                                    {/* Minimum Level */}
-                                    <FormField
-                                        control={form.control}
-                                        name="minLevel"
-                                        render={({field}) => (
-                                            <FormItem className={"flex-[1_1_45%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Minimum
-                                                    Level</FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type="number"
-                                                        className={"h-[46px]"}
-                                                        placeholder="Enter minimum level"
-                                                        {...field}
-                                                        value={field.value || ""}
-                                                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                                                    />
-                                                </FormControl>
-                                                <FormMessage/>
-                                            </FormItem>
-                                        )}
-                                    />
                                 </div>
 
                                 <div
