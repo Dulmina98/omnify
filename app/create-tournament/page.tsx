@@ -173,21 +173,22 @@ export default function CreateTournament() {
                                     />
 
                                     {/* Tournament Description (Textarea) */}
-                                    <FormField
-                                        control={form.control}
-                                        name="description"
-                                        render={({field}) => (
-                                            <FormItem className={"flex-1"}>
-                                                <FormLabel
-                                                    className={"text-white text-[16px] mb-[10px]"}>Description</FormLabel>
-                                                <FormControl>
-                                                    <Textarea placeholder="Enter tournament description" {...field} />
-                                                </FormControl>
-                                                <FormMessage/>
-                                            </FormItem>
-                                        )}
-                                    />
+
                                 </div>
+                                <FormField
+                                    control={form.control}
+                                    name="description"
+                                    render={({field}) => (
+                                        <FormItem className={"flex-1 mt-10"}>
+                                            <FormLabel
+                                                className={"text-white text-[16px] mb-[10px]"}>Description</FormLabel>
+                                            <FormControl>
+                                                <Textarea placeholder="Enter tournament description" {...field} />
+                                            </FormControl>
+                                            <FormMessage/>
+                                        </FormItem>
+                                    )}
+                                />
 
                                 <div
                                     className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>Tournament
