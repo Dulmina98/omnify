@@ -10,6 +10,8 @@ import {useApiMutation} from "@/hooks/use-api-mutation";
 import {api} from "@/convex/_generated/api";
 import {useCurrentUser} from "@/services/user-service";
 import {GameTypes} from "@/types/game-types";
+import {CreateTournamentSuccessModal} from "@/app/components/modals/create-tournament-success-modal";
+import {useState} from "react";
 
 type TournamentFormData = {
     tournamentName: string;
@@ -36,6 +38,7 @@ type TournamentFormData = {
 export default function CreateTournament() {
     const {mutate} = useApiMutation(api.tournaments.createTournament);
     const {user} = useCurrentUser();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const form = useForm<TournamentFormData>({
         defaultValues: {
@@ -104,6 +107,7 @@ export default function CreateTournament() {
                 pauseBreakRules: tournamentData.pauseBreakRules,
             }).then(() => {
                 console.log("Tournament created successfully")
+                setIsModalOpen(true);
             });
         } catch (error) {
             console.log(error)
@@ -636,6 +640,10 @@ export default function CreateTournament() {
                     </form>
                 </FormProvider>
             </div>
+            <CreateTournamentSuccessModal
+                open={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+            />
         </div>
     );
 }
