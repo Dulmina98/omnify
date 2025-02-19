@@ -1,5 +1,6 @@
 import {mutation} from "@/convex/_generated/server";
 import {v} from "convex/values";
+import {PaymentTypes} from "@/types/payment-types";
 
 export const createTransaction = mutation({
     args: {
@@ -9,43 +10,18 @@ export const createTransaction = mutation({
         toAddress: v.string(),
         transactionHash: v.string(),
         userId: v.string(),
+        paymentType: v.union(
+            v.literal(PaymentTypes.ENTRY_FEE),
+            v.literal(PaymentTypes.PRIZE_DISTRIBUTION),
+            v.literal(PaymentTypes.SPONSORSHIP),
+            v.literal(PaymentTypes.PLATFORM_FEE),
+            v.literal(PaymentTypes.ORGANIZER_SHARE)
+        ),
     },
     handler: async (ctx, args) => {
         return ctx.db.insert("transactions", {
-            status: "pending",
+            status: "confirmed",
             ...args,
         });
-    },
-});
-
-export const confirmTransaction = mutation({
-    args: {transactionHash: v.string(), blockNumber: v.number()},
-    handler: async (ctx, args) => {
-        const transaction = await ctx.db
-            .query("transactions")
-            .withIndex("by_transactionHash", (q) =>
-                q.eq("transactionHash", args.transactionHash)
-            )
-            .unique();
-
-        if (!transaction) {
-            throw new Error("Transaction not found");
-        }
-
-        await ctx.db.patch(transaction._id, {
-            status: "confirmed",
-            blockNumber: args.blockNumber,
-        });
-
-        const entries = await ctx.db
-            .query("tournamentEntries")
-            .withIndex("by_transaction", (q) =>
-                q.eq("transactionId", transaction._id)
-            )
-            .collect();
-
-        await Promise.all(
-            entries.map((entry) => ctx.db.patch(entry._id, {payment: true}))
-        );
     },
 });

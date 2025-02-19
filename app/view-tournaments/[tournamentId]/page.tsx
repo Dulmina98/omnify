@@ -100,13 +100,19 @@ export default function TournamentInfo() {
                                 <h2 className="text-[26px] font-semibold text-center">{match.label}</h2>
                                 <div className="flex justify-between items-center w-full relative flex-1">
                                     <div className={"text-[20px] w-[37%] text-center"}>
-                                        {match.player1 ? playerIgnMap.get(match.player1.userId) || 'Unknown Player' :
+                                        {match.player1 ?
+                                            (playerIgnMap.get(match.player1.userId) || 'Unknown Player') +
+                                            (playersInTournament.find(p => p.userId === match.player1.userId)?.status === "pending" ? " (pending)" : "")
+                                            :
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
                                     <div className={"absolute w-full flex justify-center h-full items-center"}><Image
                                         src={"/assets/images/versus/vs.png"} alt={"vs"} height={150} width={150}/></div>
                                     <div className={"text-[20px] w-[37%] text-center"}>
-                                        {match.player2 ? playerIgnMap.get(match.player2.userId) || 'Unknown Player' :
+                                        {match.player2 ?
+                                            (playerIgnMap.get(match.player2.userId) || 'Unknown Player') +
+                                            (playersInTournament.find(p => p.userId === match.player2.userId)?.status === "pending" ? " (pending)" : "")
+                                            :
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
                                 </div>

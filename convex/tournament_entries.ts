@@ -49,7 +49,7 @@ export const getPlayerTournamentsWithStatusAndPayment = query({
                 return {
                     ...tournament,
                     status: p.status,
-                    paymentStatus: p.payment ?? false,
+                    transactionId: p.transactionId,
                 };
             })
         );
@@ -129,7 +129,7 @@ export const updateTransactionId = mutation({
 
         await ctx.db.patch(entry._id, {
             transactionId: args.transactionId,
-            status: "processing"
+            status: "approved"
         });
     }
 });

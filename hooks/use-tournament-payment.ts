@@ -4,6 +4,7 @@ import {api} from "@/convex/_generated/api";
 import {useCurrentUser} from "@/services/user-service";
 import {contractConfig} from "@/lib/ethereum";
 import {Id} from "@/convex/_generated/dataModel";
+import {PaymentTypes} from "@/types/payment-types";
 
 export const useTournamentPayment = (tournamentId: string, entryFee: number) => {
     const {address} = useAccount();
@@ -16,7 +17,11 @@ export const useTournamentPayment = (tournamentId: string, entryFee: number) => 
     if (!user) {
         return {
             payEntryFee: async () => {
-            }, isLoading: false, isSuccess: false, error: null, hasPaid: false
+            },
+            isLoading: false,
+            isSuccess: false,
+            error: null,
+            hasPaid: false
         };
     }
 
@@ -36,7 +41,7 @@ export const useTournamentPayment = (tournamentId: string, entryFee: number) => 
                 chainId: contractConfig.chainId,
             });
 
-            // Create transaction record in Convex
+            // Create transaction record in Convex with payment type
             const transactionId = await createTransaction({
                 tournamentId: tournamentId as Id<"tournaments">,
                 amount: entryFee,
@@ -44,6 +49,7 @@ export const useTournamentPayment = (tournamentId: string, entryFee: number) => 
                 toAddress: contractConfig.address,
                 transactionHash: txHash,
                 userId: user.userId,
+                paymentType: PaymentTypes.ENTRY_FEE,
             });
 
             await updateEntryTransaction({

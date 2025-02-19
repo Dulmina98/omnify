@@ -31,7 +31,7 @@ export function Dashboard() {
             {role === "player" && userTournamentsWithStatus.map((tournament, index) => (
                 <div key={index} className="mt-20">
                     <DashboardTournamentCard tournament={tournament as Tournament} status={tournament.status}
-                                             paymentStatus={tournament.paymentStatus}/>
+                                             transactionId={tournament.transactionId}/>
                 </div>
             ))}
 

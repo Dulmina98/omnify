@@ -9,14 +9,15 @@ import {useQuery} from "convex/react";
 import {getRemainingDays} from "@/utils/date-formatter";
 import {Button} from "@/components/ui/button";
 import {useTournamentPayment} from "@/hooks/use-tournament-payment";
+import {Id} from "@/convex/_generated/dataModel";
 
 type JoinTournamentCardProps = {
     tournament: Tournament
     status: string;
-    paymentStatus: boolean
+    transactionId: Id<"transactions"> | undefined
 }
 
-export function DashboardTournamentCard({tournament, status, paymentStatus}: JoinTournamentCardProps) {
+export function DashboardTournamentCard({tournament, status, transactionId}: JoinTournamentCardProps) {
     const allParticipants = useQuery(
         api.tournament_entries.getPlayersInTournament,
         {tournamentId: tournament._id}
@@ -67,23 +68,33 @@ export function DashboardTournamentCard({tournament, status, paymentStatus}: Joi
                     </div>
                 </div>
                 <div className={"flex gap-x-5"}>
-                    {paymentStatus && <div
-                        className={`capitalize h-[46px] rounded-[5px]  border  flex justify-center items-center px-8 font-bold text-green-500 bg-green-500/10 border-green-500`}>
-                        Entry Confirmed
-                    </div>}
-                    {paymentStatus && <div>Entry Confirmed</div>}
-                    {!hasPaid && !paymentStatus && (
+                    {transactionId && (
+                        <div
+                            className={`capitalize h-[46px] rounded-[5px] border flex justify-center items-center px-8 font-bold text-green-500 bg-green-500/10 border-green-500`}>
+                            Payment Confirmed
+                        </div>
+                    )}
+                    {!transactionId && !hasPaid && (
                         <Button
                             className={"font-semibold text-[16px] h-[46px]"}
                             onClick={handlePay}
-                            disabled={status !== "approved" || isLoading}
+                            disabled={isLoading}
                         >
-                            {isLoading ? 'Processing...' : `Pay ${tournament.entryFee} ETH`}
+                            {isLoading ? 'Processing Payment...' : `Pay ${tournament.entryFee} ETH`}
                         </Button>
                     )}
-                    {!paymentStatus && !isLoading && <div>Payment pending confirmation...</div>}
+                    {hasPaid && !transactionId && (
+                        <div
+                            className={`capitalize h-[46px] rounded-[5px] border flex justify-center items-center px-8 font-bold text-yellow-500 bg-yellow-500/10 border-yellow-500`}>
+                            Payment Processing
+                        </div>
+                    )}
                     <div
-                        className={`capitalize h-[46px] rounded-[5px]  border  flex justify-center items-center px-8 font-bold ${status === "pending" && "text-yellow-500 bg-yellow-500/10 border-yellow-500"} ${status === "approved" && "text-green-500 bg-green-500/10 border-green-500"}`}>
+                        className={`capitalize h-[46px] rounded-[5px] border flex justify-center items-center px-8 font-bold 
+        ${status === "pending" ? "text-yellow-500 bg-yellow-500/10 border-yellow-500" : ""}
+        ${status === "approved" ? "text-green-500 bg-green-500/10 border-green-500" : ""}
+        ${status === "rejected" ? "text-red-500 bg-red-500/10 border-red-500" : ""}`}
+                    >
                         {status}
                     </div>
                 </div>

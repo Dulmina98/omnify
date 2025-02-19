@@ -11,6 +11,8 @@ import {api} from "@/convex/_generated/api";
 import {useCurrentUser} from "@/services/user-service";
 import {useQuery} from "convex/react";
 import Link from "next/link";
+import {JoinTournamentModal} from "@/app/components/modals/join-tournament-modal";
+import {useState} from "react";
 
 type JoinTournamentCardProps = {
     tournament: Tournament
@@ -19,6 +21,7 @@ type JoinTournamentCardProps = {
 export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
     const {mutate} = useApiMutation(api.tournament_entries.enterTournament);
     const {user, role} = useCurrentUser();
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     const allParticipants = useQuery(
         api.tournament_entries.getPlayersInTournament,
@@ -41,6 +44,7 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                 tournamentId: tournament._id,
                 userId: user.userId,
             }).then(() => {
+                setIsModalOpen(true);
                 console.log("Player joined to tournament successfully!")
             })
         } catch (error) {
@@ -48,19 +52,27 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
         }
     }
 
+    const handleOpenModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
     return <div
         className={"w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-black/40"}
     >
         {/* Game Banner */}
         <div
             className={"absolute top-[-75px] right-[50px] z-0 w-[400px] flex justify-center items-center h-[150px] backdrop-blur-lg px-5"}>
-            {tournament.gameTitle === "Mortal Kombat 1" &&
+            {tournament.gameTitle === "mortal-kombat" &&
                 <Image src={mk} alt={"mortal kombat"} width={2000} height={2000} className={"w-full"}/>}
-            {tournament.gameTitle === "Street Fighter 6" &&
+            {tournament.gameTitle === "street-fighter" &&
                 <Image src={sf} alt={"street fighter"} width={2000} height={2000} className={"w-full"}/>}
-            {tournament.gameTitle === "Injustice 2" &&
+            {tournament.gameTitle === "injustice" &&
                 <Image src={injustice} alt={"injustice"} width={2000} height={2000} className={"w-full"}/>}
-            {tournament.gameTitle === "Tekken 8" &&
+            {tournament.gameTitle === "tekken" &&
                 <Image src={tekken} alt={"tekken"} width={2000} height={2000} className={"w-full mb-5"}/>}
         </div>
 
@@ -114,9 +126,6 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                         </li>
                         <li className={"text-white text-[16px]"}>
                             <span className={"font-semibold"}>Deadline:</span> {formatDate(tournament.deadline)}
-                        </li>
-                        <li className={"text-white text-[16px]"}>
-                            <span className={"font-semibold"}>Minimum Level:</span> {tournament.minLevel}
                         </li>
                     </div>
                 </div>
@@ -185,16 +194,12 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                         Join Tournament
                     </Button>
                 )}
-                {allParticipants?.some(participant => participant.userId === user?.userId) && (
-                    <Link href={"/user-profile"}>
-                        <Button
-                            className={"text-[16px]"}
-                        >
-                            View Status
-                        </Button>
-                    </Link>
-                )}
             </div>
+            <JoinTournamentModal
+                open={isModalOpen}
+                onClose={handleCloseModal}
+                amount={tournament.entryFee}
+            />
         </div>
     </div>;
 }

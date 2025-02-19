@@ -1,5 +1,6 @@
 import {defineSchema, defineTable} from "convex/server";
 import {v} from "convex/values";
+import {PaymentTypes} from "@/types/payment-types";
 
 export default defineSchema({
     admins: defineTable({
@@ -61,7 +62,6 @@ export default defineSchema({
         tournamentId: v.string(),
         userId: v.string(),
         status: v.string(),
-        payment: v.optional(v.boolean()),
         transactionId: v.optional(v.id("transactions")),
     })
         .index("by_tournament", ["tournamentId"])
@@ -77,6 +77,13 @@ export default defineSchema({
             v.literal("confirmed"),
             v.literal("failed")
         ),
+        paymentType: v.union(
+            v.literal(PaymentTypes.ENTRY_FEE),
+            v.literal(PaymentTypes.PRIZE_DISTRIBUTION),
+            v.literal(PaymentTypes.SPONSORSHIP),
+            v.literal(PaymentTypes.PLATFORM_FEE),
+            v.literal(PaymentTypes.ORGANIZER_SHARE)
+        ),
         blockNumber: v.optional(v.number()),
         fromAddress: v.string(),
         toAddress: v.string()
@@ -85,4 +92,5 @@ export default defineSchema({
         .index("by_tournament", ["tournamentId"])
         .index("by_user", ["userId"])
         .index("by_status", ["status"])
+        .index("by_paymentType", ["paymentType"]),
 });
