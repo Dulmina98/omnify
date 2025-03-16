@@ -11,18 +11,25 @@ import injustice from "@/public/assets/images/games/injustice.png";
 import tekken from "@/public/assets/images/games/tekken.png";
 import {getRemainingDays} from "@/utils/date-formatter";
 import {Button} from "@/components/ui/button";
+import {SubmitMatchResultsModal} from "@/app/components/modals/submit-match-results-modal";
+import {useState} from "react";
+
+interface Match {
+    match: number;
+    label: string;
+    player1: { userId: string; status?: string } | null;
+    player2: { userId: string; status?: string } | null;
+    winner: string | null;
+}
 
 export default function TournamentInfo() {
     const params = useParams();
     const {tournamentId} = params;
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
-    // Fetch tournament details
     const tournamentQuery = useQuery(api.tournaments.getTournamentById, {tournamentId: tournamentId as Id<"tournaments">});
-
-    // Fetch players in the tournament
     const playersInTournamentQuery = useQuery(api.tournament_entries.getPlayersInTournament, {tournamentId: tournamentId as Id<"tournaments">});
-
-    // Fetch player details for each player in the tournament
     const playerDetailsQuery = useQuery(api.players.getPlayersByUserIds, {
         userIds: playersInTournamentQuery?.map(player => player.userId) || []
     });
@@ -43,7 +50,6 @@ export default function TournamentInfo() {
     const playersInTournament = playersInTournamentQuery;
     const playerDetails = playerDetailsQuery;
 
-    // Create a map of userId to ign for easy lookup
     const playerIgnMap = new Map<string, string>();
     playerDetails.forEach((player) => {
         if (player) {
@@ -51,7 +57,6 @@ export default function TournamentInfo() {
         }
     });
 
-    // Create the bracket with placeholders if players are missing
     const bracket = [
         {
             match: 1,
@@ -69,6 +74,24 @@ export default function TournamentInfo() {
         },
         {match: 3, label: "Grand Final", player1: null, player2: null, winner: null}, // Final match
     ];
+
+    const handleOpenModal = (match: Match) => {
+        setSelectedMatch(match);
+        setIsModalOpen(true);
+    };
+
+    const handleSubmitResult = (winner: string) => {
+        // Here you would typically make an API call to submit the result
+        console.log(`Winner of ${selectedMatch?.label}: ${winner}`);
+        // Update bracket logic would go here
+    };
+
+    const getPlayerName = (player: { userId: string; status?: string } | null): string | null => {
+        if (!player) return null;
+        const ign = playerIgnMap.get(player.userId) || 'Unknown Player';
+        const status = playersInTournament.find(p => p.userId === player.userId)?.status;
+        return status === "pending" ? `${ign} (pending)` : ign;
+    };
 
     return (
         <div className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
@@ -117,7 +140,8 @@ export default function TournamentInfo() {
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
                                 </div>
-                                <div className={"w-full mt-8"}><Button className={"w-full"} variant={"secondary"}>Submit
+                                <div className={"w-full mt-8"}><Button className={"w-full"} variant={"secondary"}
+                                                                       onClick={() => handleOpenModal(match)}>Submit
                                     Match Results</Button></div>
                             </div>
                         ))}
@@ -140,13 +164,22 @@ export default function TournamentInfo() {
                                         <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                 </div>
                             </div>
-                            <div className={"w-full mt-8"}><Button className={"w-full"} variant={"secondary"}>Submit
+                            <div className={"w-full mt-8"}><Button className={"w-full"} variant={"secondary"}
+                                                                   onClick={() => handleOpenModal(bracket[2])}>Submit
                                 Match Results</Button></div>
 
                         </div>
                     </div>
                 </div>
             </div>
+            <SubmitMatchResultsModal
+                open={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                matchLabel={selectedMatch?.label || ''}
+                player1={selectedMatch?.player1 ? getPlayerName(selectedMatch.player1) : null}
+                player2={selectedMatch?.player2 ? getPlayerName(selectedMatch.player2) : null}
+                onSubmit={handleSubmitResult}
+            />
         </div>
     );
 }
