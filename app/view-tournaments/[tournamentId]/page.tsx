@@ -10,6 +10,7 @@ import sf from "@/public/assets/images/games/street-fighter.png";
 import injustice from "@/public/assets/images/games/injustice.png";
 import tekken from "@/public/assets/images/games/tekken.png";
 import {getRemainingDays} from "@/utils/date-formatter";
+import {Button} from "@/components/ui/button";
 
 export default function TournamentInfo() {
     const params = useParams();
@@ -96,7 +97,7 @@ export default function TournamentInfo() {
                     <div className="flex justify-between gap-5">
                         {bracket.slice(0, 2).map((match, index) => (
                             <div key={index}
-                                 className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[300px] flex flex-col">
+                                 className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col">
                                 <h2 className="text-[26px] font-semibold text-center">{match.label}</h2>
                                 <div className="flex justify-between items-center w-full relative flex-1">
                                     <div className={"text-[20px] w-[37%] text-center"}>
@@ -116,6 +117,8 @@ export default function TournamentInfo() {
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
                                 </div>
+                                <div className={"w-full mt-8"}><Button className={"w-full"} variant={"secondary"}>Submit
+                                    Match Results</Button></div>
                             </div>
                         ))}
                     </div>
@@ -123,7 +126,7 @@ export default function TournamentInfo() {
                     {/* Final match at the bottom */}
                     <div className="mt-5">
                         <div
-                            className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[300px] flex flex-col">
+                            className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col">
                             <h2 className="text-[26px] font-semibold text-center">{bracket[2].label}</h2>
                             <div className="flex justify-between items-center w-full relative flex-1">
                                 <div className={"text-[20px] w-[37%] text-center"}>
@@ -137,6 +140,9 @@ export default function TournamentInfo() {
                                         <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                 </div>
                             </div>
+                            <div className={"w-full mt-8"}><Button className={"w-full"} variant={"secondary"}>Submit
+                                Match Results</Button></div>
+
                         </div>
                     </div>
                 </div>
