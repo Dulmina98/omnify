@@ -11,6 +11,7 @@ export default defineSchema({
         email: v.string(),
         approved: v.boolean(),
     }).index('by_userId', ['userId']),
+
     players: defineTable({
         userId: v.string(),
         firstName: v.string(),
@@ -22,6 +23,7 @@ export default defineSchema({
         platform: v.string(),
         email: v.string(),
     }).index('by_userId', ['userId']),
+
     organizers: defineTable({
         userId: v.string(),
         firstName: v.string(),
@@ -34,6 +36,7 @@ export default defineSchema({
         preferredCommunicationChannel: v.string(),
         email: v.string(),
     }).index('by_userId', ['userId']),
+
     tournaments: defineTable({
         userId: v.string(),
         tournamentName: v.string(),
@@ -57,7 +60,9 @@ export default defineSchema({
         matchDisputeResolution: v.string(),
         pauseBreakRules: v.string(),
         isApproved: v.boolean(),
+        winnerUserId: v.optional(v.string()),
     }),
+
     tournamentEntries: defineTable({
         tournamentId: v.string(),
         userId: v.string(),
@@ -67,6 +72,7 @@ export default defineSchema({
         .index("by_tournament", ["tournamentId"])
         .index("by_user", ["userId"])
         .index("by_transaction", ["transactionId"]),
+
     transactions: defineTable({
         transactionHash: v.string(),
         tournamentId: v.id("tournaments"),
@@ -93,4 +99,21 @@ export default defineSchema({
         .index("by_user", ["userId"])
         .index("by_status", ["status"])
         .index("by_paymentType", ["paymentType"]),
+
+    matchResults: defineTable({
+        tournamentId: v.id("tournaments"),
+        matchId: v.string(),
+        player1UserId: v.string(),
+        player2UserId: v.string(),
+        player1Submission: v.optional(v.string()), // Player 1's submitted winner userId
+        player2Submission: v.optional(v.string()), // Player 2's submitted winner userId
+        winnerUserId: v.optional(v.string()), // Final winner, set when submissions match
+        status: v.union(
+            v.literal("pending"),    // Waiting for submissions
+            v.literal("completed"),  // Both agree, winner set
+            v.literal("disputed")    // Submissions disagree
+        ),
+    })
+        .index("by_tournament", ["tournamentId"])
+        .index("by_matchId", ["matchId"]),
 });
