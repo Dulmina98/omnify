@@ -1,7 +1,7 @@
 'use client';
 
 import {useParams} from 'next/navigation';
-import {useQuery} from 'convex/react';
+import {useMutation, useQuery} from 'convex/react';
 import {api} from '@/convex/_generated/api';
 import {Id} from "@/convex/_generated/dataModel";
 import Image from "next/image";
@@ -33,6 +33,8 @@ export default function TournamentInfo() {
     const playerDetailsQuery = useQuery(api.players.getPlayersByUserIds, {
         userIds: playersInTournamentQuery?.map(player => player.userId) || []
     });
+    const matchResults = useQuery(api.match_results.getMatchResults, {tournamentId: tournamentId as Id<"tournaments">});
+    const submitMatchResult = useMutation(api.match_results.submitMatchResult);
 
     if (!tournamentId) {
         return <div>Invalid Tournament ID</div>;
@@ -80,10 +82,33 @@ export default function TournamentInfo() {
         setIsModalOpen(true);
     };
 
-    const handleSubmitResult = (winner: string) => {
-        // Here you would typically make an API call to submit the result
-        console.log(`Winner of ${selectedMatch?.label}: ${winner}`);
-        // Update bracket logic would go here
+    const handleSubmitResult = async (winner: string) => {
+        if (!selectedMatch) return;
+        if (!selectedMatch.player1 || !selectedMatch.player2) {
+            console.error("Cannot submit result: Missing player information");
+            return;
+        }
+
+        const player1Name = getPlayerName(selectedMatch.player1);
+        const player2Name = getPlayerName(selectedMatch.player2);
+        const winnerUserId = winner === player1Name ? selectedMatch.player1.userId : selectedMatch.player2.userId;
+
+        const currentUserId = "currentUserId"; // Replace with actual authenticated user ID
+
+        try {
+            await submitMatchResult({
+                tournamentId: tournamentId as Id<"tournaments">,
+                matchId: `match-${selectedMatch.match}`,
+                player1UserId: selectedMatch.player1.userId,
+                player2UserId: selectedMatch.player2.userId,
+                winnerUserId,
+                submittedBy: currentUserId,
+            });
+            console.log(`Result submitted for ${selectedMatch.label} by ${currentUserId}`);
+            setIsModalOpen(false);
+        } catch (error) {
+            console.error("Failed to submit match result:", error);
+        }
     };
 
     const getPlayerName = (player: { userId: string; status?: string } | null): string | null => {
