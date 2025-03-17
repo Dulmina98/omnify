@@ -14,7 +14,7 @@ import {useClerk} from "@clerk/nextjs";
 import Link from "next/link";
 
 export function ProfileDropdown() {
-    const {user} = useCurrentUser();
+    const {user, role} = useCurrentUser();
     const {signOut} = useClerk();
 
     const randomImageNum = Math.floor(Math.random() * (35 - 20 + 1)) + 20;
@@ -57,6 +57,8 @@ export function ProfileDropdown() {
                                 <div>
                                     <div
                                         className={'text-base font-medium text-main-text'}>{user?.firstName} {user?.lastName}</div>
+                                    {role && <div
+                                        className={'text-xs font-normal text-main-text capitalize'}>{role}</div>}
                                     <div
                                         className={'text-xs font-normal text-[#897EA7] dark:text-[#70707C]'}>{user?.email}</div>
                                 </div>
