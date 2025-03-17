@@ -55,7 +55,8 @@ export function ProfileDropdown() {
                                     />
                                 </div>
                                 <div>
-                                    <div className={'text-base font-medium text-main-text'}>{user?.firstName}</div>
+                                    <div
+                                        className={'text-base font-medium text-main-text'}>{user?.firstName} {user?.lastName}</div>
                                     <div
                                         className={'text-xs font-normal text-[#897EA7] dark:text-[#70707C]'}>{user?.email}</div>
                                 </div>
