@@ -22,6 +22,7 @@ export default defineSchema({
         game: v.string(),
         platform: v.string(),
         email: v.string(),
+        walletId: v.optional(v.string()),
     }).index('by_userId', ['userId']),
 
     organizers: defineTable({
@@ -35,6 +36,7 @@ export default defineSchema({
         websiteUrl: v.optional(v.string()),
         preferredCommunicationChannel: v.string(),
         email: v.string(),
+        walletId: v.optional(v.string()),
     }).index('by_userId', ['userId']),
 
     tournaments: defineTable({
