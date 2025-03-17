@@ -7,11 +7,10 @@ export const submitMatchResult = mutation({
         matchId: v.string(),
         player1UserId: v.string(),
         player2UserId: v.string(),
-        winnerUserId: v.string(), // The userId of the winner according to the submitter
-        submittedBy: v.string(),  // The userId of the player submitting
+        winnerUserId: v.string(),
+        submittedBy: v.string(),
     },
     handler: async (ctx, args) => {
-        // Check if match result already exists
         const existingResult = await ctx.db
             .query("matchResults")
             .filter(q => q.eq(q.field("matchId"), args.matchId))
@@ -33,7 +32,6 @@ export const submitMatchResult = mutation({
             return await ctx.db.insert("matchResults", newResult);
         }
 
-        // Update existing result
         const updateFields: Partial<typeof existingResult> = {};
 
         if (args.submittedBy === args.player1UserId) {
@@ -44,7 +42,6 @@ export const submitMatchResult = mutation({
             throw new Error("Only match participants can submit results");
         }
 
-        // Determine status and winner
         if (updateFields.player1Submission && existingResult.player2Submission) {
             updateFields.status = updateFields.player1Submission === existingResult.player2Submission
                 ? "completed" as const
@@ -74,5 +71,39 @@ export const getMatchResults = query({
             .query("matchResults")
             .filter(q => q.eq(q.field("tournamentId"), args.tournamentId))
             .collect();
+    },
+});
+
+export const resolveMatchDispute = mutation({
+    args: {
+        tournamentId: v.id("tournaments"),
+        matchId: v.string(),
+        winnerUserId: v.string(),
+        submittedBy: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const tournament = await ctx.db.get(args.tournamentId);
+        if (!tournament || tournament.userId !== args.submittedBy) {
+            throw new Error("Only the tournament organizer can resolve disputes");
+        }
+
+        const existingResult = await ctx.db
+            .query("matchResults")
+            .filter(q => q.eq(q.field("matchId"), args.matchId))
+            .filter(q => q.eq(q.field("tournamentId"), args.tournamentId))
+            .first();
+
+        if (!existingResult) {
+            throw new Error("Match result not found");
+        }
+
+        if (existingResult.status !== "disputed") {
+            throw new Error("Can only resolve disputed matches");
+        }
+
+        return await ctx.db.patch(existingResult._id, {
+            winnerUserId: args.winnerUserId,
+            status: "completed" as const,
+        });
     },
 });
