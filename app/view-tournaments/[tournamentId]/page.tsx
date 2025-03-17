@@ -42,6 +42,7 @@ export default function TournamentInfo() {
     });
     const matchResults = useQuery(api.match_results.getMatchResults, {tournamentId: tournamentId as Id<"tournaments">});
     const submitMatchResult = useMutation(api.match_results.submitMatchResult);
+    const resolveMatchDispute = useMutation(api.match_results.resolveMatchDispute);
 
     if (!tournamentId) {
         return <div>Invalid Tournament ID</div>;
@@ -65,6 +66,8 @@ export default function TournamentInfo() {
             playerIgnMap.set(player.userId, player.ign);
         }
     });
+
+    const isTournamentOrganizer = isOrganizer && currentUserId === tournament.userId;
 
     const bracket = [
         {
@@ -137,11 +140,9 @@ export default function TournamentInfo() {
         }
 
         try {
-            await submitMatchResult({
+            await resolveMatchDispute({
                 tournamentId: tournamentId as Id<"tournaments">,
                 matchId: `match-${selectedMatch.match}`,
-                player1UserId: selectedMatch.player1.userId,
-                player2UserId: selectedMatch.player2.userId,
                 winnerUserId,
                 submittedBy: currentUserId,
             });
@@ -258,14 +259,14 @@ export default function TournamentInfo() {
                                         </Button>
                                     </div>
                                 )}
-                                {isOrganizer && getMatchStatus(match) === "Results in Dispute" && (
+                                {isTournamentOrganizer && getMatchStatus(match) === "Results in Dispute" && (
                                     <div className={"w-full mt-4"}>
                                         <Button
                                             className={"w-full"}
                                             variant={"secondary"}
                                             onClick={() => handleOpenReviewModal(match)}
                                         >
-                                            Review Submitted Results
+                                            Resolve Dispute
                                         </Button>
                                     </div>
                                 )}
@@ -303,14 +304,14 @@ export default function TournamentInfo() {
                                     </Button>
                                 </div>
                             )}
-                            {isOrganizer && getMatchStatus(bracket[2]) === "Results in Dispute" && (
+                            {isTournamentOrganizer && getMatchStatus(bracket[2]) === "Results in Dispute" && (
                                 <div className={"w-full mt-4"}>
                                     <Button
                                         className={"w-full"}
                                         variant={"outline"}
                                         onClick={() => handleOpenReviewModal(bracket[2])}
                                     >
-                                        Review Submitted Results
+                                        Resolve Dispute
                                     </Button>
                                 </div>
                             )}
