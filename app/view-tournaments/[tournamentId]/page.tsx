@@ -13,6 +13,7 @@ import {getRemainingDays} from "@/utils/date-formatter";
 import {Button} from "@/components/ui/button";
 import {SubmitMatchResultsModal} from "@/app/components/modals/submit-match-results-modal";
 import {useState} from "react";
+import {useCurrentUser} from "@/services/user-service";
 
 interface Match {
     match: number;
@@ -27,6 +28,9 @@ export default function TournamentInfo() {
     const {tournamentId} = params;
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
+
+    const {user} = useCurrentUser();
+    const currentUserId = user?.userId;
 
     const tournamentQuery = useQuery(api.tournaments.getTournamentById, {tournamentId: tournamentId as Id<"tournaments">});
     const playersInTournamentQuery = useQuery(api.tournament_entries.getPlayersInTournament, {tournamentId: tournamentId as Id<"tournaments">});
@@ -88,12 +92,14 @@ export default function TournamentInfo() {
             console.error("Cannot submit result: Missing player information");
             return;
         }
+        if (!currentUserId) {
+            console.error("Cannot submit result: User not authenticated");
+            return;
+        }
 
         const player1Name = getPlayerName(selectedMatch.player1);
         const player2Name = getPlayerName(selectedMatch.player2);
         const winnerUserId = winner === player1Name ? selectedMatch.player1.userId : selectedMatch.player2.userId;
-
-        const currentUserId = "currentUserId"; // Replace with actual authenticated user ID
 
         try {
             await submitMatchResult({
@@ -116,6 +122,27 @@ export default function TournamentInfo() {
         const ign = playerIgnMap.get(player.userId) || 'Unknown Player';
         const status = playersInTournament.find(p => p.userId === player.userId)?.status;
         return status === "pending" ? `${ign} (pending)` : ign;
+    };
+
+    const isCurrentUserParticipant = (match: Match) => {
+        if (!currentUserId || !match.player1 || !match.player2) return false;
+        return match.player1.userId === currentUserId || match.player2.userId === currentUserId;
+    };
+
+    const hasUserSubmittedResult = (match: Match) => {
+        if (!matchResults) {
+            console.error("Match results not available");
+            return false;
+        }
+
+        if (!currentUserId || !match.player1 || !match.player2) return false;
+        const matchId = `match-${match.match}`;
+        const result = matchResults.find((mr) => mr.matchId === matchId);
+        if (!result) return false;
+        return (
+            (currentUserId === match.player1.userId && result.player1Submission !== undefined) ||
+            (currentUserId === match.player2.userId && result.player2Submission !== undefined)
+        );
     };
 
     return (
@@ -165,9 +192,18 @@ export default function TournamentInfo() {
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
                                 </div>
-                                <div className={"w-full mt-8"}><Button className={"w-full"} variant={"secondary"}
-                                                                       onClick={() => handleOpenModal(match)}>Submit
-                                    Match Results</Button></div>
+                                {isCurrentUserParticipant(match) && (
+                                    <div className={"w-full mt-8"}>
+                                        <Button
+                                            className={"w-full"}
+                                            variant={"secondary"}
+                                            onClick={() => handleOpenModal(match)}
+                                            disabled={hasUserSubmittedResult(match)}
+                                        >
+                                            {hasUserSubmittedResult(match) ? "Match Results Submitted" : "Submit Match Results"}
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
@@ -175,7 +211,7 @@ export default function TournamentInfo() {
                     {/* Final match at the bottom */}
                     <div className="mt-5">
                         <div
-                            className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col">
+                            className={`border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col`}>
                             <h2 className="text-[26px] font-semibold text-center">{bracket[2].label}</h2>
                             <div className="flex justify-between items-center w-full relative flex-1">
                                 <div className={"text-[20px] w-[37%] text-center"}>
@@ -189,10 +225,18 @@ export default function TournamentInfo() {
                                         <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                 </div>
                             </div>
-                            <div className={"w-full mt-8"}><Button className={"w-full"} variant={"secondary"}
-                                                                   onClick={() => handleOpenModal(bracket[2])}>Submit
-                                Match Results</Button></div>
-
+                            {isCurrentUserParticipant(bracket[2]) && (
+                                <div className={"w-full mt-8"}>
+                                    <Button
+                                        className={"w-full"}
+                                        variant={"secondary"}
+                                        onClick={() => handleOpenModal(bracket[2])}
+                                        disabled={hasUserSubmittedResult(bracket[2])}
+                                    >
+                                        {hasUserSubmittedResult(bracket[2]) ? "Match Results Submitted" : "Submit Match Results"}
+                                    </Button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
