@@ -14,7 +14,7 @@ import {Button} from "@/components/ui/button";
 import {SubmitMatchResultsModal} from "@/app/components/modals/submit-match-results-modal";
 import {useState} from "react";
 import {useCurrentUser} from "@/services/user-service";
-import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog";
+import {ReviewDisputeModal} from "@/app/components/modals/review-dispute-modal";
 
 interface Match {
     match: number;
@@ -143,7 +143,7 @@ export default function TournamentInfo() {
                 player1UserId: selectedMatch.player1.userId,
                 player2UserId: selectedMatch.player2.userId,
                 winnerUserId,
-                submittedBy: currentUserId, // Organizer submits as final resolution
+                submittedBy: currentUserId,
             });
             console.log(`Dispute resolved for ${selectedMatch.label} by ${currentUserId}`);
             setIsReviewModalOpen(false);
@@ -185,7 +185,7 @@ export default function TournamentInfo() {
             return `Winner: ${winnerIgn}`;
         }
         if (result.status === "disputed") return "Results in Dispute";
-        return "Awaiting Results"; // Fallback
+        return "Awaiting Results";
     };
 
     const getSubmittedResults = (match: Match) => {
@@ -262,7 +262,7 @@ export default function TournamentInfo() {
                                     <div className={"w-full mt-4"}>
                                         <Button
                                             className={"w-full"}
-                                            variant={"outline"}
+                                            variant={"secondary"}
                                             onClick={() => handleOpenReviewModal(match)}
                                         >
                                             Review Submitted Results
@@ -330,46 +330,18 @@ export default function TournamentInfo() {
             />
 
             {/* Review Dispute Modal */}
-            <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
-                <DialogContent
-                    className="max-w-[600px] w-full bg-black/40 backdrop-blur-lg rounded-[10px] border-theme-crimson text-white p-[40px]">
-                    <DialogHeader>
-                        <DialogTitle className="text-[30px] text-center">Resolve
-                            Dispute: {selectedMatch?.label}</DialogTitle>
-                    </DialogHeader>
-                    {selectedMatch && (
-                        <div className="flex flex-col gap-4">
-                            <div className="text-[20px]">
-                                <p>Player 1
-                                    ({getPlayerName(selectedMatch.player1)}): {getSubmittedResults(selectedMatch).player1Submission || "Not Submitted"}</p>
-                                <p>Player 2
-                                    ({getPlayerName(selectedMatch.player2)}): {getSubmittedResults(selectedMatch).player2Submission || "Not Submitted"}</p>
-                            </div>
-                            <div className="flex flex-col gap-4 mt-4">
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => handleResolveDispute(selectedMatch.player1!.userId)}
-                                >
-                                    Declare {getPlayerName(selectedMatch.player1)} as Winner
-                                </Button>
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => handleResolveDispute(selectedMatch.player2!.userId)}
-                                >
-                                    Declare {getPlayerName(selectedMatch.player2)} as Winner
-                                </Button>
-                            </div>
-                            <Button
-                                className="mt-4"
-                                variant="outline"
-                                onClick={() => setIsReviewModalOpen(false)}
-                            >
-                                Cancel
-                            </Button>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+            <ReviewDisputeModal
+                open={isReviewModalOpen}
+                onOpenChange={setIsReviewModalOpen}
+                matchLabel={selectedMatch?.label || ""}
+                player1Name={selectedMatch?.player1 ? getPlayerName(selectedMatch.player1) : null}
+                player2Name={selectedMatch?.player2 ? getPlayerName(selectedMatch.player2) : null}
+                player1UserId={selectedMatch?.player1?.userId || null}
+                player2UserId={selectedMatch?.player2?.userId || null}
+                player1Submission={selectedMatch ? getSubmittedResults(selectedMatch).player1Submission : null}
+                player2Submission={selectedMatch ? getSubmittedResults(selectedMatch).player2Submission : null}
+                onResolveDispute={handleResolveDispute}
+            />
         </div>
     );
 }
