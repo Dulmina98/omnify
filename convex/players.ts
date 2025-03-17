@@ -51,3 +51,41 @@ export const getPlayersByUserIds = query({
         );
     },
 });
+
+export const updatePlayerWallet = mutation({
+    args: {
+        userId: v.string(),
+        walletId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const existingPlayer = await ctx.db
+            .query("players")
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .unique();
+
+        if (!existingPlayer) {
+            throw new Error("Player not found");
+        }
+
+        if (existingPlayer.walletId) {
+            return existingPlayer._id;
+        }
+
+        await ctx.db.patch(existingPlayer._id, {
+            walletId: args.walletId,
+        });
+
+        return existingPlayer._id;
+    },
+});
+
+export const getPlayerWalletId = query({
+    args: {userId: v.string()},
+    handler: async (ctx, args) => {
+        const player = await ctx.db
+            .query("players")
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .unique();
+        return player?.walletId || null;
+    },
+});
