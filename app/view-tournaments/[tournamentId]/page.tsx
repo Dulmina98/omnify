@@ -14,6 +14,7 @@ import {Button} from "@/components/ui/button";
 import {SubmitMatchResultsModal} from "@/app/components/modals/submit-match-results-modal";
 import {useState} from "react";
 import {useCurrentUser} from "@/services/user-service";
+import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 
 interface Match {
     match: number;
@@ -26,11 +27,13 @@ interface Match {
 export default function TournamentInfo() {
     const params = useParams();
     const {tournamentId} = params;
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
 
-    const {user} = useCurrentUser();
+    const {user, role} = useCurrentUser();
     const currentUserId = user?.userId;
+    const isOrganizer = role === "organizer"; // Assuming role is a string like "organizer", "player", etc.
 
     const tournamentQuery = useQuery(api.tournaments.getTournamentById, {tournamentId: tournamentId as Id<"tournaments">});
     const playersInTournamentQuery = useQuery(api.tournament_entries.getPlayersInTournament, {tournamentId: tournamentId as Id<"tournaments">});
@@ -44,11 +47,11 @@ export default function TournamentInfo() {
         return <div>Invalid Tournament ID</div>;
     }
 
-    if (!tournamentQuery || !playersInTournamentQuery || !playerDetailsQuery) {
+    if (!tournamentQuery || !playersInTournamentQuery || !playerDetailsQuery || !matchResults) {
         return <div>Loading...</div>;
     }
 
-    if ('error' in tournamentQuery || 'error' in playersInTournamentQuery || 'error' in playerDetailsQuery) {
+    if ('error' in tournamentQuery || 'error' in playersInTournamentQuery || 'error' in playerDetailsQuery || 'error' in matchResults) {
         return <div>Error loading tournament details.</div>;
     }
 
@@ -78,12 +81,17 @@ export default function TournamentInfo() {
             player2: playersInTournament[3] || null,
             winner: null
         },
-        {match: 3, label: "Grand Final", player1: null, player2: null, winner: null}, // Final match
+        {match: 3, label: "Grand Final", player1: null, player2: null, winner: null},
     ];
 
-    const handleOpenModal = (match: Match) => {
+    const handleOpenSubmitModal = (match: Match) => {
         setSelectedMatch(match);
-        setIsModalOpen(true);
+        setIsSubmitModalOpen(true);
+    };
+
+    const handleOpenReviewModal = (match: Match) => {
+        setSelectedMatch(match);
+        setIsReviewModalOpen(true);
     };
 
     const handleSubmitResult = async (winner: string) => {
@@ -111,9 +119,36 @@ export default function TournamentInfo() {
                 submittedBy: currentUserId,
             });
             console.log(`Result submitted for ${selectedMatch.label} by ${currentUserId}`);
-            setIsModalOpen(false);
+            setIsSubmitModalOpen(false);
         } catch (error) {
             console.error("Failed to submit match result:", error);
+        }
+    };
+
+    const handleResolveDispute = async (winnerUserId: string) => {
+        if (!selectedMatch) return;
+        if (!selectedMatch.player1 || !selectedMatch.player2) {
+            console.error("Cannot resolve dispute: Missing player information");
+            return;
+        }
+        if (!currentUserId) {
+            console.error("Cannot resolve dispute: User not authenticated");
+            return;
+        }
+
+        try {
+            await submitMatchResult({
+                tournamentId: tournamentId as Id<"tournaments">,
+                matchId: `match-${selectedMatch.match}`,
+                player1UserId: selectedMatch.player1.userId,
+                player2UserId: selectedMatch.player2.userId,
+                winnerUserId,
+                submittedBy: currentUserId, // Organizer submits as final resolution
+            });
+            console.log(`Dispute resolved for ${selectedMatch.label} by ${currentUserId}`);
+            setIsReviewModalOpen(false);
+        } catch (error) {
+            console.error("Failed to resolve dispute:", error);
         }
     };
 
@@ -130,11 +165,6 @@ export default function TournamentInfo() {
     };
 
     const hasUserSubmittedResult = (match: Match) => {
-        if (!matchResults) {
-            console.error("Match results not available");
-            return false;
-        }
-
         if (!currentUserId || !match.player1 || !match.player2) return false;
         const matchId = `match-${match.match}`;
         const result = matchResults.find((mr) => mr.matchId === matchId);
@@ -143,6 +173,29 @@ export default function TournamentInfo() {
             (currentUserId === match.player1.userId && result.player1Submission !== undefined) ||
             (currentUserId === match.player2.userId && result.player2Submission !== undefined)
         );
+    };
+
+    const getMatchStatus = (match: Match) => {
+        const matchId = `match-${match.match}`;
+        const result = matchResults.find((mr) => mr.matchId === matchId);
+        if (!result) return "Awaiting Results";
+        if (result.status === "pending") return "Awaiting Results";
+        if (result.status === "completed" && result.winnerUserId) {
+            const winnerIgn = playerIgnMap.get(result.winnerUserId) || 'Unknown Player';
+            return `Winner: ${winnerIgn}`;
+        }
+        if (result.status === "disputed") return "Results in Dispute";
+        return "Awaiting Results"; // Fallback
+    };
+
+    const getSubmittedResults = (match: Match) => {
+        const matchId = `match-${match.match}`;
+        const result = matchResults.find((mr) => mr.matchId === matchId);
+        if (!result) return {player1Submission: null, player2Submission: null};
+        return {
+            player1Submission: result.player1Submission ? playerIgnMap.get(result.player1Submission) || 'Unknown' : null,
+            player2Submission: result.player2Submission ? playerIgnMap.get(result.player2Submission) || 'Unknown' : null,
+        };
     };
 
     return (
@@ -192,15 +245,27 @@ export default function TournamentInfo() {
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
                                 </div>
+                                <div className="text-center text-[16px] mt-4">{getMatchStatus(match)}</div>
                                 {isCurrentUserParticipant(match) && (
-                                    <div className={"w-full mt-8"}>
+                                    <div className={"w-full mt-4"}>
                                         <Button
                                             className={"w-full"}
                                             variant={"secondary"}
-                                            onClick={() => handleOpenModal(match)}
+                                            onClick={() => handleOpenSubmitModal(match)}
                                             disabled={hasUserSubmittedResult(match)}
                                         >
                                             {hasUserSubmittedResult(match) ? "Match Results Submitted" : "Submit Match Results"}
+                                        </Button>
+                                    </div>
+                                )}
+                                {isOrganizer && getMatchStatus(match) === "Results in Dispute" && (
+                                    <div className={"w-full mt-4"}>
+                                        <Button
+                                            className={"w-full"}
+                                            variant={"outline"}
+                                            onClick={() => handleOpenReviewModal(match)}
+                                        >
+                                            Review Submitted Results
                                         </Button>
                                     </div>
                                 )}
@@ -211,7 +276,7 @@ export default function TournamentInfo() {
                     {/* Final match at the bottom */}
                     <div className="mt-5">
                         <div
-                            className={`border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col`}>
+                            className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col">
                             <h2 className="text-[26px] font-semibold text-center">{bracket[2].label}</h2>
                             <div className="flex justify-between items-center w-full relative flex-1">
                                 <div className={"text-[20px] w-[37%] text-center"}>
@@ -225,15 +290,27 @@ export default function TournamentInfo() {
                                         <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                 </div>
                             </div>
+                            <div className="text-center text-[16px] mt-4">{getMatchStatus(bracket[2])}</div>
                             {isCurrentUserParticipant(bracket[2]) && (
-                                <div className={"w-full mt-8"}>
+                                <div className={"w-full mt-4"}>
                                     <Button
                                         className={"w-full"}
                                         variant={"secondary"}
-                                        onClick={() => handleOpenModal(bracket[2])}
+                                        onClick={() => handleOpenSubmitModal(bracket[2])}
                                         disabled={hasUserSubmittedResult(bracket[2])}
                                     >
                                         {hasUserSubmittedResult(bracket[2]) ? "Match Results Submitted" : "Submit Match Results"}
+                                    </Button>
+                                </div>
+                            )}
+                            {isOrganizer && getMatchStatus(bracket[2]) === "Results in Dispute" && (
+                                <div className={"w-full mt-4"}>
+                                    <Button
+                                        className={"w-full"}
+                                        variant={"outline"}
+                                        onClick={() => handleOpenReviewModal(bracket[2])}
+                                    >
+                                        Review Submitted Results
                                     </Button>
                                 </div>
                             )}
@@ -241,14 +318,58 @@ export default function TournamentInfo() {
                     </div>
                 </div>
             </div>
+
+            {/* Submit Match Results Modal */}
             <SubmitMatchResultsModal
-                open={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                open={isSubmitModalOpen}
+                onClose={() => setIsSubmitModalOpen(false)}
                 matchLabel={selectedMatch?.label || ''}
                 player1={selectedMatch?.player1 ? getPlayerName(selectedMatch.player1) : null}
                 player2={selectedMatch?.player2 ? getPlayerName(selectedMatch.player2) : null}
                 onSubmit={handleSubmitResult}
             />
+
+            {/* Review Dispute Modal */}
+            <Dialog open={isReviewModalOpen} onOpenChange={setIsReviewModalOpen}>
+                <DialogContent
+                    className="max-w-[600px] w-full bg-black/40 backdrop-blur-lg rounded-[10px] border-theme-crimson text-white p-[40px]">
+                    <DialogHeader>
+                        <DialogTitle className="text-[30px] text-center">Resolve
+                            Dispute: {selectedMatch?.label}</DialogTitle>
+                    </DialogHeader>
+                    {selectedMatch && (
+                        <div className="flex flex-col gap-4">
+                            <div className="text-[20px]">
+                                <p>Player 1
+                                    ({getPlayerName(selectedMatch.player1)}): {getSubmittedResults(selectedMatch).player1Submission || "Not Submitted"}</p>
+                                <p>Player 2
+                                    ({getPlayerName(selectedMatch.player2)}): {getSubmittedResults(selectedMatch).player2Submission || "Not Submitted"}</p>
+                            </div>
+                            <div className="flex flex-col gap-4 mt-4">
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => handleResolveDispute(selectedMatch.player1!.userId)}
+                                >
+                                    Declare {getPlayerName(selectedMatch.player1)} as Winner
+                                </Button>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => handleResolveDispute(selectedMatch.player2!.userId)}
+                                >
+                                    Declare {getPlayerName(selectedMatch.player2)} as Winner
+                                </Button>
+                            </div>
+                            <Button
+                                className="mt-4"
+                                variant="outline"
+                                onClick={() => setIsReviewModalOpen(false)}
+                            >
+                                Cancel
+                            </Button>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
