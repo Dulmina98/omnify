@@ -12,48 +12,35 @@ import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/compon
 export function NavigationBar() {
     const {user, isSignedIn: isConvexSigned, role} = useCurrentUser();
     const {isSignedIn: isClerkSigned} = useUser();
-    const {
-        provider,
-        signer,
-        address,
-        isConnected,
-        connectWallet,
-        disconnectWallet,
-        walletError
-    } = useEthereum(user?.userId, role);
+    const {provider, signer, address, isConnected, connectWallet, disconnectWallet} = useEthereum();
 
     return (
         <div className={"fixed top-0 left-0 w-full h-[68px] flex justify-center backdrop-blur-lg z-50"}>
-            <div className={"w-full h-full max-w-[1800px] px-[25px] lg:px-[100px] flex items-center"}>
-                <Link href={"/"}>
-                    <Image src={"/assets/images/logo/logo.png"} alt={"logo"} height={60} width={210}
-                           className={"w-[105px] cursor-pointer mr-12"}/>
-                </Link>
+            <div
+                className={" w-full h-full max-w-[1800px] px-[25px] lg:px-[100px] flex items-center"}>
+                <Link href={"/"}><Image src={"/assets/images/logo/logo.png"} alt={"logo"} height={60} width={210}
+                                        className={"w-[105px] cursor-pointer mr-12"}/></Link>
                 <div className={"flex justify-between w-full"}>
                     <div className={"flex gap-[25px] items-center w-full"}>
                         <Link href={"/"} className={"text-white text-[16px] font-medium"}>Home</Link>
-                        {user && role === "organizer" && (
-                            <Link href={"/"} className={"text-white text-[16px] font-medium"}>Create Tournament</Link>
-                        )}
-                        {user && role === "player" && (
+                        {user && role === "organizer" &&
+                            <Link href={"/"} className={"text-white text-[16px] font-medium"}>Create Tournament</Link>}
+                        {user && role === "player" &&
                             <Link href={"/join-tournament"} className={"text-white text-[16px] font-medium"}>Join
-                                Tournament</Link>
-                        )}
+                                Tournament</Link>}
                         <Link href={"/view-tournaments"} className={"text-white text-[16px] font-medium"}>View
                             Tournaments</Link>
                         <Link href={"/"} className={"text-white text-[16px] font-medium"}>Contact Us</Link>
                     </div>
                     <div className={"flex items-center gap-[20px]"}>
-                        {(isConvexSigned && isClerkSigned) && (
+                        {(isConvexSigned && isClerkSigned) && <>
                             <>
                                 {isConnected ? (
                                     <TooltipProvider>
                                         <Tooltip>
                                             <TooltipTrigger asChild>
                                                 <Button variant={"secondary"} className={"w-[150px] h-[36px]"}
-                                                        onClick={disconnectWallet}>
-                                                    Disconnect Wallet
-                                                </Button>
+                                                        onClick={disconnectWallet}>Disconnect Wallet</Button>
                                             </TooltipTrigger>
                                             <TooltipContent
                                                 className={"bg-black/35 backdrop-blur-lg text-white border-muted-gray"}
@@ -63,30 +50,27 @@ export function NavigationBar() {
                                         </Tooltip>
                                     </TooltipProvider>
                                 ) : (
+
                                     <Button variant={"secondary"} className={"w-[150px] h-[36px]"}
-                                            onClick={connectWallet}>
-                                        Connect Wallet
-                                    </Button>
-                                )}
-                                {walletError && (
-                                    <div className="text-red-500 text-sm">{walletError}</div>
+                                            onClick={connectWallet}>Connect Wallet</Button>
+
                                 )}
                             </>
-                        )}
-                        {isClerkSigned && !user && role !== "admin" && (
-                            <Link href="/become-a-member" passHref>
-                                <Button className={"w-[150px] h-[36px]"}>Become a member</Button>
-                            </Link>
-                        )}
-                        {!isClerkSigned && (
-                            <Link href="/sign-up" passHref>
-                                <Button className={"w-[150px] h-[36px]"}>Sign up</Button>
-                            </Link>
-                        )}
+                        </>}
+                        {isClerkSigned && !user && role !== "admin" && <Link href="/become-a-member" passHref>
+                            <Button className={"w-[150px] h-[36px]"}>
+                                Become a member
+                            </Button>
+                        </Link>}
+                        {!isClerkSigned && <Link href="/sign-up" passHref>
+                            <Button className={"w-[150px] h-[36px]"}>
+                                Sign up
+                            </Button>
+                        </Link>}
                         {(isConvexSigned && isClerkSigned) && <ProfileDropdown/>}
                     </div>
                 </div>
             </div>
         </div>
-    );
+    )
 }
