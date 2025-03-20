@@ -11,8 +11,6 @@
   "dependencies": {
     "@clerk/nextjs": "^6.10.3",
     "@hookform/resolvers": "^3.10.0",
-    "@nomiclabs/hardhat-ethers": "^2.2.3",
-    "@nomiclabs/hardhat-waffle": "^2.0.6",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-dropdown-menu": "^2.1.5",
     "@radix-ui/react-label": "^2.1.1",
@@ -23,8 +21,6 @@
     "@stripe/react-stripe-js": "^3.1.1",
     "@stripe/stripe-js": "^5.6.0",
     "@tanstack/react-query": "^5.66.0",
-    "@wagmi/connectors": "^5.7.5",
-    "@wagmi/core": "^2.16.4",
     "add": "^2.0.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -36,11 +32,8 @@
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.54.2",
     "react-hot-toast": "^2.5.2",
-    "stripe": "^17.6.0",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
-    "viem": "^2.22.23",
-    "wagmi": "^2.14.9",
     "zod": "^3.24.1"
   },
   "devDependencies": {
