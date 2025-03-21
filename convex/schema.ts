@@ -63,6 +63,7 @@ export default defineSchema({
         pauseBreakRules: v.string(),
         isApproved: v.boolean(),
         winnerUserId: v.optional(v.string()),
+        contractAddress: v.string(),
     }),
 
     tournamentEntries: defineTable({
