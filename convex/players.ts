@@ -52,7 +52,7 @@ export const getPlayersByUserIds = query({
     },
 });
 
-export const updatePlayerWallet = mutation({
+export const updatePlayerWalletId = mutation({
     args: {
         userId: v.string(),
         walletId: v.string(),

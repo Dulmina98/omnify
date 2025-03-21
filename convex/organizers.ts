@@ -41,7 +41,7 @@ export const getOrganizerByUserId = query({
     },
 });
 
-export const updateOrganizerWallet = mutation({
+export const updateOrganizerWalletId = mutation({
     args: {
         userId: v.string(),
         walletId: v.string(),
