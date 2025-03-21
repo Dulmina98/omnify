@@ -15,7 +15,7 @@ const abi = [
 ];
 
 
-export async function getContract() {
+export async function getContract(contractAddress: string) {
     // If MetaMask is not installed, window.ethereum will be undefined
     if (!window.ethereum) {
         throw new Error("MetaMask not found. Please install MetaMask and refresh.");
@@ -31,3 +31,4 @@ export async function getContract() {
     // Return a contract instance connected to the signer
     return new ethers.Contract(contractAddress, abi, signer);
 }
+
