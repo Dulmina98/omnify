@@ -34,6 +34,9 @@
     "react-hot-toast": "^2.5.2",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "@wagmi/connectors": "^5.7.5",
+    "@wagmi/core": "^2.16.4",
+    "wagmi": "^2.14.9",
     "zod": "^3.24.1"
   },
   "devDependencies": {
