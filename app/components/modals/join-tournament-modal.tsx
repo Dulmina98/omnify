@@ -9,6 +9,7 @@ import {api} from "@/convex/_generated/api";
 import {PaymentTypes} from "@/types/payment-types";
 import {ethers} from "ethers";
 import {Doc} from "@/convex/_generated/dataModel";
+import {Loading} from "@/app/components/Loading";
 
 interface JoinTournamentModalProps {
     open: boolean;
@@ -93,8 +94,7 @@ export function JoinTournamentModal({open, onClose, tournament, user}: JoinTourn
                     )}
                     {state === "processing" && (
                         <>
-                            <Image src="/assets/images/icons/loading.png" alt="processing" width={50} height={50}
-                                   className="mb-8"/>
+                            <Loading/>
                             <div className="text-[40px] text-center">Processing <span
                                 className="text-theme-crimson">Payment</span></div>
                             <div className="mt-2 text-muted-white text-center">Please wait while your payment is being
@@ -104,7 +104,7 @@ export function JoinTournamentModal({open, onClose, tournament, user}: JoinTourn
                     )}
                     {state === "success" && (
                         <>
-                            <Image src="/assets/images/icons/success.png" alt="success" width={50} height={50}
+                            <Image src="/assets/images/icons/checked.png" alt="error" width={50} height={50}
                                    className="mb-8"/>
                             <div className="text-[40px] text-center">Success!</div>
                             <div className="mt-2 text-muted-white text-center">Payment successful! You’ve joined the
