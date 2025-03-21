@@ -1,56 +1,138 @@
-import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog";
+import {useEffect, useState} from "react";
+import {Dialog, DialogContent, DialogHeader} from "@/components/ui/dialog";
 import {Button} from "@/components/ui/button";
 import {VisuallyHidden} from "@radix-ui/react-visually-hidden";
 import Image from "next/image";
-import Link from "next/link";
+import {getContract} from "@/lib/contract";
+import {useApiMutation} from "@/hooks/use-api-mutation";
+import {api} from "@/convex/_generated/api";
+import {Doc} from "@/convex/_generated/dataModel";
 
-interface ModalProps {
+interface JoinTournamentModalProps {
     open: boolean;
     onClose: () => void;
-    amount: number;
+    tournament: Doc<"tournaments">;
+    user: Doc<'players'> | null | undefined;
 }
 
-export function JoinTournamentModal({open, onClose, amount}: ModalProps) {
+export function JoinTournamentModal({open, onClose, tournament, user}: JoinTournamentModalProps) {
+    const [state, setState] = useState<"idle" | "confirming" | "processing" | "success" | "error">("idle");
+    const [errorMessage, setErrorMessage] = useState("");
+    const {mutate} = useApiMutation(api.tournament_entries.enterTournament);
+
+    useEffect(() => {
+        if (open && state === "idle" && user) {
+            handlePayment();
+        }
+    }, [open, state, user]);
+
+    const handlePayment = async () => {
+        try {
+            if (!user || !user.walletId) {
+                throw new Error("User is not connected or has no Ethereum address.");
+            }
+
+            setState("confirming");
+            const contract = await getContract(tournament.contractAddress);
+            const entryFee = await contract.entryFee(); // Get entry fee in wei
+            const tx = await contract.payEntryFee({value: entryFee});
+            setState("processing");
+            await tx.wait(); // Wait for transaction confirmation
+
+            // Record entry in the database
+            await mutate({
+                tournamentId: tournament._id,
+                userId: user.userId,
+            });
+
+            setState("success");
+        } catch (error: unknown) {
+            setState("error");
+            const message = error instanceof Error ? error.message : "Failed to join tournament. Please try again.";
+            setErrorMessage(message);
+        }
+    };
+
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent
                 className="max-w-[700px] w-full bg-black/40 backdrop-blur-lg rounded-[10px] border-theme-crimson text-white p-[40px]">
                 <VisuallyHidden>
-                    <DialogHeader>
-                        <DialogTitle>Payment Required</DialogTitle>
-                    </DialogHeader>
+                    <DialogHeader>Payment Required</DialogHeader>
                 </VisuallyHidden>
                 <div className="flex flex-col justify-center items-center text-white">
-                    <Image
-                        src="/assets/images/icons/payment.png"
-                        alt="payment required"
-                        width={50}
-                        height={50}
-                        className="mb-8"
-                    />
-                    <div className="text-[40px] text-center">
-                        Secure Your <span className="text-theme-crimson">Spot</span>
-                    </div>
-                    <div className={"mt-2 text-muted-white text-center"}>
-                        You've reserved a spot in the tournament. <span className={"text-white font-semibold"}>Pay the entry fee within 24 hours to confirm participation.</span> If
-                        not paid, your spot will be automatically removed.
-                    </div>
-                    <div className={"flex w-full items-center gap-x-5 mt-16"}>
-                        <Button
-                            className={"w-full text-[16px] h-[46px]"}
-                            variant={"secondary"}
-                            onClick={onClose}
-                        >
-                            Pay Later
-                        </Button>
-                        <Link href="/user-profile" className={"w-full"}>
-                            <Button
-                                className="w-full text-[16px] h-[46px]"
-                            >
-                                Go to Dashboard to pay {amount}ETH
+                    {state === "confirming" && (
+                        <>
+                            <Image
+                                src="/assets/images/icons/payment.png"
+                                alt="payment required"
+                                width={50}
+                                height={50}
+                                className="mb-8"
+                            />
+                            <div className="text-[40px] text-center">
+                                Confirm <span className="text-theme-crimson">Payment</span>
+                            </div>
+                            <div className="mt-2 text-muted-white text-center">
+                                Please confirm the transaction in your wallet to pay {tournament.entryFee} ETH.
+                            </div>
+                        </>
+                    )}
+                    {state === "processing" && (
+                        <>
+                            <Image
+                                src="/assets/images/icons/loading.png" // Replace with a loading icon
+                                alt="processing"
+                                width={50}
+                                height={50}
+                                className="mb-8"
+                            />
+                            <div className="text-[40px] text-center">
+                                Processing <span className="text-theme-crimson">Payment</span>
+                            </div>
+                            <div className="mt-2 text-muted-white text-center">Please wait while your payment is being
+                                processed...
+                            </div>
+                        </>
+                    )}
+                    {state === "success" && (
+                        <>
+                            <Image
+                                src="/assets/images/icons/success.png" // Replace with a success icon
+                                alt="success"
+                                width={50}
+                                height={50}
+                                className="mb-8"
+                            />
+                            <div className="text-[40px] text-center">
+                                Success!
+                            </div>
+                            <div className="mt-2 text-muted-white text-center">
+                                Payment successful! You’ve joined the tournament.
+                            </div>
+                            <Button className="mt-8 w-full text-[16px] h-[46px]" onClick={onClose}>
+                                Close
                             </Button>
-                        </Link>
-                    </div>
+                        </>
+                    )}
+                    {state === "error" && (
+                        <>
+                            <Image
+                                src="/assets/images/icons/error.png" // Replace with an error icon
+                                alt="error"
+                                width={50}
+                                height={50}
+                                className="mb-8"
+                            />
+                            <div className="text-[40px] text-center">
+                                Payment <span className="text-theme-crimson">Failed</span>
+                            </div>
+                            <div className="mt-2 text-muted-white text-center">{errorMessage}</div>
+                            <Button className="mt-8 w-full text-[16px] h-[46px]" onClick={onClose}>
+                                Close
+                            </Button>
+                        </>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>
