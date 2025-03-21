@@ -6,19 +6,22 @@ import Image from "next/image";
 import {getContract} from "@/lib/contract";
 import {useApiMutation} from "@/hooks/use-api-mutation";
 import {api} from "@/convex/_generated/api";
+import {PaymentTypes} from "@/types/payment-types";
+import {ethers} from "ethers";
 import {Doc} from "@/convex/_generated/dataModel";
 
 interface JoinTournamentModalProps {
     open: boolean;
     onClose: () => void;
-    tournament: Doc<"tournaments">;
-    user: Doc<'players'> | null | undefined;
+    tournament: Doc<'tournaments'>;
+    user: Doc<"players"> | null | undefined;
 }
 
 export function JoinTournamentModal({open, onClose, tournament, user}: JoinTournamentModalProps) {
     const [state, setState] = useState<"idle" | "confirming" | "processing" | "success" | "error">("idle");
     const [errorMessage, setErrorMessage] = useState("");
-    const {mutate} = useApiMutation(api.tournament_entries.enterTournament);
+    const {mutate: enterTournament} = useApiMutation(api.tournament_entries.enterTournament);
+    const {mutate: recordTransaction} = useApiMutation(api.transactions.createTransaction);
 
     useEffect(() => {
         if (open && state === "idle" && user) {
@@ -34,15 +37,31 @@ export function JoinTournamentModal({open, onClose, tournament, user}: JoinTourn
 
             setState("confirming");
             const contract = await getContract(tournament.contractAddress);
-            const entryFee = await contract.entryFee(); // Get entry fee in wei
+            const entryFee = await contract.entryFee();
             const tx = await contract.payEntryFee({value: entryFee});
             setState("processing");
-            await tx.wait(); // Wait for transaction confirmation
 
-            // Record entry in the database
-            await mutate({
+            const receipt = await tx.wait();
+            const transactionHash = receipt.hash;
+            const blockNumber = receipt.blockNumber;
+            const amountInEth = parseFloat(ethers.formatEther(entryFee));
+
+            const transactionId = await recordTransaction({
+                transactionHash,
                 tournamentId: tournament._id,
                 userId: user.userId,
+                amount: amountInEth,
+                status: "confirmed",
+                paymentType: PaymentTypes.ENTRY_FEE,
+                blockNumber,
+                fromAddress: user.walletId,
+                toAddress: tournament.contractAddress,
+            });
+
+            await enterTournament({
+                tournamentId: tournament._id,
+                userId: user.userId,
+                transactionId,
             });
 
             setState("success");
@@ -63,16 +82,10 @@ export function JoinTournamentModal({open, onClose, tournament, user}: JoinTourn
                 <div className="flex flex-col justify-center items-center text-white">
                     {state === "confirming" && (
                         <>
-                            <Image
-                                src="/assets/images/icons/payment.png"
-                                alt="payment required"
-                                width={50}
-                                height={50}
-                                className="mb-8"
-                            />
-                            <div className="text-[40px] text-center">
-                                Confirm <span className="text-theme-crimson">Payment</span>
-                            </div>
+                            <Image src="/assets/images/icons/payment.png" alt="payment required" width={50} height={50}
+                                   className="mb-8"/>
+                            <div className="text-[40px] text-center">Confirm <span
+                                className="text-theme-crimson">Payment</span></div>
                             <div className="mt-2 text-muted-white text-center">
                                 Please confirm the transaction in your wallet to pay {tournament.entryFee} ETH.
                             </div>
@@ -80,16 +93,10 @@ export function JoinTournamentModal({open, onClose, tournament, user}: JoinTourn
                     )}
                     {state === "processing" && (
                         <>
-                            <Image
-                                src="/assets/images/icons/loading.png" // Replace with a loading icon
-                                alt="processing"
-                                width={50}
-                                height={50}
-                                className="mb-8"
-                            />
-                            <div className="text-[40px] text-center">
-                                Processing <span className="text-theme-crimson">Payment</span>
-                            </div>
+                            <Image src="/assets/images/icons/loading.png" alt="processing" width={50} height={50}
+                                   className="mb-8"/>
+                            <div className="text-[40px] text-center">Processing <span
+                                className="text-theme-crimson">Payment</span></div>
                             <div className="mt-2 text-muted-white text-center">Please wait while your payment is being
                                 processed...
                             </div>
@@ -97,40 +104,25 @@ export function JoinTournamentModal({open, onClose, tournament, user}: JoinTourn
                     )}
                     {state === "success" && (
                         <>
-                            <Image
-                                src="/assets/images/icons/success.png" // Replace with a success icon
-                                alt="success"
-                                width={50}
-                                height={50}
-                                className="mb-8"
-                            />
-                            <div className="text-[40px] text-center">
-                                Success!
+                            <Image src="/assets/images/icons/success.png" alt="success" width={50} height={50}
+                                   className="mb-8"/>
+                            <div className="text-[40px] text-center">Success!</div>
+                            <div className="mt-2 text-muted-white text-center">Payment successful! You’ve joined the
+                                tournament.
                             </div>
-                            <div className="mt-2 text-muted-white text-center">
-                                Payment successful! You’ve joined the tournament.
-                            </div>
-                            <Button className="mt-8 w-full text-[16px] h-[46px]" onClick={onClose}>
-                                Close
-                            </Button>
+                            <Button className="mt-8 w-full text-[16px] h-[46px]" onClick={onClose}>Close</Button>
                         </>
                     )}
                     {state === "error" && (
                         <>
-                            <Image
-                                src="/assets/images/icons/error.png" // Replace with an error icon
-                                alt="error"
-                                width={50}
-                                height={50}
-                                className="mb-8"
-                            />
-                            <div className="text-[40px] text-center">
-                                Payment <span className="text-theme-crimson">Failed</span>
+                            <Image src="/assets/images/icons/failed.png" alt="error" width={50} height={50}
+                                   className="mb-8"/>
+                            <div className="text-[40px] text-center">Payment <span
+                                className="text-theme-crimson">Failed</span></div>
+                            <div className="mt-2 text-muted-white text-center break-words w-full max-w-md">
+                                {errorMessage}
                             </div>
-                            <div className="mt-2 text-muted-white text-center">{errorMessage}</div>
-                            <Button className="mt-8 w-full text-[16px] h-[46px]" onClick={onClose}>
-                                Close
-                            </Button>
+                            <Button className="mt-8 w-full text-[16px] h-[46px]" onClick={onClose}>Close</Button>
                         </>
                     )}
                 </div>
