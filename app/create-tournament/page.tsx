@@ -27,7 +27,6 @@ type TournamentFormData = {
     entryFee: string;
     totalPrizePool: number;
     prizeDistributionMethod: string;
-    pauseBreakRules: string;
 };
 
 export default function CreateTournament() {
@@ -106,7 +105,6 @@ export default function CreateTournament() {
                 entryFee: tournamentData.entryFee,
                 totalPrizePool: tournamentData.totalPrizePool,
                 prizeDistributionMethod: tournamentData.prizeDistributionMethod,
-                pauseBreakRules: tournamentData.pauseBreakRules,
                 contractAddress: tournamentData.contractAddress,
             });
 
