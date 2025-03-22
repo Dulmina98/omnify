@@ -1,6 +1,10 @@
+'use client';
+
 import {Button} from "@/components/ui/button";
+import {useRouter} from "next/navigation";
 
 export function Contact() {
+    const router = useRouter();
 
     return (
         <div className={"relative w-full flex justify-center overflow-hidden bg-black z-10"}>
@@ -16,7 +20,8 @@ export function Contact() {
                     of a transparent, secure, and fair gaming ecosystem.
                 </div>
                 <div className="flex justify-center w-full mt-[70px]"><Button variant={"secondary"}
-                                                                              className={"text-[16px] w-[200px] h-[48px]"}>Contact
+                                                                              className={"text-[16px] w-[200px] h-[48px]"}
+                                                                              onClick={() => router.push("/contact-us")}>Contact
                     Us</Button></div>
             </div>
             <img src="/assets/images/bg/contact-bg.png" alt="contact-bg"
