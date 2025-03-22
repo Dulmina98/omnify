@@ -10,6 +10,8 @@ import {useUser} from "@clerk/nextjs";
 import {api} from "@/convex/_generated/api";
 import {TabBar} from "@/app/components/tab-bar/tab-bar";
 import {useState} from "react";
+import {useRouter} from "next/navigation";
+import {ConnectWalletModal} from "@/app/components/modals/connect-wallet-modal";
 
 type PlayersFormData = {
     firstName: string;
@@ -35,8 +37,12 @@ type OrganizersFormData = {
 export default function Page() {
     const {mutate: playerMutate} = useApiMutation(api.players.createPlayer);
     const {mutate: organizerMutate} = useApiMutation(api.organizers.createOrganizer);
+    const {mutate: updatePlayerWallet} = useApiMutation(api.players.updatePlayerWalletId);
+    const {mutate: updateOrganizerWallet} = useApiMutation(api.organizers.updateOrganizerWalletId);
     const {user, isLoaded, isSignedIn} = useUser();
     const [activeTab, setActiveTab] = useState("Players");
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const router = useRouter();
 
     const tabs = [
         {name: "Players"},
@@ -76,26 +82,24 @@ export default function Page() {
                 return;
             }
 
-            const userData = {...data};
-
             const userEmail =
-                user.emailAddresses?.find(email => email.id === user.primaryEmailAddressId)?.emailAddress ?? "";
+                user.emailAddresses?.find((email) => email.id === user.primaryEmailAddressId)?.emailAddress ?? "";
 
-            playerMutate({
+            await playerMutate({
                 clerkId: user.id,
-                firstName: userData.firstName,
-                lastName: userData.lastName,
-                mobileNum: userData.mobileNumber,
-                ign: userData.gameAlias,
-                level: userData.gameLevel,
-                game: userData.preferredGame,
-                platform: userData.platform,
+                firstName: data.firstName,
+                lastName: data.lastName,
+                mobileNum: data.mobileNumber,
+                ign: data.gameAlias,
+                level: data.gameLevel,
+                game: data.preferredGame,
+                platform: data.platform,
                 email: userEmail,
-            }).then(() => {
-                console.log("User created successfully");
             });
+
+            setIsModalOpen(true);
         } catch (error) {
-            console.log(error);
+            console.error("Error creating player:", error);
         }
     };
 
@@ -107,9 +111,9 @@ export default function Page() {
             }
 
             const userEmail =
-                user.emailAddresses?.find(email => email.id === user.primaryEmailAddressId)?.emailAddress ?? "";
+                user.emailAddresses?.find((email) => email.id === user.primaryEmailAddressId)?.emailAddress ?? "";
 
-            organizerMutate({
+            await organizerMutate({
                 clerkId: user.id,
                 firstName: data.firstName,
                 lastName: data.lastName,
@@ -120,11 +124,38 @@ export default function Page() {
                 websiteUrl: data.websiteUrl,
                 preferredCommunicationChannel: data.preferredCommunicationChannel,
                 email: userEmail,
-            }).then(() => {
-                console.log("Organizer created successfully");
             });
+
+            setIsModalOpen(true);
         } catch (error) {
-            console.log(error);
+            console.error("Error creating organizer:", error);
+        }
+    };
+
+    const handleWalletConnected = async (walletAddress?: string) => {
+        if (!walletAddress || !user) {
+            setIsModalOpen(false);
+            return;
+        }
+
+        try {
+            if (activeTab === "Players") {
+                await updatePlayerWallet({
+                    userId: user.id,
+                    walletId: walletAddress,
+                });
+            } else {
+                await updateOrganizerWallet({
+                    userId: user.id,
+                    walletId: walletAddress,
+                });
+            }
+            console.log("Wallet ID saved successfully");
+            router.push("/");
+        } catch (error) {
+            console.error("Error updating wallet ID:", error);
+        } finally {
+            setIsModalOpen(false);
         }
     };
 
@@ -444,6 +475,7 @@ export default function Page() {
                     )}
                 </div>
             </div>
+            <ConnectWalletModal open={isModalOpen} onClose={handleWalletConnected}/>
         </div>
     );
 }

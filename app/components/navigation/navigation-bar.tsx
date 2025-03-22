@@ -6,13 +6,13 @@ import {Button} from "@/components/ui/button";
 import {useCurrentUser} from "@/services/user-service";
 import {useUser} from "@clerk/nextjs";
 import {ProfileDropdown} from "@/app/components/navigation/profile-dropdown";
-import {useEthereum} from "@/hooks/use-ethereum";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
+import {useWallet} from "@/hooks/use-wallet";
 
 export function NavigationBar() {
     const {user, isSignedIn: isConvexSigned, role} = useCurrentUser();
     const {isSignedIn: isClerkSigned} = useUser();
-    const {provider, signer, address, isConnected, connectWallet, disconnectWallet} = useEthereum();
+    const {provider, signer, address, isConnected, connectWallet, disconnectWallet} = useWallet();
 
     return (
         <div className={"fixed top-0 left-0 w-full h-[68px] flex justify-center backdrop-blur-lg z-50"}>

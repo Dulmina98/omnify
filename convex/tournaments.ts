@@ -24,6 +24,7 @@ export const createTournament = mutation({
         disconnectPolicy: v.string(),
         matchDisputeResolution: v.string(),
         pauseBreakRules: v.string(),
+        contractAddress: v.string(),
     },
     handler: async (ctx, args) => {
         return await ctx.db.insert("tournaments", {
@@ -49,9 +50,10 @@ export const createTournament = mutation({
             matchDisputeResolution: args.matchDisputeResolution,
             pauseBreakRules: args.pauseBreakRules,
             isApproved: false,
-        })
-    }
-})
+            contractAddress: args.contractAddress,
+        });
+    },
+});
 
 export const getAllTournaments = query({
     handler: async (ctx) => {

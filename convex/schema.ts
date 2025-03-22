@@ -63,12 +63,12 @@ export default defineSchema({
         pauseBreakRules: v.string(),
         isApproved: v.boolean(),
         winnerUserId: v.optional(v.string()),
+        contractAddress: v.string(),
     }),
 
     tournamentEntries: defineTable({
         tournamentId: v.string(),
         userId: v.string(),
-        status: v.string(),
         transactionId: v.optional(v.id("transactions")),
     })
         .index("by_tournament", ["tournamentId"])
@@ -107,13 +107,13 @@ export default defineSchema({
         matchId: v.string(),
         player1UserId: v.string(),
         player2UserId: v.string(),
-        player1Submission: v.optional(v.string()), // Player 1's submitted winner userId
-        player2Submission: v.optional(v.string()), // Player 2's submitted winner userId
-        winnerUserId: v.optional(v.string()), // Final winner, set when submissions match
+        player1Submission: v.optional(v.string()),
+        player2Submission: v.optional(v.string()),
+        winnerUserId: v.optional(v.string()),
         status: v.union(
-            v.literal("pending"),    // Waiting for submissions
-            v.literal("completed"),  // Both agree, winner set
-            v.literal("disputed")    // Submissions disagree
+            v.literal("pending"),
+            v.literal("completed"),
+            v.literal("disputed")
         ),
     })
         .index("by_tournament", ["tournamentId"])

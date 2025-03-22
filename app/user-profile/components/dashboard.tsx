@@ -1,8 +1,6 @@
 import {useCurrentUser} from "@/services/user-service";
 import {useQuery} from "convex/react";
 import {api} from "@/convex/_generated/api";
-import {Tournament} from "@/types/tournaments-type";
-import {DashboardTournamentCard} from "@/app/user-profile/components/dashboard-tournament-card";
 import {TabBar} from "@/app/components/tab-bar/tab-bar";
 import {useState} from "react";
 import {TournamentApprovalCard} from "@/app/user-profile/components/TournamentApprovalCard";
@@ -15,26 +13,14 @@ const tabs = [
 export function Dashboard() {
     const {user, role} = useCurrentUser();
     const [activeTab, setActiveTab] = useState("Pending");
-    const userTournamentsWithStatus = useQuery(
-        api.tournament_entries.getPlayerTournamentsWithStatusAndPayment,
-        {userId: user ? user.userId : "skip"}
-    );
     const approvedTournaments = useQuery(api.tournaments.getApprovedTournaments)
     const notApprovedTournaments = useQuery(api.tournaments.getNotApprovedTournaments)
 
-    if (!userTournamentsWithStatus) {
-        return <div>Loading...</div>;
-    }
 
     return (
         <div>
-            {role === "player" && userTournamentsWithStatus.map((tournament, index) => (
-                <div key={index} className="mt-20">
-                    <DashboardTournamentCard tournament={tournament as Tournament} status={tournament.status}
-                                             transactionId={tournament.transactionId}/>
-                </div>
-            ))}
-
+            {/*<DashboardTournamentCard tournament={tournament as Tournament} status={tournament.status}
+                                     transactionId={tournament.transactionId}/>*/}
             {role === "admin" && <div className={"mt-10"}>
                 <TabBar
                     tabs={tabs}

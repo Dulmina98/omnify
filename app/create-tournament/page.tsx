@@ -1,17 +1,19 @@
 "use client";
 
 import {FormProvider, useForm} from "react-hook-form";
-import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
-import {Input} from "@/components/ui/input";
-import {Textarea} from "@/components/ui/textarea";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {Button} from "@/components/ui/button";
 import {useApiMutation} from "@/hooks/use-api-mutation";
 import {api} from "@/convex/_generated/api";
 import {useCurrentUser} from "@/services/user-service";
-import {GameTypes} from "@/types/game-types";
 import {CreateTournamentSuccessModal} from "@/app/components/modals/create-tournament-success-modal";
 import {useState} from "react";
+import {ethers} from "ethers";
+import TournamentArtifact from "../../smart-contract/artifacts/contracts/Tournament.sol/Tournament.json"
+import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
+import {Input} from "@/components/ui/input";
+import {Textarea} from "@/components/ui/textarea";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
+import {GameTypes} from "@/types/game-types";
 
 type TournamentFormData = {
     tournamentName: string;
@@ -35,10 +37,13 @@ type TournamentFormData = {
     matchDisputeResolution: string;
     pauseBreakRules: string;
 };
+
 export default function CreateTournament() {
     const {mutate} = useApiMutation(api.tournaments.createTournament);
     const {user} = useCurrentUser();
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isDeploying, setIsDeploying] = useState(false);
+    const [deploymentError, setDeploymentError] = useState<string | null>(null);
 
     const form = useForm<TournamentFormData>({
         defaultValues: {
@@ -65,25 +70,51 @@ export default function CreateTournament() {
         },
     });
 
-    const onSubmit = (data: TournamentFormData) => {
+    const onSubmit = async (data: TournamentFormData) => {
         try {
             if (!user) {
                 console.error("User is not signed in.");
                 return;
             }
 
+            setIsDeploying(true);
+            setDeploymentError(null);
+
+            // Connect to the wallet (e.g., MetaMask)
+            if (!window.ethereum) {
+                throw new Error("Please install MetaMask or another Ethereum wallet provider.");
+            }
+            await window.ethereum.request({method: "eth_requestAccounts"});
+            const provider = new ethers.BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+
+            // Deploy the smart contract
+            const entryFeeInWei = ethers.parseEther(data.entryFee.toString() || "0");
+            const factory = new ethers.ContractFactory(
+                TournamentArtifact.abi,
+                TournamentArtifact.bytecode,
+                signer
+            );
+            const contract = await factory.deploy(entryFeeInWei);
+            await contract.waitForDeployment();
+            const contractAddress = await contract.getAddress();
+
+            // Prepare tournament data with timestamps and contract address
             const startDateTimestamp = new Date(data.startDate).getTime();
             const endDateTimestamp = new Date(data.endDate).getTime();
             const deadlineTimestamp = new Date(data.deadline).getTime();
 
             const tournamentData = {
-                ...data, startDate: startDateTimestamp,
+                ...data,
+                startDate: startDateTimestamp,
                 endDate: endDateTimestamp,
                 deadline: deadlineTimestamp,
                 entryFee: parseFloat(data.entryFee) || 0,
+                contractAddress, // Include the deployed contract address
             };
 
-            mutate({
+            // Call the mutation with all required fields
+            await mutate({
                 userId: user.userId,
                 tournamentName: tournamentData.tournamentName,
                 gameTitle: tournamentData.gameTitle,
@@ -105,12 +136,16 @@ export default function CreateTournament() {
                 disconnectPolicy: tournamentData.disconnectPolicy,
                 matchDisputeResolution: tournamentData.matchDisputeResolution,
                 pauseBreakRules: tournamentData.pauseBreakRules,
-            }).then(() => {
-                console.log("Tournament created successfully")
-                setIsModalOpen(true);
+                contractAddress: tournamentData.contractAddress,
             });
-        } catch (error) {
-            console.log(error)
+
+            setIsDeploying(false);
+            setIsModalOpen(true);
+            console.log("Tournament created successfully with contract address:", contractAddress);
+        } catch (error: any) {
+            setIsDeploying(false);
+            setDeploymentError(error.message || "An error occurred while creating the tournament.");
+            console.error("Error creating tournament:", error);
         }
     };
 
@@ -628,22 +663,23 @@ export default function CreateTournament() {
                                     )}
                                 />
                             </div>
-
-                            {/* Submit Button */}
                             <div className="mt-[80px]">
-                                <Button type="submit"
-                                        className="w-full h-[46px] text-[16px] hover:bg-theme-crimson-dark">
-                                    Create Tournament
+                                <Button
+                                    type="submit"
+                                    className="w-full h-[46px] text-[16px] hover:bg-theme-crimson-dark"
+                                    disabled={isDeploying}
+                                >
+                                    {isDeploying ? "Deploying Contract..." : "Create Tournament"}
                                 </Button>
+                                {deploymentError && (
+                                    <p className="text-red-500 mt-2 text-center">{deploymentError}</p>
+                                )}
                             </div>
                         </div>
                     </form>
                 </FormProvider>
             </div>
-            <CreateTournamentSuccessModal
-                open={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-            />
+            <CreateTournamentSuccessModal open={isModalOpen} onClose={() => setIsModalOpen(false)}/>
         </div>
     );
 }
