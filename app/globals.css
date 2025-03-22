@@ -10,6 +10,10 @@ body {
     filter: drop-shadow(-3px -3px 0 black) drop-shadow(3px -3px 0 black) drop-shadow(-3px 3px 0 black) drop-shadow(3px 3px 0 black);
 }
 
+.custom-date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
 @layer base {
   :root {
     --theme-crimson: #DA006D;
