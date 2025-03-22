@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
 import {useCurrentUser} from "@/services/user-service";
-import {useUser} from "@clerk/nextjs";
+import {useClerk, useUser} from "@clerk/nextjs";
 import {ProfileDropdown} from "@/app/components/navigation/profile-dropdown";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
 import {useWallet} from "@/hooks/use-wallet";
@@ -12,7 +12,8 @@ import {useWallet} from "@/hooks/use-wallet";
 export function NavigationBar() {
     const {user, isSignedIn: isConvexSigned, role} = useCurrentUser();
     const {isSignedIn: isClerkSigned} = useUser();
-    const {provider, signer, address, isConnected, connectWallet, disconnectWallet} = useWallet();
+    const {signOut} = useClerk();
+    const {address, isConnected, connectWallet, disconnectWallet} = useWallet();
 
     return (
         <div className={"fixed top-0 left-0 w-full h-[68px] flex justify-center backdrop-blur-lg z-50"}>
@@ -74,6 +75,10 @@ export function NavigationBar() {
                                 Sign up
                             </Button>
                         </Link>}
+                        {isClerkSigned && !user &&
+                            <Button className={"w-[150px] h-[36px]"} onClick={() => signOut({redirectUrl: '/'})}>
+                                Log out
+                            </Button>}
                         {(isConvexSigned && isClerkSigned) && <ProfileDropdown/>}
                     </div>
                 </div>
