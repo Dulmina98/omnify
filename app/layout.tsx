@@ -1,3 +1,4 @@
+// app/layout.tsx
 import type {Metadata} from "next";
 import {Urbanist} from "next/font/google";
 import "./globals.css";
@@ -6,10 +7,10 @@ import {Footer} from "@/app/components/navigation/footer";
 import {ClerkProvider} from "@clerk/nextjs";
 import {ConvexClientProvider} from "./ConvexClientProvider";
 import Providers from "@/app/providers";
+import WalletCheckWrapper from "@/app/components/wrappers/wallet-check-wrapper";
 
-// Import Urbanist font
 const urbanist = Urbanist({
-    variable: "--font-urbanist", // Define the CSS variable
+    variable: "--font-urbanist",
     subsets: ["latin"],
 });
 
@@ -18,11 +19,7 @@ export const metadata: Metadata = {
     description: "The Future of Gaming Tournaments",
 };
 
-export default function RootLayout({
-                                       children,
-                                   }: Readonly<{
-    children: React.ReactNode;
-}>) {
+export default function RootLayout({children}: { children: React.ReactNode }) {
     return (
         <ClerkProvider>
             <ConvexClientProvider>
@@ -35,6 +32,7 @@ export default function RootLayout({
                     <NavigationBar/>
                     {children}
                     <Footer/>
+                    <WalletCheckWrapper/>
                     </body>
                     </html>
                 </Providers>

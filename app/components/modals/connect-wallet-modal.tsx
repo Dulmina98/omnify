@@ -29,7 +29,6 @@ export function ConnectWalletModal({open, onClose}: ConnectWalletModalProps) {
         }
     };
 
-
     useEffect(() => {
         if (isConnected && address) {
             setState("success");
@@ -62,7 +61,7 @@ export function ConnectWalletModal({open, onClose}: ConnectWalletModalProps) {
                                 Connect <span className="text-theme-crimson">Wallet</span>
                             </div>
                             <div className="mt-2 text-muted-white text-center">
-                                Please connect your wallet to complete registration.
+                                Please connect your wallet to continue.
                             </div>
                             <Button className="mt-8 w-full text-[16px] h-[46px]" onClick={handleConnect}>
                                 Connect Wallet
