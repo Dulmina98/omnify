@@ -24,13 +24,14 @@ export function NavigationBar() {
                     <div className={"flex gap-[25px] items-center w-full"}>
                         <Link href={"/"} className={"text-white text-[16px] font-medium"}>Home</Link>
                         {user && role === "organizer" &&
-                            <Link href={"/"} className={"text-white text-[16px] font-medium"}>Create Tournament</Link>}
+                            <Link href={"/create-tournament"} className={"text-white text-[16px] font-medium"}>Create
+                                Tournament</Link>}
                         {user && role === "player" &&
                             <Link href={"/join-tournament"} className={"text-white text-[16px] font-medium"}>Join
                                 Tournament</Link>}
                         <Link href={"/view-tournaments"} className={"text-white text-[16px] font-medium"}>View
                             Tournaments</Link>
-                        <Link href={"/"} className={"text-white text-[16px] font-medium"}>Contact Us</Link>
+                        <Link href={"/contact-us"} className={"text-white text-[16px] font-medium"}>Contact Us</Link>
                     </div>
                     <div className={"flex items-center gap-[20px]"}>
                         {(isConvexSigned && isClerkSigned) && <>
