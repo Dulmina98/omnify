@@ -43,7 +43,7 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
     };
 
     return (
-        <div className="w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-black/40">
+        <div className="w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-black/40 mb-20">
             {/* Game Banner */}
             <div
                 className="absolute top-[-75px] right-[50px] z-0 w-[400px] flex justify-center items-center h-[150px] backdrop-blur-lg px-5">
