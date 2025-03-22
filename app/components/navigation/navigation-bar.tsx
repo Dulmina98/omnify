@@ -22,16 +22,22 @@ export function NavigationBar() {
                                         className={"w-[105px] cursor-pointer mr-12"}/></Link>
                 <div className={"flex justify-between w-full"}>
                     <div className={"flex gap-[25px] items-center w-full"}>
-                        <Link href={"/"} className={"text-white text-[16px] font-medium"}>Home</Link>
+                        <Link href={"/"}
+                              className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>Home</Link>
                         {user && role === "organizer" &&
-                            <Link href={"/create-tournament"} className={"text-white text-[16px] font-medium"}>Create
+                            <Link href={"/create-tournament"}
+                                  className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>Create
                                 Tournament</Link>}
                         {user && role === "player" &&
-                            <Link href={"/join-tournament"} className={"text-white text-[16px] font-medium"}>Join
+                            <Link href={"/join-tournament"}
+                                  className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>Join
                                 Tournament</Link>}
-                        <Link href={"/view-tournaments"} className={"text-white text-[16px] font-medium"}>View
+                        <Link href={"/view-tournaments"}
+                              className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>View
                             Tournaments</Link>
-                        <Link href={"/contact-us"} className={"text-white text-[16px] font-medium"}>Contact Us</Link>
+                        <Link href={"/contact-us"}
+                              className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>Contact
+                            Us</Link>
                     </div>
                     <div className={"flex items-center gap-[20px]"}>
                         {(isConvexSigned && isClerkSigned) && <>
