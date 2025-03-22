@@ -7,19 +7,19 @@ import {api} from "@/convex/_generated/api";
 import {ConnectWalletModal} from "@/app/components/modals/connect-wallet-modal";
 
 export default function WalletCheckWrapper() {
-    const {isSignedIn, isLoading, hasWalletId, userId, isPlayer, isOrganizer} = useWalletCheck();
+    const {isSignedIn, isLoading, hasWalletId, shouldOpenModal, userId, isPlayer, isOrganizer} = useWalletCheck();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const updatePlayerWallet = useMutation(api.players.updatePlayerWalletId);
     const updateOrganizerWallet = useMutation(api.organizers.updateOrganizerWalletId);
 
     useEffect(() => {
-        if (isSignedIn && !isLoading && !hasWalletId) {
+        if (isSignedIn && !isLoading && shouldOpenModal) {
             setIsModalOpen(true);
         } else {
             setIsModalOpen(false);
         }
-    }, [isSignedIn, isLoading, hasWalletId]);
+    }, [isSignedIn, isLoading, shouldOpenModal]);
 
     const handleWalletConnected = async (walletAddress?: string) => {
         if (!walletAddress || !userId) {
@@ -40,8 +40,6 @@ export default function WalletCheckWrapper() {
                     walletId: walletAddress,
                 });
                 console.log("Organizer wallet updated");
-            } else {
-                console.log("User is neither a player nor an organizer yet. Wallet not saved.");
             }
         } catch (error) {
             console.error("Error updating wallet ID:", error);
@@ -50,5 +48,5 @@ export default function WalletCheckWrapper() {
         }
     };
 
-    return <ConnectWalletModal open={isModalOpen} onClose={handleWalletConnected}/>;
+    return <ConnectWalletModal open={isModalOpen} onClose={handleWalletConnected} hasWalletId={hasWalletId}/>;
 }

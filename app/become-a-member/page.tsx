@@ -10,8 +10,6 @@ import {useUser} from "@clerk/nextjs";
 import {api} from "@/convex/_generated/api";
 import {TabBar} from "@/app/components/tab-bar/tab-bar";
 import {useState} from "react";
-import {useRouter} from "next/navigation";
-import {ConnectWalletModal} from "@/app/components/modals/connect-wallet-modal";
 
 type PlayersFormData = {
     firstName: string;
@@ -37,12 +35,8 @@ type OrganizersFormData = {
 export default function Page() {
     const {mutate: playerMutate} = useApiMutation(api.players.createPlayer);
     const {mutate: organizerMutate} = useApiMutation(api.organizers.createOrganizer);
-    const {mutate: updatePlayerWallet} = useApiMutation(api.players.updatePlayerWalletId);
-    const {mutate: updateOrganizerWallet} = useApiMutation(api.organizers.updateOrganizerWalletId);
     const {user, isLoaded, isSignedIn} = useUser();
     const [activeTab, setActiveTab] = useState("Players");
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const router = useRouter();
 
     const tabs = [
         {name: "Players"},
@@ -97,7 +91,6 @@ export default function Page() {
                 email: userEmail,
             });
 
-            setIsModalOpen(true);
         } catch (error) {
             console.error("Error creating player:", error);
         }
@@ -126,36 +119,8 @@ export default function Page() {
                 email: userEmail,
             });
 
-            setIsModalOpen(true);
         } catch (error) {
             console.error("Error creating organizer:", error);
-        }
-    };
-
-    const handleWalletConnected = async (walletAddress?: string) => {
-        if (!walletAddress || !user) {
-            setIsModalOpen(false);
-            return;
-        }
-
-        try {
-            if (activeTab === "Players") {
-                await updatePlayerWallet({
-                    userId: user.id,
-                    walletId: walletAddress,
-                });
-            } else {
-                await updateOrganizerWallet({
-                    userId: user.id,
-                    walletId: walletAddress,
-                });
-            }
-            console.log("Wallet ID saved successfully");
-            router.push("/");
-        } catch (error) {
-            console.error("Error updating wallet ID:", error);
-        } finally {
-            setIsModalOpen(false);
         }
     };
 
@@ -475,7 +440,6 @@ export default function Page() {
                     )}
                 </div>
             </div>
-            <ConnectWalletModal open={isModalOpen} onClose={handleWalletConnected}/>
         </div>
     );
 }

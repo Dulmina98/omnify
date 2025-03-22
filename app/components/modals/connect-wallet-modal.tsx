@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {useEffect, useState} from "react";
 import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog";
@@ -11,9 +11,10 @@ import {Loading} from "@/app/components/Loading";
 interface ConnectWalletModalProps {
     open: boolean;
     onClose: (walletAddress?: string) => void;
+    hasWalletId: boolean;
 }
 
-export function ConnectWalletModal({open, onClose}: ConnectWalletModalProps) {
+export function ConnectWalletModal({open, onClose, hasWalletId}: ConnectWalletModalProps) {
     const {connectWallet, address, isConnected} = useWallet();
     const [state, setState] = useState<"idle" | "connecting" | "success" | "error">("idle");
     const [errorMessage, setErrorMessage] = useState<string>("");
@@ -31,9 +32,13 @@ export function ConnectWalletModal({open, onClose}: ConnectWalletModalProps) {
 
     useEffect(() => {
         if (isConnected && address) {
-            setState("success");
+            if (!hasWalletId) {
+                setState("success");
+            } else {
+                onClose(address);
+            }
         }
-    }, [isConnected, address]);
+    }, [isConnected, address, hasWalletId, onClose]);
 
     const handleClose = () => {
         if (state === "success" && address) {
@@ -74,8 +79,8 @@ export function ConnectWalletModal({open, onClose}: ConnectWalletModalProps) {
                             <div className="text-[40px] text-center">
                                 Connecting <span className="text-theme-crimson">Wallet</span>
                             </div>
-                            <div className="mt-2 text-muted-white text-center">Please confirm the connection in your
-                                wallet...
+                            <div className="mt-2 text-muted-white text-center">
+                                Please confirm the connection in your wallet...
                             </div>
                         </>
                     )}

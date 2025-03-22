@@ -16,16 +16,23 @@ export function useWalletCheck() {
         user?.id ? {userId: user.id} : "skip"
     );
 
-    const hasWalletId = (player?.walletId !== undefined && player?.walletId !== null) ||
-        (organizer?.walletId !== undefined && organizer?.walletId !== null);
+    const isPlayer = !!player;
+    const isOrganizer = !!organizer;
+    const hasWalletId =
+        (isPlayer && player?.walletId !== undefined && player?.walletId !== null) ||
+        (isOrganizer && organizer?.walletId !== undefined && organizer?.walletId !== null);
+
     const isLoading = !isLoaded || player === undefined || organizer === undefined;
+
+    const shouldOpenModal = (isPlayer || isOrganizer) && !hasWalletId;
 
     return {
         isSignedIn,
         isLoading,
         hasWalletId,
+        shouldOpenModal,
         userId: user?.id,
-        isPlayer: !!player,
-        isOrganizer: !!organizer,
+        isPlayer,
+        isOrganizer,
     };
 }

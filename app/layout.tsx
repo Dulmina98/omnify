@@ -28,10 +28,10 @@ export default function RootLayout({children}: { children: React.ReactNode }) {
                         className={`${urbanist.variable} antialiased bg-black`}
                         style={{fontFamily: urbanist.style.fontFamily}}
                     >
+                    <WalletCheckWrapper/>
                     <NavigationBar/>
                     {children}
                     <Footer/>
-                    <WalletCheckWrapper/>
                     </body>
                     </html>
                 </Providers>
