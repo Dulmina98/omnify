@@ -9,7 +9,6 @@ import mk from "@/public/assets/images/games/mk.png";
 import sf from "@/public/assets/images/games/street-fighter.png";
 import injustice from "@/public/assets/images/games/injustice.png";
 import tekken from "@/public/assets/images/games/tekken.png";
-import {getRemainingDays} from "@/utils/date-formatter";
 import {Button} from "@/components/ui/button";
 import {SubmitMatchResultsModal} from "@/app/components/modals/submit-match-results-modal";
 import {useState} from "react";
@@ -156,7 +155,6 @@ export default function TournamentInfo() {
     const getPlayerName = (player: { userId: string; status?: string } | null): string | null => {
         if (!player) return null;
         const ign = playerIgnMap.get(player.userId) || 'Unknown Player';
-        const status = playersInTournament.find(p => p.userId === player.userId)?.status;
         return status === "pending" ? `${ign} (pending)` : ign;
     };
 
@@ -215,10 +213,6 @@ export default function TournamentInfo() {
                         <div className={"text-[40px]"}>{tournament.tournamentName} - <span
                             className={"text-theme-crimson"}>Semi Finals</span></div>
                     </div>
-                    <div className={"text-white font-bold italic text-[20px]"}>
-                        Tournament Begins in <span
-                        className={"text-theme-crimson"}>{getRemainingDays(tournament.deadline)} Days.</span>
-                    </div>
                 </div>
 
                 <div className={"mt-16 max-w-[1300px] mx-auto"}>
@@ -230,22 +224,19 @@ export default function TournamentInfo() {
                                 <h2 className="text-[26px] font-semibold text-center">{match.label}</h2>
                                 <div className="flex justify-between items-center w-full relative flex-1">
                                     <div className={"text-[20px] w-[37%] text-center"}>
-                                        {match.player1 ?
-                                            (playerIgnMap.get(match.player1.userId) || 'Unknown Player') +
-                                            (playersInTournament.find(p => p.userId === match.player1.userId)?.status === "pending" ? " (pending)" : "")
-                                            :
+                                        {match.player1 ? playerIgnMap.get(match.player1.userId) || 'Unknown Player' :
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
-                                    <div className={"absolute w-full flex justify-center h-full items-center"}><Image
-                                        src={"/assets/images/versus/vs.png"} alt={"vs"} height={150} width={150}/></div>
+                                    <div className={"absolute w-full flex justify-center h-full items-center"}>
+                                        <Image src={"/assets/images/versus/vs.png"} alt={"vs"} height={150}
+                                               width={150}/>
+                                    </div>
                                     <div className={"text-[20px] w-[37%] text-center"}>
-                                        {match.player2 ?
-                                            (playerIgnMap.get(match.player2.userId) || 'Unknown Player') +
-                                            (playersInTournament.find(p => p.userId === match.player2.userId)?.status === "pending" ? " (pending)" : "")
-                                            :
+                                        {match.player2 ? playerIgnMap.get(match.player2.userId) || 'Unknown Player' :
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
                                 </div>
+
                                 <div className="text-center text-[16px] mt-4">{getMatchStatus(match)}</div>
                                 {isCurrentUserParticipant(match) && (
                                     <div className={"w-full mt-4"}>
