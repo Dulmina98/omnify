@@ -14,6 +14,7 @@ import {SubmitMatchResultsModal} from "@/app/components/modals/submit-match-resu
 import {useState} from "react";
 import {useCurrentUser} from "@/services/user-service";
 import {ReviewDisputeModal} from "@/app/components/modals/review-dispute-modal";
+import TournamentDetails from "@/app/components/smart-contracts/tournament-details";
 
 interface Match {
     match: number;
@@ -198,142 +199,149 @@ export default function TournamentInfo() {
     };
 
     return (
-        <div className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
-            <div className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[100px] mx-auto"}>
-                <div className={"w-full flex flex-col items-center justify-center"}>
-                    {tournament.gameTitle === "mortal-kombat" &&
-                        <Image src={mk} alt={"mortal kombat"} width={2000} height={2000} className={"w-[700px]"}/>}
-                    {tournament.gameTitle === "street-fighter" &&
-                        <Image src={sf} alt={"street fighter"} width={2000} height={2000} className={"w-[700px]"}/>}
-                    {tournament.gameTitle === "injustice" &&
-                        <Image src={injustice} alt={"injustice"} width={2000} height={2000} className={"w-[700px]"}/>}
-                    {tournament.gameTitle === "tekken" &&
-                        <Image src={tekken} alt={"tekken"} width={2000} height={2000} className={"w-[700px]"}/>}
-                    <div className={"flex gap-x-5 items-center"}>
-                        <div className={"text-[40px]"}>{tournament.tournamentName} - <span
-                            className={"text-theme-crimson"}>Semi Finals</span></div>
+        <div>
+            <div
+                className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
+                <div className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[100px] mx-auto"}>
+                    <div className={"w-full flex flex-col items-center justify-center"}>
+                        {tournament.gameTitle === "mortal-kombat" &&
+                            <Image src={mk} alt={"mortal kombat"} width={2000} height={2000} className={"w-[700px]"}/>}
+                        {tournament.gameTitle === "street-fighter" &&
+                            <Image src={sf} alt={"street fighter"} width={2000} height={2000} className={"w-[700px]"}/>}
+                        {tournament.gameTitle === "injustice" &&
+                            <Image src={injustice} alt={"injustice"} width={2000} height={2000}
+                                   className={"w-[700px]"}/>}
+                        {tournament.gameTitle === "tekken" &&
+                            <Image src={tekken} alt={"tekken"} width={2000} height={2000} className={"w-[700px]"}/>}
+                        <div className={"flex gap-x-5 items-center"}>
+                            <div className={"text-[40px]"}>{tournament.tournamentName} - <span
+                                className={"text-theme-crimson"}>Semi Finals</span></div>
+                        </div>
                     </div>
-                </div>
 
-                <div className={"mt-16 max-w-[1300px] mx-auto"}>
-                    {/* Semi-finals matches in a row */}
-                    <div className="flex justify-between gap-5">
-                        {bracket.slice(0, 2).map((match, index) => (
-                            <div key={index}
-                                 className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col">
-                                <h2 className="text-[26px] font-semibold text-center">{match.label}</h2>
+                    <div className={"mt-16 max-w-[1300px] mx-auto"}>
+                        {/* Semi-finals matches in a row */}
+                        <div className="flex justify-between gap-5">
+                            {bracket.slice(0, 2).map((match, index) => (
+                                <div key={index}
+                                     className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col">
+                                    <h2 className="text-[26px] font-semibold text-center">{match.label}</h2>
+                                    <div className="flex justify-between items-center w-full relative flex-1">
+                                        <div className={"text-[20px] w-[37%] text-center"}>
+                                            {match.player1 ? playerIgnMap.get(match.player1.userId) || 'Unknown Player' :
+                                                <span
+                                                    className="text-muted-white text-[20px]">Waiting for player...</span>}
+                                        </div>
+                                        <div className={"absolute w-full flex justify-center h-full items-center"}>
+                                            <Image src={"/assets/images/versus/vs.png"} alt={"vs"} height={150}
+                                                   width={150}/>
+                                        </div>
+                                        <div className={"text-[20px] w-[37%] text-center"}>
+                                            {match.player2 ? playerIgnMap.get(match.player2.userId) || 'Unknown Player' :
+                                                <span
+                                                    className="text-muted-white text-[20px]">Waiting for player...</span>}
+                                        </div>
+                                    </div>
+
+                                    <div className="text-center text-[16px] mt-4">{getMatchStatus(match)}</div>
+                                    {isCurrentUserParticipant(match) && (
+                                        <div className={"w-full mt-4"}>
+                                            <Button
+                                                className={"w-full"}
+                                                variant={"secondary"}
+                                                onClick={() => handleOpenSubmitModal(match)}
+                                                disabled={hasUserSubmittedResult(match)}
+                                            >
+                                                {hasUserSubmittedResult(match) ? "Match Results Submitted" : "Submit Match Results"}
+                                            </Button>
+                                        </div>
+                                    )}
+                                    {isTournamentOrganizer && getMatchStatus(match) === "Results in Dispute" && (
+                                        <div className={"w-full mt-4"}>
+                                            <Button
+                                                className={"w-full"}
+                                                variant={"secondary"}
+                                                onClick={() => handleOpenReviewModal(match)}
+                                            >
+                                                Resolve Dispute
+                                            </Button>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Final match at the bottom */}
+                        <div className="mt-5">
+                            <div
+                                className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col">
+                                <h2 className="text-[26px] font-semibold text-center">{bracket[2].label}</h2>
                                 <div className="flex justify-between items-center w-full relative flex-1">
                                     <div className={"text-[20px] w-[37%] text-center"}>
-                                        {match.player1 ? playerIgnMap.get(match.player1.userId) || 'Unknown Player' :
+                                        {bracket[2].player1 ? playerIgnMap.get(bracket[2].player1.userId) || 'Unknown Player' :
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
-                                    <div className={"absolute w-full flex justify-center h-full items-center"}>
-                                        <Image src={"/assets/images/versus/vs.png"} alt={"vs"} height={150}
-                                               width={150}/>
-                                    </div>
+                                    <div className={"absolute w-full flex justify-center h-full items-center"}><Image
+                                        src={"/assets/images/versus/vs.png"} alt={"vs"} height={150} width={150}/></div>
                                     <div className={"text-[20px] w-[37%] text-center"}>
-                                        {match.player2 ? playerIgnMap.get(match.player2.userId) || 'Unknown Player' :
+                                        {bracket[2].player2 ? playerIgnMap.get(bracket[2].player2.userId) || 'Unknown Player' :
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
                                 </div>
-
-                                <div className="text-center text-[16px] mt-4">{getMatchStatus(match)}</div>
-                                {isCurrentUserParticipant(match) && (
+                                <div className="text-center text-[16px] mt-4">{getMatchStatus(bracket[2])}</div>
+                                {isCurrentUserParticipant(bracket[2]) && (
                                     <div className={"w-full mt-4"}>
                                         <Button
                                             className={"w-full"}
                                             variant={"secondary"}
-                                            onClick={() => handleOpenSubmitModal(match)}
-                                            disabled={hasUserSubmittedResult(match)}
+                                            onClick={() => handleOpenSubmitModal(bracket[2])}
+                                            disabled={hasUserSubmittedResult(bracket[2])}
                                         >
-                                            {hasUserSubmittedResult(match) ? "Match Results Submitted" : "Submit Match Results"}
+                                            {hasUserSubmittedResult(bracket[2]) ? "Match Results Submitted" : "Submit Match Results"}
                                         </Button>
                                     </div>
                                 )}
-                                {isTournamentOrganizer && getMatchStatus(match) === "Results in Dispute" && (
+                                {isTournamentOrganizer && getMatchStatus(bracket[2]) === "Results in Dispute" && (
                                     <div className={"w-full mt-4"}>
                                         <Button
                                             className={"w-full"}
-                                            variant={"secondary"}
-                                            onClick={() => handleOpenReviewModal(match)}
+                                            variant={"outline"}
+                                            onClick={() => handleOpenReviewModal(bracket[2])}
                                         >
                                             Resolve Dispute
                                         </Button>
                                     </div>
                                 )}
                             </div>
-                        ))}
-                    </div>
-
-                    {/* Final match at the bottom */}
-                    <div className="mt-5">
-                        <div
-                            className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col">
-                            <h2 className="text-[26px] font-semibold text-center">{bracket[2].label}</h2>
-                            <div className="flex justify-between items-center w-full relative flex-1">
-                                <div className={"text-[20px] w-[37%] text-center"}>
-                                    {bracket[2].player1 ? playerIgnMap.get(bracket[2].player1.userId) || 'Unknown Player' :
-                                        <span className="text-muted-white text-[20px]">Waiting for player...</span>}
-                                </div>
-                                <div className={"absolute w-full flex justify-center h-full items-center"}><Image
-                                    src={"/assets/images/versus/vs.png"} alt={"vs"} height={150} width={150}/></div>
-                                <div className={"text-[20px] w-[37%] text-center"}>
-                                    {bracket[2].player2 ? playerIgnMap.get(bracket[2].player2.userId) || 'Unknown Player' :
-                                        <span className="text-muted-white text-[20px]">Waiting for player...</span>}
-                                </div>
-                            </div>
-                            <div className="text-center text-[16px] mt-4">{getMatchStatus(bracket[2])}</div>
-                            {isCurrentUserParticipant(bracket[2]) && (
-                                <div className={"w-full mt-4"}>
-                                    <Button
-                                        className={"w-full"}
-                                        variant={"secondary"}
-                                        onClick={() => handleOpenSubmitModal(bracket[2])}
-                                        disabled={hasUserSubmittedResult(bracket[2])}
-                                    >
-                                        {hasUserSubmittedResult(bracket[2]) ? "Match Results Submitted" : "Submit Match Results"}
-                                    </Button>
-                                </div>
-                            )}
-                            {isTournamentOrganizer && getMatchStatus(bracket[2]) === "Results in Dispute" && (
-                                <div className={"w-full mt-4"}>
-                                    <Button
-                                        className={"w-full"}
-                                        variant={"outline"}
-                                        onClick={() => handleOpenReviewModal(bracket[2])}
-                                    >
-                                        Resolve Dispute
-                                    </Button>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
+
+                {/* Submit Match Results Modal */}
+                <SubmitMatchResultsModal
+                    open={isSubmitModalOpen}
+                    onClose={() => setIsSubmitModalOpen(false)}
+                    matchLabel={selectedMatch?.label || ''}
+                    player1={selectedMatch?.player1 ? getPlayerName(selectedMatch.player1) : null}
+                    player2={selectedMatch?.player2 ? getPlayerName(selectedMatch.player2) : null}
+                    onSubmit={handleSubmitResult}
+                />
+
+                {/* Review Dispute Modal */}
+                <ReviewDisputeModal
+                    open={isReviewModalOpen}
+                    onOpenChange={setIsReviewModalOpen}
+                    matchLabel={selectedMatch?.label || ""}
+                    player1Name={selectedMatch?.player1 ? getPlayerName(selectedMatch.player1) : null}
+                    player2Name={selectedMatch?.player2 ? getPlayerName(selectedMatch.player2) : null}
+                    player1UserId={selectedMatch?.player1?.userId || null}
+                    player2UserId={selectedMatch?.player2?.userId || null}
+                    player1Submission={selectedMatch ? getSubmittedResults(selectedMatch).player1Submission : null}
+                    player2Submission={selectedMatch ? getSubmittedResults(selectedMatch).player2Submission : null}
+                    onResolveDispute={handleResolveDispute}
+                />
             </div>
-
-            {/* Submit Match Results Modal */}
-            <SubmitMatchResultsModal
-                open={isSubmitModalOpen}
-                onClose={() => setIsSubmitModalOpen(false)}
-                matchLabel={selectedMatch?.label || ''}
-                player1={selectedMatch?.player1 ? getPlayerName(selectedMatch.player1) : null}
-                player2={selectedMatch?.player2 ? getPlayerName(selectedMatch.player2) : null}
-                onSubmit={handleSubmitResult}
-            />
-
-            {/* Review Dispute Modal */}
-            <ReviewDisputeModal
-                open={isReviewModalOpen}
-                onOpenChange={setIsReviewModalOpen}
-                matchLabel={selectedMatch?.label || ""}
-                player1Name={selectedMatch?.player1 ? getPlayerName(selectedMatch.player1) : null}
-                player2Name={selectedMatch?.player2 ? getPlayerName(selectedMatch.player2) : null}
-                player1UserId={selectedMatch?.player1?.userId || null}
-                player2UserId={selectedMatch?.player2?.userId || null}
-                player1Submission={selectedMatch ? getSubmittedResults(selectedMatch).player1Submission : null}
-                player2Submission={selectedMatch ? getSubmittedResults(selectedMatch).player2Submission : null}
-                onResolveDispute={handleResolveDispute}
-            />
+            <TournamentDetails contractAddress={tournament.contractAddress}/>
         </div>
     );
 }
