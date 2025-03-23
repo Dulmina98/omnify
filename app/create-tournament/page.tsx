@@ -73,14 +73,10 @@ export default function CreateTournament() {
             }
 
             // Validate dates
-            const now = Date.now() / 1000; // Current time in seconds
             const startDateTimestamp = Math.floor(data.startDate / 1000);
             const endDateTimestamp = Math.floor(data.endDate / 1000);
             if (startDateTimestamp >= endDateTimestamp) {
                 throw new Error("Start date must be before end date.");
-            }
-            if (startDateTimestamp <= now) {
-                throw new Error("Start date must be in the future.");
             }
 
             // Validate supported options
