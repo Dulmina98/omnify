@@ -118,12 +118,12 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                     <p className="flex items-center">
                         <FaCalendarAlt className="mr-2 text-purple-400"/>
                         <span
-                            className="font-semibold mr-2">Start Date:</span> {new Date(tournamentData.startDate * 1000).toLocaleString()}
+                            className="font-semibold mr-2">Start Date:</span> {new Date(tournamentData.startDate * 1000).toLocaleDateString()}
                     </p>
                     <p className="flex items-center">
                         <FaCalendarAlt className="mr-2 text-purple-400"/>
                         <span
-                            className="font-semibold mr-2">End Date:</span> {new Date(tournamentData.endDate * 1000).toLocaleString()}
+                            className="font-semibold mr-2">End Date:</span> {new Date(tournamentData.endDate * 1000).toLocaleDateString()}
                     </p>
                     <p className="flex items-center">
                         <FaUsers className="mr-2 text-orange-400"/>
@@ -137,7 +137,8 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                     <p className="flex items-center">
                         <span className="font-semibold mr-2">Status:</span>
                         <span
-                            className={`px-2 py-1 rounded ${tournamentData.status === 0 ? "bg-green-500/20 text-green-400" : tournamentData.status === 1 ? "bg-blue-500/20 text-blue-400" : "bg-red-500/20 text-red-400"}`}>
+                            className={`px-2 py-1 rounded ${tournamentData.status === 0 ? "bg-green-500/20 text-green-400" : tournamentData.status === 1 ? "bg-blue-500/20 text-blue-400" : "bg-red-500/20 text-red-400"}`}
+                        >
                             {statusLabels[tournamentData.status]}
                         </span>
                     </p>
