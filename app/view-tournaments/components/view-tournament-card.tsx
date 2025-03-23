@@ -3,7 +3,7 @@ import mk from "@/public/assets/images/games/mk.png";
 import sf from "@/public/assets/images/games/street-fighter.png";
 import injustice from "@/public/assets/images/games/injustice.png";
 import tekken from "@/public/assets/images/games/tekken.png";
-import {formatDate, getRemainingDays} from "@/utils/date-formatter";
+import {formatDate} from "@/utils/date-formatter";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
 import {Doc} from "@/convex/_generated/dataModel";
@@ -72,9 +72,6 @@ export function ViewTournamentCard({tournament}: ViewTournamentCardProps) {
                     </div>
                 </div>
                 <div className={"w-full flex justify-end mt-8 items-center gap-10"}>
-                    <div className={"text-theme-crimson font-bold italic text-[20px]"}>
-                        {getRemainingDays(tournament.deadline)} days remaining.
-                    </div>
                     <Link href={`/view-tournaments/${tournament._id}`}>
                         <Button className="text-[16px]">View Tournament</Button>
                     </Link>

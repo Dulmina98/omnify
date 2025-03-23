@@ -15,6 +15,7 @@ import {useState} from "react";
 import {useCurrentUser} from "@/services/user-service";
 import {ReviewDisputeModal} from "@/app/components/modals/review-dispute-modal";
 import TournamentDetails from "@/app/components/smart-contracts/tournament-details";
+import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
 
 interface Match {
     match: number;
@@ -314,6 +315,15 @@ export default function TournamentInfo() {
                                 )}
                             </div>
                         </div>
+                        <Accordion type="single" collapsible className={"mt-20"}>
+                            <AccordionItem value="item-1">
+                                <AccordionTrigger>More Details</AccordionTrigger>
+                                <AccordionContent>
+                                    <TournamentDetails contractAddress={tournament.contractAddress}/>
+                                </AccordionContent>
+                            </AccordionItem>
+                        </Accordion>
+
                     </div>
                 </div>
 
@@ -341,7 +351,6 @@ export default function TournamentInfo() {
                     onResolveDispute={handleResolveDispute}
                 />
             </div>
-            <TournamentDetails contractAddress={tournament.contractAddress}/>
         </div>
     );
 }

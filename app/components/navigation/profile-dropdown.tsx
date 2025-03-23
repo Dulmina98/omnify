@@ -17,8 +17,6 @@ export function ProfileDropdown() {
     const {user, role} = useCurrentUser();
     const {signOut} = useClerk();
 
-    const randomImageNum = Math.floor(Math.random() * (35 - 20 + 1)) + 20;
-
     return (
         <>
             <div className={'hidden md:block'}>
@@ -26,11 +24,11 @@ export function ProfileDropdown() {
                     <DropdownMenuTrigger asChild>
                         <div className={'w-[30px] md:w-10 h-[30px] md:h-10 cursor-pointer'}>
                             <Image
-                                src={`https://avatar.iran.liara.run/public/${randomImageNum}`}
+                                src={"/assets/images/other/user-placeholder.png"}
                                 alt={'avatar'}
                                 width={40}
                                 height={40}
-                                className={'rounded-full'}
+                                className={'rounded-full w-full h-[40px] object-cover'}
                             />
                         </div>
                     </DropdownMenuTrigger>
@@ -43,11 +41,11 @@ export function ProfileDropdown() {
                             <div className={'flex gap-2'}>
                                 <div className={'w-10 h-10'}>
                                     <Image
-                                        src={`https://avatar.iran.liara.run/public/${randomImageNum}`}
+                                        src={"/assets/images/other/user-placeholder.png"}
                                         alt={'avatar'}
                                         width={40}
                                         height={40}
-                                        className={'rounded-full'}
+                                        className={'rounded-full w-full h-[40px] object-cover'}
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).src =
                                                 '/assets/placeholder.jpg'

@@ -84,3 +84,30 @@ export async function fetchTournamentData(contractAddress: string) {
         throw new Error(`Failed to fetch tournament data: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 }
+
+/**
+ * Fetch all entry fee payment transactions (PlayerPaid events) for a tournament
+ * @param contractAddress The deployed contract address
+ * @returns Array of transaction objects with player, amount, transactionHash, and blockNumber
+ */
+export async function fetchEntryFeeTransactions(contractAddress: string) {
+    // Create a read-only contract instance
+    const contract = getContractReadOnly(contractAddress);
+
+    // Create a filter for the PlayerPaid event
+    const filter = contract.filters.PlayerPaid();
+
+    // Query all PlayerPaid events from the contract
+    const logs = await contract.queryFilter(filter);
+
+    // Filter only EventLog instances (those with the 'args' property)
+    const eventLogs = logs.filter(log => 'args' in log) as ethers.EventLog[];
+
+    // Map events to a readable format
+    return eventLogs.map(event => ({
+        player: event.args.player,                  // Access player from args
+        amount: ethers.formatEther(event.args.amount), // Convert amount from wei to ETH
+        transactionHash: event.transactionHash,     // Transaction hash
+        blockNumber: event.blockNumber,             // Block number
+    }));
+}
