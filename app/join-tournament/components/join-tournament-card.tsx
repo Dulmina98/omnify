@@ -3,7 +3,7 @@ import mk from "@/public/assets/images/games/mk.png";
 import sf from "@/public/assets/images/games/street-fighter.png";
 import injustice from "@/public/assets/images/games/injustice.png";
 import tekken from "@/public/assets/images/games/tekken.png";
-import {formatDate, getRemainingDays} from "@/utils/date-formatter";
+import {formatDate} from "@/utils/date-formatter";
 import {Button} from "@/components/ui/button";
 import {useCurrentUser} from "@/services/user-service";
 import {useQuery} from "convex/react";
@@ -100,12 +100,6 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                             <li className="text-white text-[16px]">
                                 <span className="font-semibold">Entry Fee:</span> {tournament.entryFee}
                             </li>
-                            <li className="text-white text-[16px]">
-                                <span className="font-semibold">Payment Method:</span> {tournament.paymentMethod}
-                            </li>
-                            <li className="text-white text-[16px]">
-                                <span className="font-semibold">Deadline:</span> {formatDate(tournament.deadline)}
-                            </li>
                         </div>
                     </div>
 
@@ -123,39 +117,13 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                         </div>
                     </div>
 
-                    {/* Match Rules & Settings Section */}
-                    <div className="my-5">
-                        <div className="text-white text-[20px] font-semibold mb-3">Match Rules & Settings</div>
-                        <div className="flex flex-col gap-y-2">
-                            <li className="text-white text-[16px]">
-                                <span className="font-semibold">Game Mode:</span> {tournament.gameMode}
-                            </li>
-                            <li className="text-white text-[16px]">
-                                <span className="font-semibold">Stage Selection:</span> {tournament.stageSelection}
-                            </li>
-                            <li className="text-white text-[16px]">
-                                <span
-                                    className="font-semibold">Character Selection Rules:</span> {tournament.characterSelectionRules}
-                            </li>
-                            <li className="text-white text-[16px]">
-                                <span
-                                    className="font-semibold">Banned Characters/Items:</span> {tournament.bannedCharactersItems}
-                            </li>
-                            <li className="text-white text-[16px]">
-                                <span className="font-semibold">Disconnect Policy:</span> {tournament.disconnectPolicy}
-                            </li>
-                            <li className="text-white text-[16px]">
-                                <span className="font-semibold">Pause/Break Rules:</span> {tournament.pauseBreakRules}
-                            </li>
-                        </div>
-                    </div>
                 </div>
 
                 {/* Join Button */}
                 <div className="w-full flex justify-end mt-16 items-center gap-10">
                     <div className="text-theme-crimson font-bold italic text-[20px]">
                         {tournament.numberOfPlayersRequired - (allParticipants?.length ?? 0)} seats left.{" "}
-                        {getRemainingDays(tournament.deadline)} days left. Hurry Up!
+                        Hurry Up!
                     </div>
                     <Link href={`/view-tournaments/${tournament._id}`}>
                         <Button className="text-[16px]">View Tournament</Button>
