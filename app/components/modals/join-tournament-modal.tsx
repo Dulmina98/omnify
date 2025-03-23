@@ -1,9 +1,9 @@
 import {useEffect, useState} from "react";
-import {Dialog, DialogContent, DialogHeader} from "@/components/ui/dialog";
+import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 import {Button} from "@/components/ui/button";
 import {VisuallyHidden} from "@radix-ui/react-visually-hidden";
 import Image from "next/image";
-import {getContract} from "@/lib/contract";
+import {getContractWithSigner} from "@/lib/contract";
 import {useApiMutation} from "@/hooks/use-api-mutation";
 import {api} from "@/convex/_generated/api";
 import {PaymentTypes} from "@/types/payment-types";
@@ -37,7 +37,7 @@ export function JoinTournamentModal({open, onClose, tournament, user}: JoinTourn
             }
 
             setState("confirming");
-            const contract = await getContract(tournament.contractAddress);
+            const contract = await getContractWithSigner(tournament.contractAddress);
             const entryFee = await contract.entryFee();
             const tx = await contract.payEntryFee({value: entryFee});
             setState("processing");
@@ -77,9 +77,11 @@ export function JoinTournamentModal({open, onClose, tournament, user}: JoinTourn
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent
                 className="max-w-[700px] w-full bg-black/40 backdrop-blur-lg rounded-[10px] border-theme-crimson text-white p-[40px]">
-                <VisuallyHidden>
-                    <DialogHeader>Payment Required</DialogHeader>
-                </VisuallyHidden>
+                <DialogHeader>
+                    <VisuallyHidden>
+                        <DialogTitle>Join Tournament Payment</DialogTitle>
+                    </VisuallyHidden>
+                </DialogHeader>
                 <div className="flex flex-col justify-center items-center text-white">
                     {state === "confirming" && (
                         <>
