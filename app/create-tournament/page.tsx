@@ -8,12 +8,15 @@ import {useCurrentUser} from "@/services/user-service";
 import {CreateTournamentSuccessModal} from "@/app/components/modals/create-tournament-success-modal";
 import {useState} from "react";
 import {ethers} from "ethers";
-import TournamentArtifact from "../../smart-contract/artifacts/contracts/Tournament.sol/Tournament.json"
+import TournamentArtifact from "../../smart-contract/artifacts/contracts/Tournament.sol/Tournament.json";
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
 import {Input} from "@/components/ui/input";
 import {Textarea} from "@/components/ui/textarea";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {GameTypes} from "@/types/game-types";
+
+const prizeDistributionMethods = ["winner-takes-all", "top-3"] as const;
+type PrizeDistributionMethod = typeof prizeDistributionMethods[number];
 
 type TournamentFormData = {
     tournamentName: string;
@@ -25,8 +28,8 @@ type TournamentFormData = {
     startDate: number;
     endDate: number;
     entryFee: string;
-    totalPrizePool: number;
-    prizeDistributionMethod: string;
+    totalPrizePool: string; // Changed to string for precision
+    prizeDistributionMethod: PrizeDistributionMethod;
 };
 
 export default function CreateTournament() {
@@ -47,20 +50,52 @@ export default function CreateTournament() {
             startDate: 0,
             endDate: 0,
             entryFee: "",
-            totalPrizePool: 0,
-            prizeDistributionMethod: "",
+            totalPrizePool: "",
+            prizeDistributionMethod: "winner-takes-all",
         },
     });
 
     const onSubmit = async (data: TournamentFormData) => {
         try {
             if (!user) {
-                console.error("User is not signed in.");
-                return;
+                throw new Error("User is not signed in.");
             }
 
             setIsDeploying(true);
             setDeploymentError(null);
+
+            // Validate required fields
+            if (!data.entryFee || parseFloat(data.entryFee) <= 0) {
+                throw new Error("Entry fee must be a positive number.");
+            }
+            if (!data.totalPrizePool || parseFloat(data.totalPrizePool) <= 0) {
+                throw new Error("Total prize pool must be a positive number.");
+            }
+
+            // Validate dates
+            const now = Date.now() / 1000; // Current time in seconds
+            const startDateTimestamp = Math.floor(data.startDate / 1000);
+            const endDateTimestamp = Math.floor(data.endDate / 1000);
+            if (startDateTimestamp >= endDateTimestamp) {
+                throw new Error("Start date must be before end date.");
+            }
+            if (startDateTimestamp <= now) {
+                throw new Error("Start date must be in the future.");
+            }
+
+            // Validate supported options
+            const validTournamentTypes = ["single-elimination"];
+            const validTeamSizes = ["1v1"];
+            const validPlayerCounts = [4];
+            if (!validTournamentTypes.includes(data.tournamentType)) {
+                throw new Error("Invalid tournament type selected.");
+            }
+            if (!validTeamSizes.includes(data.teamSize)) {
+                throw new Error("Invalid team size selected.");
+            }
+            if (!validPlayerCounts.includes(data.numberOfPlayersRequired)) {
+                throw new Error("Invalid number of players selected.");
+            }
 
             if (!window.ethereum) {
                 throw new Error("Please install MetaMask or another Ethereum wallet provider.");
@@ -69,26 +104,46 @@ export default function CreateTournament() {
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
 
+            // Convert form data to contract-compatible types
+            const entryFeeInWei = ethers.parseEther(data.entryFee);
+            const totalPrizePoolInWei = ethers.parseEther(data.totalPrizePool);
+            const prizeMethodMapping: Record<PrizeDistributionMethod, number> = {
+                "winner-takes-all": 0,
+                "top-3": 1,
+            };
+            const prizeDistributionMethod = prizeMethodMapping[data.prizeDistributionMethod];
+
             // Deploy the smart contract
-            const entryFeeInWei = ethers.parseEther(data.entryFee.toString() || "0");
             const factory = new ethers.ContractFactory(
                 TournamentArtifact.abi,
                 TournamentArtifact.bytecode,
                 signer
             );
-            const contract = await factory.deploy(entryFeeInWei);
+            const contract = await factory.deploy(
+                entryFeeInWei,
+                data.numberOfPlayersRequired,
+                startDateTimestamp,
+                endDateTimestamp,
+                totalPrizePoolInWei,
+                prizeDistributionMethod
+            );
             await contract.waitForDeployment();
             const contractAddress = await contract.getAddress();
 
-            // Prepare tournament data with timestamps and contract address
-            const startDateTimestamp = new Date(data.startDate).getTime();
-            const endDateTimestamp = new Date(data.endDate).getTime();
+            // Verify contract deployment
+            const deployedContract = new ethers.Contract(contractAddress, TournamentArtifact.abi, signer);
+            const organizer = await deployedContract.organizer(); // Ensure contract is accessible
+            if (organizer.toLowerCase() !== (await signer.getAddress()).toLowerCase()) {
+                throw new Error("Contract deployment verification failed.");
+            }
 
+            // Prepare tournament data for database
             const tournamentData = {
                 ...data,
-                startDate: startDateTimestamp,
-                endDate: endDateTimestamp,
-                entryFee: parseFloat(data.entryFee) || 0,
+                startDate: startDateTimestamp * 1000,
+                endDate: endDateTimestamp * 1000,
+                entryFee: parseFloat(data.entryFee),
+                totalPrizePool: parseFloat(data.totalPrizePool),
                 contractAddress,
             };
 
@@ -111,15 +166,26 @@ export default function CreateTournament() {
             setIsDeploying(false);
             setIsModalOpen(true);
             console.log("Tournament created successfully with contract address:", contractAddress);
-        } catch (error: unknown) {
+        } catch (error: any) {
             setIsDeploying(false);
             let errorMessage = "An error occurred while creating the tournament.";
-            if (error instanceof Error) {
+            if (error.code === 4001) {
+                errorMessage = "Transaction rejected by user.";
+            } else if (error.message?.includes("insufficient funds")) {
+                errorMessage = "Insufficient ETH for gas fees.";
+            } else if (error instanceof Error) {
                 errorMessage = error.message;
             }
             setDeploymentError(errorMessage);
             console.error("Error creating tournament:", error);
         }
+    };
+
+    const formatPrizeMethod = (method: string) => {
+        return method
+            .split("-")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
     };
 
     return (
@@ -141,7 +207,6 @@ export default function CreateTournament() {
                                     Tournament Details
                                 </div>
                                 <div className={"flex w-full gap-[30px] flex-wrap"}>
-                                    {/* Tournament Name */}
                                     <FormField
                                         control={form.control}
                                         name="tournamentName"
@@ -157,8 +222,6 @@ export default function CreateTournament() {
                                             </FormItem>
                                         )}
                                     />
-
-                                    {/* Game Title (Select Input) */}
                                     <FormField
                                         control={form.control}
                                         name="gameTitle"
@@ -175,7 +238,11 @@ export default function CreateTournament() {
                                                     <SelectContent>
                                                         {Object.entries(GameTypes).map(([key, value]) => (
                                                             <SelectItem key={key} value={value}>
-                                                                {value.replace('-', ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                                                {value
+                                                                    .replace("-", " ")
+                                                                    .split(" ")
+                                                                    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                                                                    .join(" ")}
                                                             </SelectItem>
                                                         ))}
                                                     </SelectContent>
@@ -184,9 +251,6 @@ export default function CreateTournament() {
                                             </FormItem>
                                         )}
                                     />
-
-                                    {/* Tournament Description (Textarea) */}
-
                                 </div>
                                 <FormField
                                     control={form.control}
@@ -202,14 +266,11 @@ export default function CreateTournament() {
                                         </FormItem>
                                     )}
                                 />
-
                                 <div
-                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>Tournament
-                                    Types & Format
+                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>
+                                    Tournament Types & Format
                                 </div>
-
                                 <div className={"flex w-full gap-[30px] flex-wrap"}>
-                                    {/* Tournament Type (Select Input) */}
                                     <FormField
                                         control={form.control}
                                         name="tournamentType"
@@ -226,8 +287,9 @@ export default function CreateTournament() {
                                                     <SelectContent>
                                                         <SelectItem value="single-elimination">Single
                                                             Elimination</SelectItem>
-                                                        <SelectItem value="double-elimination" disabled={true}>Double
-                                                            Elimination</SelectItem>
+                                                        <SelectItem value="double-elimination" disabled={true}>
+                                                            Double Elimination
+                                                        </SelectItem>
                                                         <SelectItem value="round-robin" disabled={true}>Round
                                                             Robin</SelectItem>
                                                     </SelectContent>
@@ -236,8 +298,6 @@ export default function CreateTournament() {
                                             </FormItem>
                                         )}
                                     />
-
-                                    {/* Team Size (Select Input) */}
                                     <FormField
                                         control={form.control}
                                         name="teamSize"
@@ -261,16 +321,13 @@ export default function CreateTournament() {
                                             </FormItem>
                                         )}
                                     />
-
-                                    {/* Number of Players Required (Select Dropdown) */}
                                     <FormField
                                         control={form.control}
                                         name="numberOfPlayersRequired"
                                         render={({field}) => (
                                             <FormItem className={"flex-[1_1_30%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>
-                                                    Number of Players Required
-                                                </FormLabel>
+                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Number of
+                                                    Players Required</FormLabel>
                                                 <Select onValueChange={(value) => field.onChange(parseInt(value, 10))}>
                                                     <FormControl>
                                                         <SelectTrigger className={"h-[46px]"}>
@@ -287,9 +344,6 @@ export default function CreateTournament() {
                                             </FormItem>
                                         )}
                                     />
-
-
-                                    {/* Start Date */}
                                     <FormField
                                         control={form.control}
                                         name="startDate"
@@ -302,15 +356,14 @@ export default function CreateTournament() {
                                                         type="date"
                                                         className={"h-[46px] w-full custom-date-input"}
                                                         {...field}
-                                                        value={field.value || ""}
+                                                        value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
+                                                        onChange={(e) => field.onChange(new Date(e.target.value).getTime())}
                                                     />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
                                         )}
                                     />
-
-                                    {/* End Date */}
                                     <FormField
                                         control={form.control}
                                         name="endDate"
@@ -323,7 +376,8 @@ export default function CreateTournament() {
                                                         type="date"
                                                         className={"h-[46px] custom-date-input"}
                                                         {...field}
-                                                        value={field.value || ""}
+                                                        value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
+                                                        onChange={(e) => field.onChange(new Date(e.target.value).getTime())}
                                                     />
                                                 </FormControl>
                                                 <FormMessage/>
@@ -331,14 +385,11 @@ export default function CreateTournament() {
                                         )}
                                     />
                                 </div>
-
                                 <div
-                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>Entry
-                                    Requirement & Registration
+                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>
+                                    Entry Requirement & Registration
                                 </div>
-
                                 <div className={"flex w-full gap-[30px] flex-wrap"}>
-                                    {/* Entry Fee */}
                                     <FormField
                                         control={form.control}
                                         name="entryFee"
@@ -355,51 +406,46 @@ export default function CreateTournament() {
                                                         onChange={(e) => {
                                                             const value = e.target.value;
                                                             if (/^-?\d*\.?\d*$/.test(value)) {
-                                                                field.onChange(value === '' ? '' : value);
-                                                            } else {
-                                                                e.preventDefault();
+                                                                field.onChange(value === "" ? "" : value);
                                                             }
                                                         }}
-                                                        value={field.value === '' ? '0' : field.value}
                                                     />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
                                         )}
                                     />
-
                                 </div>
-
                                 <div
-                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>Prize
-                                    Pool & Distribution
+                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>
+                                    Prize Pool & Distribution
                                 </div>
-
                                 <div className={"flex w-full gap-[30px] flex-wrap"}>
-                                    {/* Total Prize Pool */}
                                     <FormField
                                         control={form.control}
                                         name="totalPrizePool"
                                         render={({field}) => (
                                             <FormItem className={"flex-1"}>
                                                 <FormLabel className={"text-white text-[16px] mb-[10px]"}>Total Prize
-                                                    Pool</FormLabel>
+                                                    Pool (ETH)</FormLabel>
                                                 <FormControl>
                                                     <Input
-                                                        type="number"
+                                                        type="text"
                                                         className={"h-[46px]"}
-                                                        placeholder="Enter total prize pool"
+                                                        placeholder="Enter total prize pool (e.g., 0.1)"
                                                         {...field}
-                                                        value={field.value || ""}
-                                                        onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                                                        onChange={(e) => {
+                                                            const value = e.target.value;
+                                                            if (/^-?\d*\.?\d*$/.test(value)) {
+                                                                field.onChange(value === "" ? "" : value);
+                                                            }
+                                                        }}
                                                     />
                                                 </FormControl>
                                                 <FormMessage/>
                                             </FormItem>
                                         )}
                                     />
-
-                                    {/* Prize Distribution Method (Select Input) */}
                                     <FormField
                                         control={form.control}
                                         name="prizeDistributionMethod"
@@ -415,10 +461,11 @@ export default function CreateTournament() {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        <SelectItem value="winner-takes-all">Winner Takes
-                                                            All</SelectItem>
-                                                        <SelectItem value="top-3">Top 3</SelectItem>
-                                                        <SelectItem value="custom">Custom</SelectItem>
+                                                        {prizeDistributionMethods.map((method) => (
+                                                            <SelectItem key={method} value={method}>
+                                                                {formatPrizeMethod(method)}
+                                                            </SelectItem>
+                                                        ))}
                                                     </SelectContent>
                                                 </Select>
                                                 <FormMessage/>
@@ -427,7 +474,6 @@ export default function CreateTournament() {
                                     />
                                 </div>
                             </div>
-
                             <div className="mt-[80px]">
                                 <Button
                                     type="submit"
@@ -436,9 +482,7 @@ export default function CreateTournament() {
                                 >
                                     {isDeploying ? "Deploying Contract..." : "Create Tournament"}
                                 </Button>
-                                {deploymentError && (
-                                    <p className="text-red-500 mt-2 text-center">{deploymentError}</p>
-                                )}
+                                {deploymentError && <p className="text-red-500 mt-2 text-center">{deploymentError}</p>}
                             </div>
                         </div>
                     </form>
