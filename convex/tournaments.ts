@@ -15,7 +15,6 @@ export const createTournament = mutation({
         entryFee: v.float64(),
         totalPrizePool: v.number(),
         prizeDistributionMethod: v.string(),
-        pauseBreakRules: v.string(),
         contractAddress: v.string(),
     },
     handler: async (ctx, args) => {
