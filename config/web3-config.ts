@@ -5,11 +5,11 @@ import {injected} from 'wagmi/connectors';
 const connectors = typeof window !== 'undefined' ? [injected()] : [];
 
 export const wagmiConfig = createConfig({
-    chains: [mainnet], // Use Ethereum mainnet
+    chains: [mainnet],
     connectors,
     ssr: true,
     transports: {
-        [mainnet.id]: http(), // Use Ethereum's RPC endpoint
+        [mainnet.id]: http(),
     },
 });
 

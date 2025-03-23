@@ -2,7 +2,7 @@ import {useEffect, useState} from 'react';
 import {BrowserProvider, Signer} from 'ethers'; // Updated imports for ethers v6
 import {useAccount, useConnect, useDisconnect} from 'wagmi';
 
-export const useEthereum = () => {
+export const useWallet = () => {
     const [provider, setProvider] = useState<BrowserProvider | null>(null); // Use BrowserProvider instead of Web3Provider
     const [signer, setSigner] = useState<Signer | null>(null);
     const {address, isConnected} = useAccount();

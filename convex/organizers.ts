@@ -40,3 +40,41 @@ export const getOrganizerByUserId = query({
             .unique();
     },
 });
+
+export const updateOrganizerWalletId = mutation({
+    args: {
+        userId: v.string(),
+        walletId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const existingOrganizer = await ctx.db
+            .query("organizers")
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .unique();
+
+        if (!existingOrganizer) {
+            throw new Error("Organizer not found");
+        }
+
+        if (existingOrganizer.walletId) {
+            return existingOrganizer._id;
+        }
+
+        await ctx.db.patch(existingOrganizer._id, {
+            walletId: args.walletId,
+        });
+
+        return existingOrganizer._id;
+    },
+});
+
+export const getOrganizerWalletId = query({
+    args: {userId: v.string()},
+    handler: async (ctx, args) => {
+        const organizer = await ctx.db
+            .query("organizers")
+            .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+            .unique();
+        return organizer?.walletId || null;
+    },
+});

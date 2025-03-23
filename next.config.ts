@@ -1,10 +1,6 @@
-import type {NextConfig} from "next";
-
-const nextConfig: NextConfig = {
+// next.config.js
+module.exports = {
     images: {
-        domains: ['avatar.iran.liara.run'],
+        domains: ['images.unsplash.com', 'avatar.iran.liara.run'],
     },
-    // other config options here
 };
-
-export default nextConfig;

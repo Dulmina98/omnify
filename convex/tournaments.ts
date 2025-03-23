@@ -12,19 +12,10 @@ export const createTournament = mutation({
         numberOfPlayersRequired: v.number(),
         startDate: v.number(),
         endDate: v.number(),
-        entryFee: v.number(),
-        paymentMethod: v.string(),
-        deadline: v.number(),
-        minLevel: v.number(),
+        entryFee: v.float64(),
         totalPrizePool: v.number(),
         prizeDistributionMethod: v.string(),
-        gameMode: v.string(),
-        stageSelection: v.string(),
-        characterSelectionRules: v.string(),
-        bannedCharactersItems: v.string(),
-        disconnectPolicy: v.string(),
-        matchDisputeResolution: v.string(),
-        pauseBreakRules: v.string(),
+        contractAddress: v.string(),
     },
     handler: async (ctx, args) => {
         return await ctx.db.insert("tournaments", {
@@ -38,22 +29,13 @@ export const createTournament = mutation({
             startDate: args.startDate,
             endDate: args.endDate,
             entryFee: args.entryFee,
-            paymentMethod: args.paymentMethod,
-            deadline: args.deadline,
-            minLevel: args.minLevel,
             totalPrizePool: args.totalPrizePool,
             prizeDistributionMethod: args.prizeDistributionMethod,
-            gameMode: args.gameMode,
-            stageSelection: args.stageSelection,
-            characterSelectionRules: args.characterSelectionRules,
-            bannedCharactersItems: args.bannedCharactersItems,
-            disconnectPolicy: args.disconnectPolicy,
-            matchDisputeResolution: args.matchDisputeResolution,
-            pauseBreakRules: args.pauseBreakRules,
             isApproved: false,
-        })
-    }
-})
+            contractAddress: args.contractAddress,
+        });
+    },
+});
 
 export const getAllTournaments = query({
     handler: async (ctx) => {
@@ -80,3 +62,32 @@ export const getTournamentById = query({
         return tournament;
     },
 });
+
+export const getApprovedTournaments = query({
+    handler: async (ctx) => {
+        return await ctx.db
+            .query("tournaments")
+            .filter(q => q.eq(q.field("isApproved"), true))
+            .collect()
+    }
+})
+
+export const getNotApprovedTournaments = query({
+    handler: async (ctx) => {
+        return await ctx.db
+            .query("tournaments")
+            .filter(q => q.eq(q.field("isApproved"), false))
+            .collect()
+    }
+})
+
+export const approveTournament = mutation({
+    args: {
+        tournamentId: v.id("tournaments"),
+    },
+    handler: async (ctx, args) => {
+        await ctx.db.patch(args.tournamentId, {
+            isApproved: true
+        })
+    }
+})

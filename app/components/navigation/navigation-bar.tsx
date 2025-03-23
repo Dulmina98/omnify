@@ -4,15 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import {Button} from "@/components/ui/button";
 import {useCurrentUser} from "@/services/user-service";
-import {useUser} from "@clerk/nextjs";
+import {useClerk, useUser} from "@clerk/nextjs";
 import {ProfileDropdown} from "@/app/components/navigation/profile-dropdown";
-import {useEthereum} from "@/hooks/use-ethereum";
 import {Tooltip, TooltipContent, TooltipProvider, TooltipTrigger} from "@/components/ui/tooltip";
+import {useWallet} from "@/hooks/use-wallet";
 
 export function NavigationBar() {
     const {user, isSignedIn: isConvexSigned, role} = useCurrentUser();
     const {isSignedIn: isClerkSigned} = useUser();
-    const {provider, signer, address, isConnected, connectWallet, disconnectWallet} = useEthereum();
+    const {signOut} = useClerk();
+    const {address, isConnected, connectWallet, disconnectWallet} = useWallet();
 
     return (
         <div className={"fixed top-0 left-0 w-full h-[68px] flex justify-center backdrop-blur-lg z-50"}>
@@ -22,13 +23,22 @@ export function NavigationBar() {
                                         className={"w-[105px] cursor-pointer mr-12"}/></Link>
                 <div className={"flex justify-between w-full"}>
                     <div className={"flex gap-[25px] items-center w-full"}>
-                        <Link href={"/"} className={"text-white text-[16px] font-medium"}>Home</Link>
+                        <Link href={"/"}
+                              className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>Home</Link>
                         {user && role === "organizer" &&
-                            <Link href={"/"} className={"text-white text-[16px] font-medium"}>Create Tournament</Link>}
-                        {user && role === "player" &&
-                            <Link href={"/join-tournament"} className={"text-white text-[16px] font-medium"}>Join
+                            <Link href={"/create-tournament"}
+                                  className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>Create
                                 Tournament</Link>}
-                        <Link href={"/"} className={"text-white text-[16px] font-medium"}>Contact Us</Link>
+                        {user && role === "player" &&
+                            <Link href={"/join-tournament"}
+                                  className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>Join
+                                Tournament</Link>}
+                        <Link href={"/view-tournaments"}
+                              className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>View
+                            Tournaments</Link>
+                        <Link href={"/contact-us"}
+                              className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>Contact
+                            Us</Link>
                     </div>
                     <div className={"flex items-center gap-[20px]"}>
                         {(isConvexSigned && isClerkSigned) && <>
@@ -65,6 +75,10 @@ export function NavigationBar() {
                                 Sign up
                             </Button>
                         </Link>}
+                        {isClerkSigned && !user &&
+                            <Button className={"w-[150px] h-[36px]"} onClick={() => signOut({redirectUrl: '/'})}>
+                                Log out
+                            </Button>}
                         {(isConvexSigned && isClerkSigned) && <ProfileDropdown/>}
                     </div>
                 </div>

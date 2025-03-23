@@ -14,8 +14,10 @@ import {useClerk} from "@clerk/nextjs";
 import Link from "next/link";
 
 export function ProfileDropdown() {
-    const {user} = useCurrentUser();
+    const {user, role} = useCurrentUser();
     const {signOut} = useClerk();
+
+    const randomImageNum = Math.floor(Math.random() * (35 - 20 + 1)) + 20;
 
     return (
         <>
@@ -24,7 +26,7 @@ export function ProfileDropdown() {
                     <DropdownMenuTrigger asChild>
                         <div className={'w-[30px] md:w-10 h-[30px] md:h-10 cursor-pointer'}>
                             <Image
-                                src={"https://avatar.iran.liara.run/public/33"}
+                                src={`https://avatar.iran.liara.run/public/${randomImageNum}`}
                                 alt={'avatar'}
                                 width={40}
                                 height={40}
@@ -41,7 +43,7 @@ export function ProfileDropdown() {
                             <div className={'flex gap-2'}>
                                 <div className={'w-10 h-10'}>
                                     <Image
-                                        src={"https://avatar.iran.liara.run/public/33"}
+                                        src={`https://avatar.iran.liara.run/public/${randomImageNum}`}
                                         alt={'avatar'}
                                         width={40}
                                         height={40}
@@ -53,7 +55,10 @@ export function ProfileDropdown() {
                                     />
                                 </div>
                                 <div>
-                                    <div className={'text-base font-medium text-main-text'}>{user?.firstName}</div>
+                                    <div
+                                        className={'text-base font-medium text-main-text'}>{user?.firstName} {user?.lastName}</div>
+                                    {role && <div
+                                        className={'text-xs font-normal text-main-text capitalize'}>{role}</div>}
                                     <div
                                         className={'text-xs font-normal text-[#897EA7] dark:text-[#70707C]'}>{user?.email}</div>
                                 </div>
