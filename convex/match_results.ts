@@ -1,5 +1,5 @@
 import {v} from "convex/values";
-import {mutation, query} from "@/convex/_generated/server";
+import {mutation, query} from "./_generated/server";
 
 export const submitMatchResult = mutation({
     args: {
@@ -9,17 +9,18 @@ export const submitMatchResult = mutation({
         player2UserId: v.string(),
         winnerUserId: v.string(),
         submittedBy: v.string(),
+        transactionHash: v.string(), // Added to store blockchain transaction hash
     },
     handler: async (ctx, args) => {
         const existingResult = await ctx.db
             .query("matchResults")
-            .filter(q => q.eq(q.field("matchId"), args.matchId))
-            .filter(q => q.eq(q.field("tournamentId"), args.tournamentId))
+            .filter((q) => q.eq(q.field("matchId"), args.matchId))
+            .filter((q) => q.eq(q.field("tournamentId"), args.tournamentId))
             .first();
 
         if (!existingResult) {
-            // Create new result if it doesn’t exist
-            const newResult = {
+            // Insert new result into Convex
+            const newResultId = await ctx.db.insert("matchResults", {
                 tournamentId: args.tournamentId,
                 matchId: args.matchId,
                 player1UserId: args.player1UserId,
@@ -28,11 +29,14 @@ export const submitMatchResult = mutation({
                 player2Submission: args.submittedBy === args.player2UserId ? args.winnerUserId : undefined,
                 winnerUserId: undefined,
                 status: "pending" as const,
-            };
-            return await ctx.db.insert("matchResults", newResult);
+                transactionHash: args.transactionHash,
+            });
+            return newResultId;
         }
 
-        const updateFields: Partial<typeof existingResult> = {};
+        const updateFields: Partial<typeof existingResult> = {
+            transactionHash: args.transactionHash, // Update transaction hash
+        };
 
         if (args.submittedBy === args.player1UserId) {
             updateFields.player1Submission = args.winnerUserId;
@@ -60,7 +64,10 @@ export const submitMatchResult = mutation({
             updateFields.status = "pending" as const;
         }
 
-        return await ctx.db.patch(existingResult._id, updateFields);
+        // Update Convex with final status
+        await ctx.db.patch(existingResult._id, updateFields);
+
+        return existingResult._id;
     },
 });
 
@@ -69,7 +76,22 @@ export const getMatchResults = query({
     handler: async (ctx, args) => {
         return await ctx.db
             .query("matchResults")
-            .filter(q => q.eq(q.field("tournamentId"), args.tournamentId))
+            .filter((q) => q.eq(q.field("tournamentId"), args.tournamentId))
+            .collect();
+    },
+});
+
+export const getMatchResultsByContract = query({
+    args: {contractAddress: v.string()},
+    handler: async (ctx, args) => {
+        const tournament = await ctx.db
+            .query("tournaments")
+            .filter((q) => q.eq(q.field("contractAddress"), args.contractAddress))
+            .first();
+        if (!tournament) return [];
+        return await ctx.db
+            .query("matchResults")
+            .filter((q) => q.eq(q.field("tournamentId"), tournament._id))
             .collect();
     },
 });
@@ -80,6 +102,7 @@ export const resolveMatchDispute = mutation({
         matchId: v.string(),
         winnerUserId: v.string(),
         submittedBy: v.string(),
+        transactionHash: v.optional(v.string()), // Optional for client-side blockchain interaction
     },
     handler: async (ctx, args) => {
         const tournament = await ctx.db.get(args.tournamentId);
@@ -89,8 +112,8 @@ export const resolveMatchDispute = mutation({
 
         const existingResult = await ctx.db
             .query("matchResults")
-            .filter(q => q.eq(q.field("matchId"), args.matchId))
-            .filter(q => q.eq(q.field("tournamentId"), args.tournamentId))
+            .filter((q) => q.eq(q.field("matchId"), args.matchId))
+            .filter((q) => q.eq(q.field("tournamentId"), args.tournamentId))
             .first();
 
         if (!existingResult) {
@@ -101,9 +124,13 @@ export const resolveMatchDispute = mutation({
             throw new Error("Can only resolve disputed matches");
         }
 
-        return await ctx.db.patch(existingResult._id, {
+        // Update Convex
+        await ctx.db.patch(existingResult._id, {
             winnerUserId: args.winnerUserId,
             status: "completed" as const,
+            transactionHash: args.transactionHash || existingResult.transactionHash, // Use provided or existing hash
         });
+
+        return existingResult._id;
     },
 });
