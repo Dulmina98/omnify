@@ -106,6 +106,7 @@ export default defineSchema({
             v.literal("completed"),
             v.literal("disputed")
         ),
+        transactionHash: v.optional(v.string()),
     })
         .index("by_tournament", ["tournamentId"])
         .index("by_matchId", ["matchId"]),
