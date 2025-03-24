@@ -3,12 +3,6 @@ import TournamentArtifact from "../smart-contract/artifacts/contracts/Tournament
 
 const abi = TournamentArtifact.abi;
 
-/**
- * Get a contract instance for read-only operations using a provider
- * @param contractAddress The deployed contract address
- * @param provider Optional custom provider; defaults to Alchemy Sepolia
- * @returns Ethers Contract instance
- */
 export function getContractReadOnly(
     contractAddress: string,
     provider: ethers.Provider = new ethers.JsonRpcProvider(
@@ -21,11 +15,6 @@ export function getContractReadOnly(
     return new ethers.Contract(contractAddress, abi, provider);
 }
 
-/**
- * Get a contract instance for read/write operations using MetaMask signer
- * @param contractAddress The deployed contract address
- * @returns Ethers Contract instance connected to signer
- */
 export async function getContractWithSigner(contractAddress: string) {
     if (!window.ethereum) {
         throw new Error("MetaMask not found. Please install MetaMask and refresh.");
@@ -50,11 +39,6 @@ export async function getContractWithSigner(contractAddress: string) {
     }
 }
 
-/**
- * Fetch key tournament data from the contract for verification
- * @param contractAddress The deployed contract address
- * @returns Object with key contract data
- */
 export async function fetchTournamentData(contractAddress: string) {
     const contract = getContractReadOnly(contractAddress);
 
@@ -77,37 +61,42 @@ export async function fetchTournamentData(contractAddress: string) {
             startDate: Number(startDate),
             endDate: Number(endDate),
             organizer: organizer.toLowerCase(),
-            status: Number(status), // 0: Ongoing, 1: Distributed, 2: Canceled
-            prizeDistributionMethod: Number(prizeDistributionMethod), // 0: WinnerTakesAll, 1: Top3
+            status: Number(status),
+            prizeDistributionMethod: Number(prizeDistributionMethod),
         };
     } catch (error) {
         throw new Error(`Failed to fetch tournament data: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 }
 
-/**
- * Fetch all entry fee payment transactions (PlayerPaid events) for a tournament
- * @param contractAddress The deployed contract address
- * @returns Array of transaction objects with player, amount, transactionHash, and blockNumber
- */
 export async function fetchEntryFeeTransactions(contractAddress: string) {
-    // Create a read-only contract instance
     const contract = getContractReadOnly(contractAddress);
-
-    // Create a filter for the PlayerPaid event
     const filter = contract.filters.PlayerPaid();
-
-    // Query all PlayerPaid events from the contract
     const logs = await contract.queryFilter(filter);
-
-    // Filter only EventLog instances (those with the 'args' property)
     const eventLogs = logs.filter(log => 'args' in log) as ethers.EventLog[];
 
-    // Map events to a readable format
     return eventLogs.map(event => ({
-        player: event.args.player,                  // Access player from args
-        amount: ethers.formatEther(event.args.amount), // Convert amount from wei to ETH
-        transactionHash: event.transactionHash,     // Transaction hash
-        blockNumber: event.blockNumber,             // Block number
+        player: event.args.player,
+        amount: ethers.formatEther(event.args.amount),
+        transactionHash: event.transactionHash,
+        blockNumber: event.blockNumber,
     }));
+}
+
+// New function to fetch match results
+export async function fetchMatchResult(contractAddress: string, matchId: number) {
+    const contract = getContractReadOnly(contractAddress);
+    try {
+        const result = await contract.matchResults(matchId);
+        return {
+            matchId: Number(result.matchId),
+            player1: result.player1,
+            player2: result.player2,
+            winner: result.winner,
+            submitted: result.submitted,
+            disputed: result.disputed,
+        };
+    } catch (error) {
+        throw new Error(`Failed to fetch match result: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
 }
