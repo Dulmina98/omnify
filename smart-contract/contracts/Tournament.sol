@@ -7,20 +7,34 @@ contract Tournament {
     uint256 public numberOfPlayersRequired;
     uint256 public startDate;
     uint256 public endDate;
-    uint256 public totalPrizePool; // Fixed prize pool set at creation
+    uint256 public totalPrizePool;
     enum PrizeDistributionMethod {WinnerTakesAll, Top3}
     PrizeDistributionMethod public prizeDistributionMethod;
     mapping(address => bool) public paidPlayers;
     address[] public players;
-    mapping(address => uint256) public contributions; // Track contributions per address
-    address[] public contributors; // List of contributors for refund
+    mapping(address => uint256) public contributions;
+    address[] public contributors;
     enum TournamentStatus {Ongoing, Distributed, Canceled}
     TournamentStatus public status;
+
+    // New struct for match results
+    struct MatchResult {
+        uint256 matchId;
+        address player1;
+        address player2;
+        address winner;
+        bool submitted;
+        bool disputed;
+    }
+    // Mapping to store match results
+    mapping(uint256 => MatchResult) public matchResults;
 
     event PlayerPaid(address indexed player, uint256 amount);
     event ContributionReceived(address indexed contributor, uint256 amount);
     event PrizesDistributed(address[] winners, uint256[] amounts);
     event TournamentCanceled();
+    event MatchResultSubmitted(uint256 matchId, address player1, address player2, address winner);
+    event MatchResultDisputed(uint256 matchId);
 
     constructor(
         uint256 _entryFee,
@@ -56,14 +70,14 @@ contract Tournament {
         require(status == TournamentStatus.Ongoing, "Tournament not ongoing");
         require(msg.value > 0, "Contribution must be greater than 0");
         if (contributions[msg.sender] == 0) {
-            contributors.push(msg.sender); // Add new contributor
+            contributors.push(msg.sender);
         }
         contributions[msg.sender] += msg.value;
         emit ContributionReceived(msg.sender, msg.value);
     }
 
     function getPrizePool() external view returns (uint256) {
-        return totalPrizePool; // Return fixed prize pool instead of balance
+        return totalPrizePool;
     }
 
     function distributePrizes(address[] calldata winners, uint256[] calldata amounts) external {
@@ -72,7 +86,6 @@ contract Tournament {
         require(block.timestamp > endDate, "Tournament has not yet ended");
         require(winners.length == amounts.length, "Winners and amounts length mismatch");
 
-        // Enforce prize distribution method
         if (prizeDistributionMethod == PrizeDistributionMethod.WinnerTakesAll) {
             require(winners.length == 1, "WinnerTakesAll requires exactly 1 winner");
         } else if (prizeDistributionMethod == PrizeDistributionMethod.Top3) {
@@ -107,7 +120,7 @@ contract Tournament {
             uint256 amount = contributions[contributor];
             if (amount > 0) {
                 payable(contributor).transfer(amount);
-                contributions[contributor] = 0; // Reset to prevent double refund
+                contributions[contributor] = 0;
             }
         }
         emit TournamentCanceled();
@@ -119,5 +132,30 @@ contract Tournament {
         uint256 remainingBalance = address(this).balance;
         require(remainingBalance > 0, "No funds to withdraw");
         payable(organizer).transfer(remainingBalance);
+    }
+
+    function submitMatchResult(
+        uint256 matchId,
+        address player1,
+        address player2,
+        address winner
+    ) external {
+        require(msg.sender == organizer || paidPlayers[msg.sender], "Only organizer or players can submit");
+        require(status == TournamentStatus.Ongoing, "Tournament must be ongoing");
+        require(player1 != address(0) && player2 != address(0), "Invalid player addresses");
+        require(winner == player1 || winner == player2, "Winner must be one of the players");
+        require(!matchResults[matchId].submitted, "Match result already submitted");
+
+        matchResults[matchId] = MatchResult(matchId, player1, player2, winner, true, false);
+        emit MatchResultSubmitted(matchId, player1, player2, winner);
+    }
+
+    function disputeMatchResult(uint256 matchId) external {
+        require(paidPlayers[msg.sender], "Only players can dispute");
+        require(matchResults[matchId].submitted, "Match result not submitted yet");
+        require(!matchResults[matchId].disputed, "Match already disputed");
+
+        matchResults[matchId].disputed = true;
+        emit MatchResultDisputed(matchId);
     }
 }
