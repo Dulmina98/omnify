@@ -34,6 +34,7 @@ contract Tournament {
     event TournamentCanceled();
     event MatchResultSubmitted(uint256 matchId, address player1, address player2, address winner);
     event DisputeResolved(uint256 matchId, address player1, address player2, address winner);
+    event PrizeClaimed(address indexed winner, uint256 amount);
 
     constructor(
         uint256 _entryFee,
@@ -185,5 +186,20 @@ contract Tournament {
         matchResult.disputed = false;
 
         emit DisputeResolved(matchId, matchResult.player1, matchResult.player2, winner);
+    }
+
+    function claimPrize() external {
+        require(status == TournamentStatus.Ongoing, "Tournament not ongoing or already distributed");
+        require(prizeDistributionMethod == PrizeDistributionMethod.WinnerTakesAll, "Only WinnerTakesAll supported");
+        require(msg.sender == matchResults[3].winner, "Only the grand final winner can claim");
+        require(totalPrizePool > 0, "No prize pool available");
+        require(address(this).balance >= totalPrizePool, "Insufficient contract balance");
+
+        uint256 prizeAmount = totalPrizePool;
+        totalPrizePool = 0;
+        status = TournamentStatus.Distributed;
+
+        payable(msg.sender).transfer(prizeAmount);
+        emit PrizeClaimed(msg.sender, prizeAmount);
     }
 }
