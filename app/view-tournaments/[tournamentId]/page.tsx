@@ -15,8 +15,9 @@ import {useCurrentUser} from "@/services/user-service";
 import {ReviewDisputeModal} from "@/app/components/modals/review-dispute-modal";
 import TournamentDetails from "@/app/components/smart-contracts/tournament-details";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
-import {getContractWithSigner} from "@/lib/contract";
+import {fetchTournamentData, getContractWithSigner} from "@/lib/contract";
 import {SubmitMatchResultsModal} from "@/app/components/modals/submit-match-results-modal";
+import {ClaimPrizeModal} from "@/app/components/modals/claim-prize-modal";
 
 interface Match {
     match: number;
@@ -31,8 +32,10 @@ export default function TournamentInfo() {
     const {tournamentId} = params;
     const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
     const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+    const [isClaimModalOpen, setIsClaimModalOpen] = useState(false);
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const [dynamicBracket, setDynamicBracket] = useState<Match[]>([]);
+    const [contractStatus, setContractStatus] = useState<number | null>(null);
 
     const {user, role} = useCurrentUser();
     const currentUserId = user?.userId;
@@ -53,7 +56,6 @@ export default function TournamentInfo() {
     const submitMatchResult = useMutation(api.match_results.submitMatchResult);
     const resolveMatchDispute = useMutation(api.match_results.resolveMatchDispute);
 
-    // Initialize the bracket once playersInTournamentQuery is available
     useEffect(() => {
         if (!playersInTournamentQuery) return;
 
@@ -83,14 +85,11 @@ export default function TournamentInfo() {
         setDynamicBracket(initialBracket);
     }, [playersInTournamentQuery]);
 
-    // Update the bracket based on match results
     useEffect(() => {
         if (!matchResults || !dynamicBracket.length) return;
 
-        // Create a fresh copy of the bracket
-        const updatedBracket = dynamicBracket.map(match => ({...match}));
+        const updatedBracket = dynamicBracket.map((match) => ({...match}));
 
-        // Update semi-final winners
         matchResults.forEach((result) => {
             const matchNumber = parseInt(result.matchId.replace("match-", ""), 10);
             const matchIndex = updatedBracket.findIndex((m) => m.match === matchNumber);
@@ -99,10 +98,9 @@ export default function TournamentInfo() {
             }
         });
 
-        // Propagate winners to Grand Final
-        const semi1Winner = updatedBracket.find(m => m.match === 1)?.winner;
-        const semi2Winner = updatedBracket.find(m => m.match === 2)?.winner;
-        const grandFinalIndex = updatedBracket.findIndex(m => m.match === 3);
+        const semi1Winner = updatedBracket.find((m) => m.match === 1)?.winner;
+        const semi2Winner = updatedBracket.find((m) => m.match === 2)?.winner;
+        const grandFinalIndex = updatedBracket.findIndex((m) => m.match === 3);
 
         if (grandFinalIndex !== -1) {
             if (semi1Winner && semi2Winner) {
@@ -115,15 +113,22 @@ export default function TournamentInfo() {
             }
         }
 
-        // Debugging: Uncomment to check bracket state
-        // console.log("Match Results:", matchResults);
-        // console.log("Updated Bracket:", updatedBracket);
-
-        // Only update state if there are changes to avoid infinite loops
         if (JSON.stringify(updatedBracket) !== JSON.stringify(dynamicBracket)) {
             setDynamicBracket(updatedBracket);
         }
     }, [matchResults, dynamicBracket]);
+
+    useEffect(() => {
+        const fetchStatus = async () => {
+            try {
+                const data = await fetchTournamentData(tournamentQuery?.contractAddress as string);
+                setContractStatus(data.status);
+            } catch (error) {
+                console.error("Failed to fetch contract status:", error);
+            }
+        };
+        if (tournamentQuery) fetchStatus();
+    }, [tournamentQuery?.contractAddress]);
 
     if (!tournamentId) {
         return <div>Invalid Tournament ID</div>;
@@ -160,6 +165,12 @@ export default function TournamentInfo() {
     });
 
     const isTournamentOrganizer = isOrganizer && currentUserId === tournament.userId;
+    const grandFinal = dynamicBracket[2];
+    const grandFinalWinner = grandFinal.winner;
+    const canClaimPrize = grandFinalWinner && currentUserId === grandFinalWinner; // Removed isTournamentOver
+    const winnerDetails = playerDetails.find((p) => p?.userId === grandFinalWinner);
+    const winnerWalletId = winnerDetails?.walletId;
+    const winnerIgn = playerIgnMap.get(grandFinalWinner || "") || "Unknown Player";
 
     const handleOpenSubmitModal = (match: Match) => {
         setSelectedMatch(match);
@@ -184,9 +195,9 @@ export default function TournamentInfo() {
         }
 
         try {
-            const player1Details = playerDetails?.find(p => p?.userId === selectedMatch.player1?.userId);
-            const player2Details = playerDetails?.find(p => p?.userId === selectedMatch.player2?.userId);
-            const winnerDetails = playerDetails?.find(p => p?.userId === winnerUserId);
+            const player1Details = playerDetails?.find((p) => p?.userId === selectedMatch.player1?.userId);
+            const player2Details = playerDetails?.find((p) => p?.userId === selectedMatch.player2?.userId);
+            const winnerDetails = playerDetails?.find((p) => p?.userId === winnerUserId);
 
             if (!player1Details?.walletId || !player2Details?.walletId || !winnerDetails?.walletId) {
                 throw new Error("Wallet addresses not found for players.");
@@ -265,7 +276,7 @@ export default function TournamentInfo() {
     return (
         <div>
             <div
-                className="一定会min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
+                className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
                 <div className="max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[100px] mx-auto">
                     <div className="w-full flex flex-col items-center justify-center">
                         {tournament.gameTitle === "mortal-kombat" && (
@@ -282,8 +293,7 @@ export default function TournamentInfo() {
                         )}
                         <div className="flex gap-x-5 items-center">
                             <div className="text-[40px]">
-                                {tournament.tournamentName} -{" "}
-                                <span className="text-theme-crimson">Semi Finals</span>
+                                {tournament.tournamentName} - <span className="text-theme-crimson">Semi Finals</span>
                             </div>
                         </div>
                     </div>
@@ -298,23 +308,26 @@ export default function TournamentInfo() {
                                     <h2 className="text-[26px] font-semibold text-center">{match.label}</h2>
                                     <div className="flex justify-between items-center w-full relative flex-1">
                                         <div className="text-[20px] w-[37%] text-center">
-                                            {match.player1
-                                                ? playerIgnMap.get(match.player1.userId) || "Unknown Player"
-                                                : <span
-                                                    className="text-muted-white text-[20px]">Waiting for player...</span>}
+                                            {match.player1 ? (
+                                                playerIgnMap.get(match.player1.userId) || "Unknown Player"
+                                            ) : (
+                                                <span
+                                                    className="text-muted-white text-[20px]">Waiting for player...</span>
+                                            )}
                                         </div>
                                         <div className="absolute w-full flex justify-center h-full items-center">
                                             <Image src="/assets/images/versus/vs.png" alt="vs" height={150}
                                                    width={150}/>
                                         </div>
                                         <div className="text-[20px] w-[37%] text-center">
-                                            {match.player2
-                                                ? playerIgnMap.get(match.player2.userId) || "Unknown Player"
-                                                : <span
-                                                    className="text-muted-white text-[20px]">Waiting for player...</span>}
+                                            {match.player2 ? (
+                                                playerIgnMap.get(match.player2.userId) || "Unknown Player"
+                                            ) : (
+                                                <span
+                                                    className="text-muted-white text-[20px]">Waiting for player...</span>
+                                            )}
                                         </div>
                                     </div>
-
                                     <div className="text-center text-[16px] mt-4">{getMatchStatus(match)}</div>
                                     {isCurrentUserParticipant(match) && (
                                         <div className="w-full mt-4">
@@ -324,9 +337,7 @@ export default function TournamentInfo() {
                                                 onClick={() => handleOpenSubmitModal(match)}
                                                 disabled={hasUserSubmittedResult(match)}
                                             >
-                                                {hasUserSubmittedResult(match)
-                                                    ? "Match Results Submitted"
-                                                    : "Submit Match Results"}
+                                                {hasUserSubmittedResult(match) ? "Match Results Submitted" : "Submit Match Results"}
                                             </Button>
                                         </div>
                                     )}
@@ -351,19 +362,21 @@ export default function TournamentInfo() {
                                 <h2 className="text-[26px] font-semibold text-center">{dynamicBracket[2].label}</h2>
                                 <div className="flex justify-between items-center w-full relative flex-1">
                                     <div className="text-[20px] w-[37%] text-center">
-                                        {dynamicBracket[2].player1
-                                            ? playerIgnMap.get(dynamicBracket[2].player1.userId) || "Unknown Player"
-                                            :
-                                            <span className="text-muted-white text-[20px]">Waiting for player...</span>}
+                                        {dynamicBracket[2].player1 ? (
+                                            playerIgnMap.get(dynamicBracket[2].player1.userId) || "Unknown Player"
+                                        ) : (
+                                            <span className="text-muted-white text-[20px]">Waiting for player...</span>
+                                        )}
                                     </div>
                                     <div className="absolute w-full flex justify-center h-full items-center">
                                         <Image src="/assets/images/versus/vs.png" alt="vs" height={150} width={150}/>
                                     </div>
                                     <div className="text-[20px] w-[37%] text-center">
-                                        {dynamicBracket[2].player2
-                                            ? playerIgnMap.get(dynamicBracket[2].player2.userId) || "Unknown Player"
-                                            :
-                                            <span className="text-muted-white text-[20px]">Waiting for player...</span>}
+                                        {dynamicBracket[2].player2 ? (
+                                            playerIgnMap.get(dynamicBracket[2].player2.userId) || "Unknown Player"
+                                        ) : (
+                                            <span className="text-muted-white text-[20px]">Waiting for player...</span>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="text-center text-[16px] mt-4">{getMatchStatus(dynamicBracket[2])}</div>
@@ -375,9 +388,7 @@ export default function TournamentInfo() {
                                             onClick={() => handleOpenSubmitModal(dynamicBracket[2])}
                                             disabled={hasUserSubmittedResult(dynamicBracket[2])}
                                         >
-                                            {hasUserSubmittedResult(dynamicBracket[2])
-                                                ? "Match Results Submitted"
-                                                : "Submit Match Results"}
+                                            {hasUserSubmittedResult(dynamicBracket[2]) ? "Match Results Submitted" : "Submit Match Results"}
                                         </Button>
                                     </div>
                                 )}
@@ -392,8 +403,20 @@ export default function TournamentInfo() {
                                         </Button>
                                     </div>
                                 )}
+                                {canClaimPrize && winnerWalletId && (
+                                    <div className="w-full mt-4">
+                                        <Button
+                                            className="w-full"
+                                            variant="secondary"
+                                            onClick={() => setIsClaimModalOpen(true)}
+                                        >
+                                            Claim Prize
+                                        </Button>
+                                    </div>
+                                )}
                             </div>
                         </div>
+
                         <Accordion type="single" collapsible className="mt-20">
                             <AccordionItem value="item-1">
                                 <AccordionTrigger>More Details</AccordionTrigger>
@@ -432,6 +455,19 @@ export default function TournamentInfo() {
                     player2Submission={selectedMatch ? getSubmittedResults(selectedMatch).player2Submission : null}
                     onResolveDispute={handleResolveDispute}
                 />
+
+                {canClaimPrize && winnerWalletId && (
+                    <ClaimPrizeModal
+                        open={isClaimModalOpen}
+                        onClose={() => setIsClaimModalOpen(false)}
+                        tournament={tournament}
+                        winnerUserId={grandFinalWinner || ""}
+                        winnerWalletId={winnerWalletId}
+                        winnerIgn={winnerIgn}
+                        totalPrizePool={tournament.totalPrizePool}
+                        prizeDistributionMethod={tournament.prizeDistributionMethod}
+                    />
+                )}
             </div>
         </div>
     );
