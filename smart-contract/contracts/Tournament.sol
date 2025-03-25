@@ -17,16 +17,15 @@ contract Tournament {
     enum TournamentStatus {Ongoing, Distributed, Canceled}
     TournamentStatus public status;
 
-    // New struct for match results
     struct MatchResult {
         uint256 matchId;
         address player1;
         address player2;
+        address player1Submission;
+        address player2Submission;
         address winner;
-        bool submitted;
         bool disputed;
     }
-    // Mapping to store match results
     mapping(uint256 => MatchResult) public matchResults;
 
     event PlayerPaid(address indexed player, uint256 amount);
@@ -34,7 +33,7 @@ contract Tournament {
     event PrizesDistributed(address[] winners, uint256[] amounts);
     event TournamentCanceled();
     event MatchResultSubmitted(uint256 matchId, address player1, address player2, address winner);
-    event MatchResultDisputed(uint256 matchId);
+    event DisputeResolved(uint256 matchId, address player1, address player2, address winner);
 
     constructor(
         uint256 _entryFee,
@@ -140,22 +139,51 @@ contract Tournament {
         address player2,
         address winner
     ) external {
-        require(msg.sender == organizer || paidPlayers[msg.sender], "Only organizer or players can submit");
+        require(msg.sender == player1 || msg.sender == player2, "Only match players can submit");
         require(status == TournamentStatus.Ongoing, "Tournament must be ongoing");
         require(player1 != address(0) && player2 != address(0), "Invalid player addresses");
         require(winner == player1 || winner == player2, "Winner must be one of the players");
-        require(!matchResults[matchId].submitted, "Match result already submitted");
 
-        matchResults[matchId] = MatchResult(matchId, player1, player2, winner, true, false);
+        MatchResult storage matchResult = matchResults[matchId];
+
+        if (matchResult.player1 == address(0) && matchResult.player2 == address(0)) {
+            matchResult.matchId = matchId;
+            matchResult.player1 = player1;
+            matchResult.player2 = player2;
+        }
+
+        require(matchResult.player1 == player1 && matchResult.player2 == player2, "Player mismatch");
+
+        if (msg.sender == player1) {
+            require(matchResult.player1Submission == address(0), "Player1 already submitted");
+            matchResult.player1Submission = winner;
+        } else if (msg.sender == player2) {
+            require(matchResult.player2Submission == address(0), "Player2 already submitted");
+            matchResult.player2Submission = winner;
+        }
+
+        if (matchResult.player1Submission != address(0) && matchResult.player2Submission != address(0)) {
+            if (matchResult.player1Submission == matchResult.player2Submission) {
+                matchResult.winner = matchResult.player1Submission;
+                matchResult.disputed = false;
+            } else {
+                matchResult.disputed = true;
+            }
+        }
+
         emit MatchResultSubmitted(matchId, player1, player2, winner);
     }
 
-    function disputeMatchResult(uint256 matchId) external {
-        require(paidPlayers[msg.sender], "Only players can dispute");
-        require(matchResults[matchId].submitted, "Match result not submitted yet");
-        require(!matchResults[matchId].disputed, "Match already disputed");
+    function resolveDispute(uint256 matchId, address winner) external {
+        require(msg.sender == organizer, "Only organizer can resolve disputes");
+        require(status == TournamentStatus.Ongoing, "Tournament must be ongoing");
+        MatchResult storage matchResult = matchResults[matchId];
+        require(matchResult.disputed, "Match is not disputed");
+        require(winner == matchResult.player1 || winner == matchResult.player2, "Winner must be one of the players");
 
-        matchResults[matchId].disputed = true;
-        emit MatchResultDisputed(matchId);
+        matchResult.winner = winner;
+        matchResult.disputed = false;
+
+        emit DisputeResolved(matchId, matchResult.player1, matchResult.player2, winner);
     }
 }

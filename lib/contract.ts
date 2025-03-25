@@ -83,7 +83,6 @@ export async function fetchEntryFeeTransactions(contractAddress: string) {
     }));
 }
 
-// New function to fetch match results
 export async function fetchMatchResult(contractAddress: string, matchId: number) {
     const contract = getContractReadOnly(contractAddress);
     try {
@@ -92,8 +91,9 @@ export async function fetchMatchResult(contractAddress: string, matchId: number)
             matchId: Number(result.matchId),
             player1: result.player1,
             player2: result.player2,
+            player1Submission: result.player1Submission,
+            player2Submission: result.player2Submission,
             winner: result.winner,
-            submitted: result.submitted,
             disputed: result.disputed,
         };
     } catch (error) {

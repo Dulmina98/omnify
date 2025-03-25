@@ -100,6 +100,8 @@ export default defineSchema({
         player2UserId: v.string(),
         player1Submission: v.optional(v.string()),
         player2Submission: v.optional(v.string()),
+        player1TransactionHash: v.optional(v.string()),
+        player2TransactionHash: v.optional(v.string()),
         winnerUserId: v.optional(v.string()),
         status: v.union(
             v.literal("pending"),
@@ -107,6 +109,8 @@ export default defineSchema({
             v.literal("disputed")
         ),
         transactionHash: v.optional(v.string()),
+        resolutionTransactionHash: v.optional(v.string()),
+        resolvedBy: v.optional(v.string()),
     })
         .index("by_tournament", ["tournamentId"])
         .index("by_matchId", ["matchId"]),
