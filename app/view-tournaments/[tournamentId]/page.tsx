@@ -10,12 +10,13 @@ import sf from "@/public/assets/images/games/street-fighter.png";
 import injustice from "@/public/assets/images/games/injustice.png";
 import tekken from "@/public/assets/images/games/tekken.png";
 import {Button} from "@/components/ui/button";
-import {SubmitMatchResultsModal} from "@/app/components/modals/submit-match-results-modal";
 import {useState} from "react";
 import {useCurrentUser} from "@/services/user-service";
 import {ReviewDisputeModal} from "@/app/components/modals/review-dispute-modal";
 import TournamentDetails from "@/app/components/smart-contracts/tournament-details";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/components/ui/accordion";
+import {getContractWithSigner} from "@/lib/contract";
+import {SubmitMatchResultsModal} from "@/app/components/modals/submit-match-results-modal";
 
 interface Match {
     match: number;
@@ -121,24 +122,35 @@ export default function TournamentInfo() {
     };
 
     const handleResolveDispute = async (winnerUserId: string) => {
-        if (!selectedMatch) return;
-        if (!selectedMatch.player1 || !selectedMatch.player2) {
-            console.error("Cannot resolve dispute: Missing player information");
-            return;
-        }
-        if (!currentUserId) {
-            console.error("Cannot resolve dispute: User not authenticated");
+        if (!selectedMatch || !selectedMatch.player1 || !selectedMatch.player2 || !currentUserId) {
+            console.error("Cannot resolve dispute: Missing required information");
             return;
         }
 
         try {
+            const player1Details = playerDetails?.find(p => p?.userId === selectedMatch.player1?.userId);
+            const player2Details = playerDetails?.find(p => p?.userId === selectedMatch.player2?.userId);
+            const winnerDetails = playerDetails?.find(p => p?.userId === winnerUserId);
+
+            if (!player1Details?.walletId || !player2Details?.walletId || !winnerDetails?.walletId) {
+                throw new Error("Wallet addresses not found for players.");
+            }
+
+            const contract = await getContractWithSigner(tournament.contractAddress);
+            const matchIdNum = parseInt(selectedMatch.match.toString());
+            const tx = await contract.resolveDispute(matchIdNum, winnerDetails.walletId);
+            const receipt = await tx.wait();
+            const transactionHash = receipt.hash;
+
             await resolveMatchDispute({
                 tournamentId: tournamentId as Id<"tournaments">,
                 matchId: `match-${selectedMatch.match}`,
                 winnerUserId,
                 submittedBy: currentUserId,
+                transactionHash,
             });
-            console.log(`Dispute resolved for ${selectedMatch.label} by ${currentUserId}`);
+
+            console.log(`Dispute resolved for ${selectedMatch.label}`);
             setIsReviewModalOpen(false);
         } catch (error) {
             console.error("Failed to resolve dispute:", error);
@@ -197,45 +209,20 @@ export default function TournamentInfo() {
     return (
         <div>
             <div
-                className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left"
-            >
+                className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
                 <div className="max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[100px] mx-auto">
                     <div className="w-full flex flex-col items-center justify-center">
                         {tournament.gameTitle === "mortal-kombat" && (
-                            <Image
-                                src={mk}
-                                alt="mortal kombat"
-                                width={2000}
-                                height={2000}
-                                className="w-[700px]"
-                            />
+                            <Image src={mk} alt="mortal kombat" width={2000} height={2000} className="w-[700px]"/>
                         )}
                         {tournament.gameTitle === "street-fighter" && (
-                            <Image
-                                src={sf}
-                                alt="street fighter"
-                                width={2000}
-                                height={2000}
-                                className="w-[700px]"
-                            />
+                            <Image src={sf} alt="street fighter" width={2000} height={2000} className="w-[700px]"/>
                         )}
                         {tournament.gameTitle === "injustice" && (
-                            <Image
-                                src={injustice}
-                                alt="injustice"
-                                width={2000}
-                                height={2000}
-                                className="w-[700px]"
-                            />
+                            <Image src={injustice} alt="injustice" width={2000} height={2000} className="w-[700px]"/>
                         )}
                         {tournament.gameTitle === "tekken" && (
-                            <Image
-                                src={tekken}
-                                alt="tekken"
-                                width={2000}
-                                height={2000}
-                                className="w-[700px]"
-                            />
+                            <Image src={tekken} alt="tekken" width={2000} height={2000} className="w-[700px]"/>
                         )}
                         <div className="flex gap-x-5 items-center">
                             <div className="text-[40px]">
@@ -246,7 +233,6 @@ export default function TournamentInfo() {
                     </div>
 
                     <div className="mt-16 max-w-[1300px] mx-auto">
-                        {/* Semi-finals matches in a row */}
                         <div className="flex justify-between gap-5">
                             {bracket.slice(0, 2).map((match, index) => (
                                 <div
@@ -262,12 +248,8 @@ export default function TournamentInfo() {
                                                     className="text-muted-white text-[20px]">Waiting for player...</span>}
                                         </div>
                                         <div className="absolute w-full flex justify-center h-full items-center">
-                                            <Image
-                                                src="/assets/images/versus/vs.png"
-                                                alt="vs"
-                                                height={150}
-                                                width={150}
-                                            />
+                                            <Image src="/assets/images/versus/vs.png" alt="vs" height={150}
+                                                   width={150}/>
                                         </div>
                                         <div className="text-[20px] w-[37%] text-center">
                                             {match.player2
@@ -307,7 +289,6 @@ export default function TournamentInfo() {
                             ))}
                         </div>
 
-                        {/* Final match at the bottom */}
                         <div className="mt-5">
                             <div
                                 className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col">
@@ -320,12 +301,7 @@ export default function TournamentInfo() {
                                             <span className="text-muted-white text-[20px]">Waiting for player...</span>}
                                     </div>
                                     <div className="absolute w-full flex justify-center h-full items-center">
-                                        <Image
-                                            src="/assets/images/versus/vs.png"
-                                            alt="vs"
-                                            height={150}
-                                            width={150}
-                                        />
+                                        <Image src="/assets/images/versus/vs.png" alt="vs" height={150} width={150}/>
                                     </div>
                                     <div className="text-[20px] w-[37%] text-center">
                                         {bracket[2].player2
@@ -373,7 +349,6 @@ export default function TournamentInfo() {
                     </div>
                 </div>
 
-                {/* Submit Match Results Modal */}
                 <SubmitMatchResultsModal
                     open={isSubmitModalOpen}
                     onClose={() => setIsSubmitModalOpen(false)}
@@ -389,7 +364,6 @@ export default function TournamentInfo() {
                     contractAddress={tournament.contractAddress}
                 />
 
-                {/* Review Dispute Modal */}
                 <ReviewDisputeModal
                     open={isReviewModalOpen}
                     onOpenChange={setIsReviewModalOpen}
