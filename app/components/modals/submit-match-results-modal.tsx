@@ -3,7 +3,7 @@
 import {Dialog, DialogContent, DialogHeader, DialogTitle} from "@/components/ui/dialog";
 import {Button} from "@/components/ui/button";
 import {useState} from "react";
-import {useMutation, useQuery} from "convex/react"; // Use Convex's useQuery and useMutation
+import {useMutation, useQuery} from "convex/react";
 import {api} from "@/convex/_generated/api";
 import {getContractWithSigner} from "@/lib/contract";
 import {Id} from "@/convex/_generated/dataModel";
@@ -42,8 +42,6 @@ export function SubmitMatchResultsModal({
     const [errorMessage, setErrorMessage] = useState<string>("");
 
     const submitMatchResult = useMutation(api.match_results.submitMatchResult);
-
-    // Fetch player details to get wallet addresses
     const playerDetails = useQuery(api.players.getPlayersByUserIds, {
         userIds: [player1UserId, player2UserId].filter((id): id is string => id !== null),
     });
@@ -61,7 +59,6 @@ export function SubmitMatchResultsModal({
 
         setState("submitting");
         try {
-            // Map Convex user IDs to wallet addresses
             const player1Details = playerDetails.find((p) => p?.userId === player1UserId);
             const player2Details = playerDetails.find((p) => p?.userId === player2UserId);
             if (!player1Details?.walletId || !player2Details?.walletId) {
@@ -72,7 +69,6 @@ export function SubmitMatchResultsModal({
             const winnerWalletAddress =
                 selectedWinner === player1 ? player1Details.walletId : player2Details.walletId;
 
-            // Submit to blockchain using wallet addresses
             const contract = await getContractWithSigner(contractAddress);
             const matchIdNum = parseInt(matchId.replace("match-", ""));
             const tx = await contract.submitMatchResult(
@@ -84,7 +80,6 @@ export function SubmitMatchResultsModal({
             const receipt = await tx.wait();
             const transactionHash = receipt.hash;
 
-            // Send result to Convex using Convex user IDs
             await submitMatchResult({
                 tournamentId,
                 matchId,
@@ -97,7 +92,7 @@ export function SubmitMatchResultsModal({
 
             setState("success");
             onSubmit(selectedWinner);
-            setTimeout(onClose, 2000); // Close after 2 seconds
+            setTimeout(onClose, 2000);
         } catch (error) {
             setState("error");
             setErrorMessage(
@@ -110,7 +105,8 @@ export function SubmitMatchResultsModal({
     return (
         <Dialog open={open} onOpenChange={onClose}>
             <DialogContent
-                className="max-w-[600px] w-full bg-black/40 backdrop-blur-lg rounded-[10px] border-theme-crimson text-white p-[40px]">
+                className="max-w-[600px] w-full bg-black/40 backdrop-blur-lg rounded-[10px] border-theme-crimson text-white p-[40px]"
+            >
                 <DialogHeader>
                     <DialogTitle>Submit Match Results</DialogTitle>
                 </DialogHeader>
