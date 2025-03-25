@@ -108,7 +108,7 @@ export function SubmitMatchResultsModal({
                 className="max-w-[600px] w-full bg-black/40 backdrop-blur-lg rounded-[10px] border-theme-crimson text-white p-[40px]"
             >
                 <DialogHeader>
-                    <DialogTitle>Submit Match Results</DialogTitle>
+                    <DialogTitle className={"text-center"}>Submit Match Results</DialogTitle>
                 </DialogHeader>
                 <div className="flex flex-col justify-center items-center text-white">
                     <div className="text-[30px] text-center mb-8">{matchLabel}</div>
@@ -138,10 +138,12 @@ export function SubmitMatchResultsModal({
                                 </div>
                             )}
                             {state === "submitting" && (
-                                <p>Submitting to blockchain... Please confirm in MetaMask</p>
+                                <p className={"text-center mt-5"}>Submitting to blockchain... Please confirm in
+                                    MetaMask</p>
                             )}
                             {state === "success" && (
-                                <p>Result submitted successfully! Closing in 2 seconds...</p>
+                                <p className={"text-center mt-5"}>Result submitted successfully! Closing in 2
+                                    seconds...</p>
                             )}
                             {state === "error" && (
                                 <p className="text-red-400">{errorMessage}</p>
