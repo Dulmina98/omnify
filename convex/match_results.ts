@@ -9,7 +9,7 @@ export const submitMatchResult = mutation({
         player2UserId: v.string(),
         winnerUserId: v.string(),
         submittedBy: v.string(),
-        transactionHash: v.string(), // Added to store blockchain transaction hash
+        transactionHash: v.string(),
     },
     handler: async (ctx, args) => {
         const existingResult = await ctx.db
@@ -19,7 +19,6 @@ export const submitMatchResult = mutation({
             .first();
 
         if (!existingResult) {
-            // Insert new result into Convex
             const newResultId = await ctx.db.insert("matchResults", {
                 tournamentId: args.tournamentId,
                 matchId: args.matchId,
@@ -27,46 +26,45 @@ export const submitMatchResult = mutation({
                 player2UserId: args.player2UserId,
                 player1Submission: args.submittedBy === args.player1UserId ? args.winnerUserId : undefined,
                 player2Submission: args.submittedBy === args.player2UserId ? args.winnerUserId : undefined,
+                player1TransactionHash: args.submittedBy === args.player1UserId ? args.transactionHash : undefined,
+                player2TransactionHash: args.submittedBy === args.player2UserId ? args.transactionHash : undefined,
                 winnerUserId: undefined,
                 status: "pending" as const,
-                transactionHash: args.transactionHash,
             });
             return newResultId;
         }
 
-        const updateFields: Partial<typeof existingResult> = {
-            transactionHash: args.transactionHash, // Update transaction hash
-        };
+        const updateFields: Partial<typeof existingResult> = {};
 
         if (args.submittedBy === args.player1UserId) {
             updateFields.player1Submission = args.winnerUserId;
+            updateFields.player1TransactionHash = args.transactionHash;
         } else if (args.submittedBy === args.player2UserId) {
             updateFields.player2Submission = args.winnerUserId;
+            updateFields.player2TransactionHash = args.transactionHash;
         } else {
             throw new Error("Only match participants can submit results");
         }
 
         if (updateFields.player1Submission && existingResult.player2Submission) {
             updateFields.status = updateFields.player1Submission === existingResult.player2Submission
-                ? "completed" as const
-                : "disputed" as const;
+                ? "completed"
+                : "disputed";
             updateFields.winnerUserId = updateFields.status === "completed"
                 ? updateFields.player1Submission
                 : undefined;
         } else if (existingResult.player1Submission && updateFields.player2Submission) {
             updateFields.status = existingResult.player1Submission === updateFields.player2Submission
-                ? "completed" as const
-                : "disputed" as const;
+                ? "completed"
+                : "disputed";
             updateFields.winnerUserId = updateFields.status === "completed"
                 ? existingResult.player1Submission
                 : undefined;
         } else {
-            updateFields.status = "pending" as const;
+            updateFields.status = "pending";
         }
 
-        // Update Convex with final status
         await ctx.db.patch(existingResult._id, updateFields);
-
         return existingResult._id;
     },
 });
@@ -102,7 +100,7 @@ export const resolveMatchDispute = mutation({
         matchId: v.string(),
         winnerUserId: v.string(),
         submittedBy: v.string(),
-        transactionHash: v.optional(v.string()), // Optional for client-side blockchain interaction
+        transactionHash: v.string(),
     },
     handler: async (ctx, args) => {
         const tournament = await ctx.db.get(args.tournamentId);
@@ -124,11 +122,11 @@ export const resolveMatchDispute = mutation({
             throw new Error("Can only resolve disputed matches");
         }
 
-        // Update Convex
         await ctx.db.patch(existingResult._id, {
             winnerUserId: args.winnerUserId,
             status: "completed" as const,
-            transactionHash: args.transactionHash || existingResult.transactionHash, // Use provided or existing hash
+            resolutionTransactionHash: args.transactionHash,
+            resolvedBy: args.submittedBy,
         });
 
         return existingResult._id;
