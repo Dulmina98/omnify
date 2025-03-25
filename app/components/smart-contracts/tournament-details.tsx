@@ -34,17 +34,26 @@ interface MatchResult {
     matchId: number;
     player1: string;
     player2: string;
+    player1Submission: string;
+    player2Submission: string;
     winner: string;
-    submitted: boolean;
     disputed: boolean;
-    transactionHash?: string;
-    submittedBy?: string;
+}
+
+interface Submission {
+    matchId: number;
+    player: string;
+    submission: string;
+    transactionHash: string;
+    submittedBy: string;
+    status: "Pending" | "Completed" | "Disputed" | "Resolved";
+    winner?: string;
 }
 
 export default function TournamentDetails({contractAddress}: TournamentDetailsProps) {
     const [tournamentData, setTournamentData] = useState<TournamentData | null>(null);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
-    const [matchResults, setMatchResults] = useState<MatchResult[]>([]);
+    const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -63,43 +72,94 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
             try {
                 setLoading(true);
 
-                // Fetch tournament data
                 const data = await fetchTournamentData(contractAddress);
                 setTournamentData(data);
 
-                // Fetch entry fee transactions
                 const txs = await fetchEntryFeeTransactions(contractAddress);
                 setTransactions(txs);
 
-                // Fetch match results from the blockchain
-                const matchIds = [1, 2, 3]; // Adjust based on your tournament structure
+                const matchIds = convexMatchResults.map((mr) =>
+                    parseInt(mr.matchId.replace("match-", ""), 10)
+                );
                 const blockchainResults = await Promise.all(
                     matchIds.map((id) => fetchMatchResult(contractAddress, id))
                 );
-                const filteredBlockchainResults = blockchainResults.filter((result) => result.submitted);
 
-                // Enrich with Convex data (transactionHash and submittedBy)
-                const provider = new ethers.JsonRpcProvider(
-                    `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}` // Replace with your Alchemy API key
+                const filteredResults = blockchainResults.filter(
+                    (result) =>
+                        result.player1Submission !== ethers.ZeroAddress ||
+                        result.player2Submission !== ethers.ZeroAddress
                 );
-                const enrichedResults = await Promise.all(
-                    filteredBlockchainResults.map(async (result) => {
-                        const convexResult = convexMatchResults.find(
-                            (mr) => mr.matchId === `match-${result.matchId}`
-                        );
-                        if (convexResult?.transactionHash) {
-                            const tx = await provider.getTransaction(convexResult.transactionHash);
-                            return {
-                                ...result,
-                                transactionHash: convexResult.transactionHash,
-                                submittedBy: tx?.from,
-                            };
+
+                const submissionList = filteredResults.flatMap((result) => {
+                    const convexResult = convexMatchResults.find(
+                        (mr) => mr.matchId === `match-${result.matchId}`
+                    );
+                    const submissions: Submission[] = [];
+
+                    // Player submissions status
+                    let playerStatus: "Pending" | "Completed" | "Disputed";
+                    if (
+                        result.player1Submission !== ethers.ZeroAddress &&
+                        result.player2Submission !== ethers.ZeroAddress
+                    ) {
+                        playerStatus =
+                            result.player1Submission === result.player2Submission
+                                ? "Completed"
+                                : "Disputed";
+                    } else {
+                        playerStatus = "Pending";
+                    }
+
+                    // Player 1 submission
+                    if (result.player1Submission !== ethers.ZeroAddress) {
+                        const txHash = convexResult?.player1TransactionHash || convexResult?.transactionHash;
+                        if (txHash) {
+                            submissions.push({
+                                matchId: result.matchId,
+                                player: result.player1,
+                                submission: result.player1Submission,
+                                transactionHash: txHash,
+                                submittedBy: result.player1,
+                                status: playerStatus,
+                                winner: playerStatus === "Completed" ? result.player1Submission : undefined,
+                            });
                         }
-                        return result;
-                    })
-                );
+                    }
 
-                setMatchResults(enrichedResults);
+                    // Player 2 submission
+                    if (result.player2Submission !== ethers.ZeroAddress) {
+                        const txHash = convexResult?.player2TransactionHash || convexResult?.transactionHash;
+                        if (txHash) {
+                            submissions.push({
+                                matchId: result.matchId,
+                                player: result.player2,
+                                submission: result.player2Submission,
+                                transactionHash: txHash,
+                                submittedBy: result.player2,
+                                status: playerStatus,
+                                winner: playerStatus === "Completed" ? result.player2Submission : undefined,
+                            });
+                        }
+                    }
+
+                    // Organizer resolution
+                    if (convexResult?.resolutionTransactionHash && convexResult?.resolvedBy) {
+                        submissions.push({
+                            matchId: result.matchId,
+                            player: data.organizer, // Organizer address from tournament data
+                            submission: result.winner,
+                            transactionHash: convexResult.resolutionTransactionHash,
+                            submittedBy: data.organizer, // Use organizer’s address
+                            status: "Resolved",
+                            winner: result.winner,
+                        });
+                    }
+
+                    return submissions;
+                });
+
+                setSubmissions(submissionList);
                 setError(null);
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to fetch tournament data.");
@@ -139,7 +199,6 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                 <FaTrophy className="mr-2 text-yellow-400"/> Tournament Details (On-Chain)
             </h3>
 
-            {/* Tournament Info Card */}
             <div className="bg-gray-900/50 p-4 rounded-lg mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <p className="flex">
@@ -171,8 +230,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                     <p className="flex items-center">
                         <FaEthereum className="mr-2 text-green-400"/>
                         <span
-                            className="font-semibold mr-2">Total Prize Pool:</span> {tournamentData.totalPrizePool}{" "}
-                        ETH
+                            className="font-semibold mr-2">Total Prize Pool:</span> {tournamentData.totalPrizePool} ETH
                     </p>
                     <p className="flex items-center">
                         <span className="font-semibold mr-2">Organizer:</span>
@@ -180,21 +238,21 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                     </p>
                     <p className="flex items-center">
                         <FaCalendarAlt className="mr-2 text-purple-400"/>
-                        <span className="font-semibold mr-2">Start Date:</span>{" "}
+                        <span className="font-semibold mr-2">Start Date:</span>
                         {new Date(tournamentData.startDate * 1000).toLocaleDateString()}
                     </p>
                     <p className="flex items-center">
                         <FaCalendarAlt className="mr-2 text-purple-400"/>
-                        <span className="font-semibold mr-2">End Date:</span>{" "}
+                        <span className="font-semibold mr-2">End Date:</span>
                         {new Date(tournamentData.endDate * 1000).toLocaleDateString()}
                     </p>
                     <p className="flex items-center">
                         <FaUsers className="mr-2 text-orange-400"/>
-                        <span className="font-semibold mr-2">Players Required:</span>{" "}
+                        <span className="font-semibold mr-2">Players Required:</span>
                         {tournamentData.numberOfPlayersRequired}
                     </p>
                     <p className="flex items-center">
-                        <span className="font-semibold mr-2">Prize Distribution:</span>{" "}
+                        <span className="font-semibold mr-2">Prize Distribution:</span>
                         {prizeMethodLabels[tournamentData.prizeDistributionMethod]}
                     </p>
                     <p className="flex items-center">
@@ -214,70 +272,71 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                 </div>
             </div>
 
-            {/* Match Results Section */}
             <div className="mt-6">
                 <h4 className="text-xl font-semibold mb-4 flex items-center">
                     <FaTrophy className="mr-2 text-yellow-400"/> Match Results
                 </h4>
-                {matchResults.length > 0 ? (
+                {submissions.length > 0 ? (
                     <div className="overflow-x-auto bg-gray-900/50 rounded-lg p-4">
                         <table className="min-w-full text-sm">
                             <thead>
                             <tr className="bg-gray-800">
                                 <th className="px-4 py-2 text-left font-semibold">Match ID</th>
-                                <th className="px-4 py-2 text-left font-semibold">Player 1</th>
-                                <th className="px-4 py-2 text-left font-semibold">Player 2</th>
-                                <th className="px-4 py-2 text-left font-semibold">Winner</th>
-                                <th className="px-4 py-2 text-left font-semibold">Status</th>
+                                <th className="px-4 py-2 text-left font-semibold">Player</th>
+                                <th className="px-4 py-2 text-left font-semibold">Submitted Winner</th>
                                 <th className="px-4 py-2 text-left font-semibold">Submitted By</th>
+                                <th className="px-4 py-2 text-left font-semibold">Status</th>
+                                <th className="px-4 py-2 text-left font-semibold">Winner</th>
                                 <th className="px-4 py-2 text-left font-semibold">Tx Hash</th>
                             </tr>
                             </thead>
                             <tbody>
-                            {matchResults.map((result, index) => (
+                            {submissions.map((submission, index) => (
                                 <tr
                                     key={index}
                                     className="border-t border-gray-700 hover:bg-gray-800/50 transition-colors"
                                 >
-                                    <td className="px-4 py-2">{result.matchId}</td>
-                                    <td className="px-4 py-2 truncate max-w-xs">{result.player1}</td>
-                                    <td className="px-4 py-2 truncate max-w-xs">{result.player2}</td>
-                                    <td className="px-4 py-2 truncate max-w-xs">{result.winner}</td>
+                                    <td className="px-4 py-2">{submission.matchId}</td>
+                                    <td className="px-4 py-2 truncate max-w-xs">{submission.player}</td>
+                                    <td className="px-4 py-2 truncate max-w-xs">{submission.submission}</td>
+                                    <td className="px-4 py-2 truncate max-w-xs">
+                                        <a
+                                            href={`${etherscanBaseUrl}/address/${submission.submittedBy}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:text-blue-300"
+                                        >
+                                            {submission.submittedBy}
+                                        </a>
+                                    </td>
                                     <td className="px-4 py-2">
-                                        {result.disputed ? (
-                                            <span className="text-red-400">Disputed</span>
-                                        ) : (
-                                            <span className="text-green-400">Submitted</span>
-                                        )}
+                                            <span
+                                                className={`${
+                                                    submission.status === "Pending"
+                                                        ? "text-yellow-400"
+                                                        : submission.status === "Completed"
+                                                            ? "text-green-400"
+                                                            : submission.status === "Disputed"
+                                                                ? "text-red-400"
+                                                                : "text-blue-400" // Resolved
+                                                }`}
+                                            >
+                                                {submission.status}
+                                            </span>
                                     </td>
                                     <td className="px-4 py-2 truncate max-w-xs">
-                                        {result.submittedBy ? (
-                                            <a
-                                                href={`${etherscanBaseUrl}/address/${result.submittedBy}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-400 hover:text-blue-300"
-                                            >
-                                                {result.submittedBy}
-                                            </a>
-                                        ) : (
-                                            "Unknown"
-                                        )}
+                                        {submission.winner || "N/A"}
                                     </td>
                                     <td className="px-4 py-2">
-                                        {result.transactionHash ? (
-                                            <a
-                                                href={`${etherscanBaseUrl}/tx/${result.transactionHash}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-blue-400 hover:text-blue-300 truncate max-w-xs block"
-                                            >
-                                                {result.transactionHash.slice(0, 6)}...
-                                                {result.transactionHash.slice(-4)}
-                                            </a>
-                                        ) : (
-                                            "N/A"
-                                        )}
+                                        <a
+                                            href={`${etherscanBaseUrl}/tx/${submission.transactionHash}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:text-blue-300 truncate max-w-xs block"
+                                        >
+                                            {submission.transactionHash.slice(0, 6)}...
+                                            {submission.transactionHash.slice(-4)}
+                                        </a>
                                     </td>
                                 </tr>
                             ))}
@@ -289,7 +348,6 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                 )}
             </div>
 
-            {/* Transactions Section */}
             <div className="mt-6">
                 <h4 className="text-xl font-semibold mb-4 flex items-center">
                     <FaEthereum className="mr-2 text-blue-400"/> Entry Fee Transactions
