@@ -396,7 +396,7 @@ export default function TournamentInfo() {
                                     <div className="w-full mt-4">
                                         <Button
                                             className="w-full"
-                                            variant="outline"
+                                            variant="secondary"
                                             onClick={() => handleOpenReviewModal(dynamicBracket[2])}
                                         >
                                             Resolve Dispute

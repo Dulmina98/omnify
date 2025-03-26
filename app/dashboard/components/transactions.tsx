@@ -5,102 +5,35 @@ import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, Table
 import {useQuery} from "convex/react";
 import {api} from "@/convex/_generated/api";
 import Link from "next/link";
-import {useEffect, useState} from "react";
-import {fetchPrizeClaimedTransactions} from "@/lib/contract";
-
-interface PrizeClaimedTransaction {
-    winner: string;
-    amount: string;
-    transactionHash: string;
-    blockNumber: number;
-    contractAddress?: string;
-}
 
 export function Transactions() {
     const {user} = useCurrentUser();
-    const [prizeClaimedTransactions, setPrizeClaimedTransactions] = useState<PrizeClaimedTransaction[]>([]);
 
+    // Fetch all transactions from Convex for the current user
     const convexTransactions = useQuery(
         api.transactions.listTransactionsByUser,
         user?.userId ? {userId: user.userId} : "skip"
     ) || [];
 
-    const walletId = useQuery(
-        api.players.getPlayerWalletId,
-        user?.userId ? {userId: user.userId} : "skip"
-    );
-
-    const userTournaments = useQuery(
-        api.tournaments.getUserTournaments,
-        user?.userId ? {userId: user.userId} : "skip"
-    ) || [];
-
     const etherscanBaseUrl = "https://sepolia.etherscan.io";
-
-    useEffect(() => {
-        const loadPrizeTransactions = async () => {
-            if (!user || !walletId || !userTournaments.length) return;
-
-            try {
-                const contractAddresses = userTournaments.map((t) => t.contractAddress);
-
-                const allPrizeTxs = await Promise.all(
-                    contractAddresses.map(async (contractAddress) => {
-                        const txs = await fetchPrizeClaimedTransactions(contractAddress);
-                        return txs
-                            .filter((tx) => tx.winner.toLowerCase() === walletId.toLowerCase())
-                            .map((tx) => ({...tx, contractAddress}));
-                    })
-                );
-
-                const uniquePrizeTxs = Array.from(
-                    new Map(allPrizeTxs.flat().map((tx) => [tx.transactionHash, tx])).values()
-                );
-
-                setPrizeClaimedTransactions(uniquePrizeTxs);
-            } catch (error) {
-                console.error("Failed to fetch prize transactions:", error);
-            }
-        };
-
-        loadPrizeTransactions();
-    }, [user, walletId, userTournaments]);
 
     if (!user) {
         return <div className="text-white">Loading user data...</div>;
     }
 
-    const allTransactions = [
-        ...convexTransactions.map((tx) => ({
-            type: "Convex",
-            transactionHash: tx.transactionHash,
-            tournamentId: tx.tournamentId,
-            tournamentName: tx.tournament?.tournamentName || "Unnamed Tournament",
-            status: tx.status,
-            paymentType: tx.paymentType,
-            amount: tx.amount.toString(),
-            fromAddress: tx.fromAddress,
-            toAddress: tx.toAddress,
-            blockNumber: tx.blockNumber || "Pending",
-        })),
-        ...prizeClaimedTransactions.map((tx) => {
-            const tournament = userTournaments.find((t) =>
-                t.contractAddress.toLowerCase() === tx.contractAddress?.toLowerCase()
-            );
-            return {
-                type: "Prize Claimed",
-                transactionHash: tx.transactionHash,
-                tournamentId: tournament?._id || null,
-                tournamentName: tournament?.tournamentName || "Unknown Tournament",
-                status: "Confirmed",
-                paymentType: "Prize Claim",
-                amount: tx.amount,
-                fromAddress: tx.contractAddress,
-                toAddress: tx.winner,
-                blockNumber: tx.blockNumber,
-            };
-        }),
-    ];
+    // Map Convex transactions to the display format
+    const allTransactions = convexTransactions.map((tx) => ({
+        type: "Convex",
+        transactionHash: tx.transactionHash,
+        tournamentId: tx.tournamentId,
+        tournamentName: tx.tournament?.tournamentName || "Unnamed Tournament",
+        status: tx.status,
+        paymentType: tx.paymentType,
+        amount: tx.amount.toString(),
+        fromAddress: tx.fromAddress,
+        toAddress: tx.toAddress,
+        blockNumber: tx.blockNumber || "Pending",
+    }));
 
     return (
         <div className="container mx-auto py-10">
@@ -132,7 +65,7 @@ export function Transactions() {
                                 </a>
                             </TableCell>
                             <TableCell>
-                                {tx.tournamentId && tx.tournamentName !== "Unnamed Tournament" && tx.tournamentName !== "Unknown Tournament" ? (
+                                {tx.tournamentId && tx.tournamentName !== "Unnamed Tournament" ? (
                                     <Link
                                         href={`/view-tournaments/${tx.tournamentId}`}
                                         className="text-theme-crimson hover:text-white transition-colors"

@@ -7,6 +7,9 @@ import {getContractWithSigner} from "@/lib/contract";
 import {ethers} from "ethers";
 import {Doc} from "@/convex/_generated/dataModel";
 import {Loading} from "@/app/components/Loading";
+import {useMutation} from "convex/react";
+import {api} from "@/convex/_generated/api";
+import {PaymentTypes} from "@/types/payment-types";
 
 interface ClaimPrizeModalProps {
     open: boolean;
@@ -15,7 +18,7 @@ interface ClaimPrizeModalProps {
     winnerUserId: string;
     winnerWalletId: string;
     winnerIgn: string;
-    totalPrizePool: string | number | bigint; // Accept various types, we'll convert to wei
+    totalPrizePool: string | number | bigint;
     prizeDistributionMethod: string;
 }
 
@@ -31,11 +34,11 @@ export function ClaimPrizeModal({
                                 }: ClaimPrizeModalProps) {
     const [state, setState] = useState<"idle" | "confirming" | "processing" | "success" | "error">("idle");
     const [errorMessage, setErrorMessage] = useState("");
+    const createTransaction = useMutation(api.transactions.createTransaction);
 
-    // Convert totalPrizePool to wei if it’s in ETH, otherwise assume it’s already in wei
     const prizePoolInWei = typeof totalPrizePool === "number" && totalPrizePool < 1
-        ? ethers.parseEther(totalPrizePool.toString()) // Convert ETH to wei if < 1
-        : BigInt(totalPrizePool); // Assume it’s already in wei if large or string/bigint
+        ? ethers.parseEther(totalPrizePool.toString())
+        : BigInt(totalPrizePool);
 
     const handleClaimPrize = async () => {
         try {
@@ -43,7 +46,20 @@ export function ClaimPrizeModal({
             const contract = await getContractWithSigner(tournament.contractAddress);
             const tx = await contract.claimPrize();
             setState("processing");
-            await tx.wait();
+            const receipt = await tx.wait();
+
+            await createTransaction({
+                transactionHash: receipt.transactionHash,
+                tournamentId: tournament._id,
+                userId: winnerUserId,
+                amount: Number(ethers.formatEther(prizePoolInWei)),
+                status: "confirmed",
+                paymentType: PaymentTypes.PRIZE_DISTRIBUTION,
+                blockNumber: receipt.blockNumber,
+                fromAddress: tournament.contractAddress,
+                toAddress: winnerWalletId,
+            });
+
             setState("success");
         } catch (error: unknown) {
             setState("error");
