@@ -53,8 +53,10 @@ export default function TournamentInfo() {
     const matchResults = useQuery(api.match_results.getMatchResults, {
         tournamentId: tournamentId as Id<"tournaments">,
     });
-    const submitMatchResult = useMutation(api.match_results.submitMatchResult);
     const resolveMatchDispute = useMutation(api.match_results.resolveMatchDispute);
+
+    // Replaced the first useEffect with a direct console.log
+    console.log(contractStatus);
 
     useEffect(() => {
         if (!playersInTournamentQuery) return;
@@ -128,7 +130,7 @@ export default function TournamentInfo() {
             }
         };
         if (tournamentQuery) fetchStatus();
-    }, [tournamentQuery?.contractAddress]);
+    }, [tournamentQuery]); // Updated dependency to tournamentQuery
 
     if (!tournamentId) {
         return <div>Invalid Tournament ID</div>;
@@ -154,7 +156,6 @@ export default function TournamentInfo() {
     }
 
     const tournament = tournamentQuery;
-    const playersInTournament = playersInTournamentQuery;
     const playerDetails = playerDetailsQuery;
 
     const playerIgnMap = new Map<string, string>();
@@ -167,7 +168,7 @@ export default function TournamentInfo() {
     const isTournamentOrganizer = isOrganizer && currentUserId === tournament.userId;
     const grandFinal = dynamicBracket[2];
     const grandFinalWinner = grandFinal.winner;
-    const canClaimPrize = grandFinalWinner && currentUserId === grandFinalWinner; // Removed isTournamentOver
+    const canClaimPrize = grandFinalWinner && currentUserId === grandFinalWinner;
     const winnerDetails = playerDetails.find((p) => p?.userId === grandFinalWinner);
     const winnerWalletId = winnerDetails?.walletId;
     const winnerIgn = playerIgnMap.get(grandFinalWinner || "") || "Unknown Player";
@@ -280,30 +281,34 @@ export default function TournamentInfo() {
                 <div className="max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[100px] mx-auto">
                     <div className="w-full flex flex-col items-center justify-center">
                         {tournament.gameTitle === "mortal-kombat" && (
-                            <Image src={mk} alt="mortal kombat" width={2000} height={2000} className="w-[700px]"/>
+                            <Image src={mk} alt="mortal kombat" width={2000} height={2000}
+                                   className=" w-[60%] lg:w-[700px]"/>
                         )}
                         {tournament.gameTitle === "street-fighter" && (
-                            <Image src={sf} alt="street fighter" width={2000} height={2000} className="w-[700px]"/>
+                            <Image src={sf} alt="street fighter" width={2000} height={2000}
+                                   className=" w-60%[] lg:w-[700px]"/>
                         )}
                         {tournament.gameTitle === "injustice" && (
-                            <Image src={injustice} alt="injustice" width={2000} height={2000} className="w-[700px]"/>
+                            <Image src={injustice} alt="injustice" width={2000} height={2000}
+                                   className=" w-60%[] lg:w-[700px]"/>
                         )}
                         {tournament.gameTitle === "tekken" && (
-                            <Image src={tekken} alt="tekken" width={2000} height={2000} className="w-[700px]"/>
+                            <Image src={tekken} alt="tekken" width={2000} height={2000}
+                                   className=" w-60%[] lg:w-[700px]"/>
                         )}
                         <div className="flex gap-x-5 items-center">
-                            <div className="text-[40px]">
+                            <div className="text-[30px] lg:text-[40px] text-center">
                                 {tournament.tournamentName} - <span className="text-theme-crimson">Semi Finals</span>
                             </div>
                         </div>
                     </div>
 
                     <div className="mt-16 max-w-[1300px] mx-auto">
-                        <div className="flex justify-between gap-5">
+                        <div className="flex lg:flex-row flex-col justify-between gap-5">
                             {dynamicBracket.slice(0, 2).map((match, index) => (
                                 <div
                                     key={index}
-                                    className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col"
+                                    className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 min-h-[340px] flex flex-col"
                                 >
                                     <h2 className="text-[26px] font-semibold text-center">{match.label}</h2>
                                     <div className="flex justify-between items-center w-full relative flex-1">
@@ -358,7 +363,7 @@ export default function TournamentInfo() {
 
                         <div className="mt-5">
                             <div
-                                className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 h-[340px] flex flex-col">
+                                className="border border-theme-crimson bg-black/40 backdrop-blur-lg p-[40px] rounded-lg flex-1 min-h-[400px] flex flex-col">
                                 <h2 className="text-[26px] font-semibold text-center">{dynamicBracket[2].label}</h2>
                                 <div className="flex justify-between items-center w-full relative flex-1">
                                     <div className="text-[20px] w-[37%] text-center">
@@ -396,7 +401,7 @@ export default function TournamentInfo() {
                                     <div className="w-full mt-4">
                                         <Button
                                             className="w-full"
-                                            variant="outline"
+                                            variant="secondary"
                                             onClick={() => handleOpenReviewModal(dynamicBracket[2])}
                                         >
                                             Resolve Dispute

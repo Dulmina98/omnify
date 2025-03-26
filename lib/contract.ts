@@ -100,3 +100,17 @@ export async function fetchMatchResult(contractAddress: string, matchId: number)
         throw new Error(`Failed to fetch match result: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 }
+
+export async function fetchPrizeClaimedTransactions(contractAddress: string) {
+    const contract = getContractReadOnly(contractAddress);
+    const filter = contract.filters.PrizeClaimed();
+    const logs = await contract.queryFilter(filter);
+    const eventLogs = logs.filter(log => 'args' in log) as ethers.EventLog[];
+
+    return eventLogs.map(event => ({
+        winner: event.args.winner,
+        amount: ethers.formatEther(event.args.amount),
+        transactionHash: event.transactionHash,
+        blockNumber: event.blockNumber,
+    }));
+}

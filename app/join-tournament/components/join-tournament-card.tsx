@@ -46,7 +46,7 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
         <div className="w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-black/40 mb-20">
             {/* Game Banner */}
             <div
-                className="absolute top-[-75px] right-[50px] z-0 w-[400px] flex justify-center items-center h-[150px] backdrop-blur-lg px-5">
+                className="absolute top-[-50px] lg:top-[-75px] right-[calc(50%-150px)] lg:right-[50px] z-0 w-[300px] lg:w-[400px] flex justify-center items-center h-[100px] lg:h-[150px] backdrop-blur-lg px-5">
                 {tournament.gameTitle === "mortal-kombat" && (
                     <Image src={mk} alt="mortal kombat" width={2000} height={2000} className="w-full"/>
                 )}
@@ -62,13 +62,13 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
             </div>
 
             {/* Tournament Details */}
-            <div className="py-[30px] px-[30px] relative z-10 w-full">
+            <div className="mt-10 lg:mt-0 py-[30px] px-[30px] relative z-10 w-full">
                 <div className="font-bold text-white text-[30px]">{tournament.tournamentName}</div>
                 <div className="text-muted-white text-[16px] mt-4">{tournament.description}</div>
 
-                <div className="flex justify-between mt-8">
+                <div className="lg:flex justify-between mt-8">
                     {/* Basic Info Section */}
-                    <div className="my-5">
+                    <div className="my-10 lg:my-5">
                         <div className="text-white text-[20px] font-semibold mb-3">Basic Info</div>
                         <div className="flex flex-col gap-y-2">
                             <li className="text-white text-[16px]">
@@ -94,7 +94,7 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                     </div>
 
                     {/* Entry Requirements Section */}
-                    <div className="my-5">
+                    <div className="my-10 lg:my-5">
                         <div className="text-white text-[20px] font-semibold mb-3">Entry Requirements</div>
                         <div className="flex flex-col gap-y-2">
                             <li className="text-white text-[16px]">
@@ -104,7 +104,7 @@ export function JoinTournamentCard({tournament}: JoinTournamentCardProps) {
                     </div>
 
                     {/* Prize Pool & Distribution Section */}
-                    <div className="my-5">
+                    <div className="my-10 lg:my-5">
                         <div className="text-white text-[20px] font-semibold mb-3">Prize Pool & Distribution</div>
                         <div className="flex flex-col gap-y-2">
                             <li className="text-white text-[16px]">

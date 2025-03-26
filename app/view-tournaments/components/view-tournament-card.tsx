@@ -18,7 +18,7 @@ export function ViewTournamentCard({tournament}: ViewTournamentCardProps) {
             className={"w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-black/40 mb-20"}
         >
             <div
-                className={"absolute top-[-75px] right-[50px] z-0 w-[400px] flex justify-center items-center h-[150px] backdrop-blur-lg px-5"}
+                className="absolute top-[-50px] lg:top-[-75px] right-[calc(50%-150px)] lg:right-[50px] z-0 w-[300px] lg:w-[400px] flex justify-center items-center h-[100px] lg:h-[150px] backdrop-blur-lg px-5"
             >
                 {tournament.gameTitle === "mortal-kombat" &&
                     <Image src={mk} alt={"mortal kombat"} width={2000} height={2000} className={"w-full"}/>}
@@ -30,10 +30,10 @@ export function ViewTournamentCard({tournament}: ViewTournamentCardProps) {
                     <Image src={tekken} alt={"tekken"} width={2000} height={2000} className={"w-full mb-5"}/>}
             </div>
             <div className={"py-[30px] px-[30px] relative z-10 w-full"}>
-                <div className={"font-bold text-white text-[30px]"}>{tournament.tournamentName}</div>
+                <div className={"font-bold text-white text-[30px] mt-10 lg:mt-0"}>{tournament.tournamentName}</div>
                 <div className={"text-muted-white text-[16px] mt-4"}>{tournament.description}</div>
-                <div className={"flex justify-between mt-8 gap-x-5"}>
-                    <div className={"w-1/2 pr-6"}>
+                <div className={"flex flex-col lg:flex-row justify-between mt-8 gap-x-5"}>
+                    <div className={"w-full lg:w-1/2 lg:pr-6"}>
                         <div
                             className={"text-theme-crimson text-[24px] font-bold tracking-tight mb-4 uppercase opacity-90"}>
                             Basic Info
@@ -58,7 +58,7 @@ export function ViewTournamentCard({tournament}: ViewTournamentCardProps) {
                             </div>
                         </div>
                     </div>
-                    <div className={"w-1/2 pl-6"}>
+                    <div className={"w-full lg:w-1/2 lg:pl-6 mt-10 lg:mt-0 mb-10 lg:mb-0"}>
                         <div
                             className={"text-theme-crimson text-[24px] font-bold tracking-tight mb-4 uppercase opacity-90"}>
                             Prize Pool

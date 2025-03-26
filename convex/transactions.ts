@@ -1,4 +1,4 @@
-import {mutation} from "@/convex/_generated/server";
+import {mutation, query} from "@/convex/_generated/server";
 import {v} from "convex/values";
 import {PaymentTypes} from "@/types/payment-types";
 
@@ -34,5 +34,28 @@ export const createTransaction = mutation({
         });
 
         return transactionId;
+    },
+});
+
+export const listTransactionsByUser = query({
+    args: {userId: v.string()},
+    handler: async (ctx, args) => {
+        const transactions = await ctx.db
+            .query("transactions")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .order("desc")
+            .collect();
+
+        const transactionsWithTournaments = await Promise.all(
+            transactions.map(async (tx) => {
+                const tournament = await ctx.db
+                    .query("tournaments")
+                    .filter((q) => q.eq(q.field("_id"), tx.tournamentId))
+                    .first();
+                return {...tx, tournament};
+            })
+        );
+
+        return transactionsWithTournaments;
     },
 });

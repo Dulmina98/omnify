@@ -28,7 +28,7 @@ type TournamentFormData = {
     startDate: number;
     endDate: number;
     entryFee: string;
-    totalPrizePool: string; // Changed to string for precision
+    totalPrizePool: string;
     prizeDistributionMethod: PrizeDistributionMethod;
 };
 
@@ -56,84 +56,45 @@ export default function CreateTournament() {
     });
 
     const onSubmit = async (data: TournamentFormData) => {
+        // Same as original, no changes needed here for responsiveness
         try {
-            if (!user) {
-                throw new Error("User is not signed in.");
-            }
-
+            if (!user) throw new Error("User is not signed in.");
             setIsDeploying(true);
             setDeploymentError(null);
 
-            // Validate required fields
-            if (!data.entryFee || parseFloat(data.entryFee) <= 0) {
-                throw new Error("Entry fee must be a positive number.");
-            }
-            if (!data.totalPrizePool || parseFloat(data.totalPrizePool) <= 0) {
-                throw new Error("Total prize pool must be a positive number.");
-            }
+            if (!data.entryFee || parseFloat(data.entryFee) <= 0) throw new Error("Entry fee must be a positive number.");
+            if (!data.totalPrizePool || parseFloat(data.totalPrizePool) <= 0) throw new Error("Total prize pool must be a positive number.");
 
-            // Validate dates
             const startDateTimestamp = Math.floor(data.startDate / 1000);
             const endDateTimestamp = Math.floor(data.endDate / 1000);
-            if (startDateTimestamp >= endDateTimestamp) {
-                throw new Error("Start date must be before end date.");
-            }
+            if (startDateTimestamp >= endDateTimestamp) throw new Error("Start date must be before end date.");
 
-            // Validate supported options
             const validTournamentTypes = ["single-elimination"];
             const validTeamSizes = ["1v1"];
             const validPlayerCounts = [4];
-            if (!validTournamentTypes.includes(data.tournamentType)) {
-                throw new Error("Invalid tournament type selected.");
-            }
-            if (!validTeamSizes.includes(data.teamSize)) {
-                throw new Error("Invalid team size selected.");
-            }
-            if (!validPlayerCounts.includes(data.numberOfPlayersRequired)) {
-                throw new Error("Invalid number of players selected.");
-            }
+            if (!validTournamentTypes.includes(data.tournamentType)) throw new Error("Invalid tournament type selected.");
+            if (!validTeamSizes.includes(data.teamSize)) throw new Error("Invalid team size selected.");
+            if (!validPlayerCounts.includes(data.numberOfPlayersRequired)) throw new Error("Invalid number of players selected.");
 
-            if (!window.ethereum) {
-                throw new Error("Please install MetaMask or another Ethereum wallet provider.");
-            }
+            if (!window.ethereum) throw new Error("Please install MetaMask or another Ethereum wallet provider.");
             await window.ethereum.request({method: "eth_requestAccounts"});
             const provider = new ethers.BrowserProvider(window.ethereum);
             const signer = await provider.getSigner();
 
-            // Convert form data to contract-compatible types
             const entryFeeInWei = ethers.parseEther(data.entryFee);
             const totalPrizePoolInWei = ethers.parseEther(data.totalPrizePool);
-            const prizeMethodMapping: Record<PrizeDistributionMethod, number> = {
-                "winner-takes-all": 0,
-                "top-3": 1,
-            };
+            const prizeMethodMapping: Record<PrizeDistributionMethod, number> = {"winner-takes-all": 0, "top-3": 1};
             const prizeDistributionMethod = prizeMethodMapping[data.prizeDistributionMethod];
 
-            // Deploy the smart contract
-            const factory = new ethers.ContractFactory(
-                TournamentArtifact.abi,
-                TournamentArtifact.bytecode,
-                signer
-            );
-            const contract = await factory.deploy(
-                entryFeeInWei,
-                data.numberOfPlayersRequired,
-                startDateTimestamp,
-                endDateTimestamp,
-                totalPrizePoolInWei,
-                prizeDistributionMethod
-            );
+            const factory = new ethers.ContractFactory(TournamentArtifact.abi, TournamentArtifact.bytecode, signer);
+            const contract = await factory.deploy(entryFeeInWei, data.numberOfPlayersRequired, startDateTimestamp, endDateTimestamp, totalPrizePoolInWei, prizeDistributionMethod);
             await contract.waitForDeployment();
             const contractAddress = await contract.getAddress();
 
-            // Verify contract deployment
             const deployedContract = new ethers.Contract(contractAddress, TournamentArtifact.abi, signer);
-            const organizer = await deployedContract.organizer(); // Ensure contract is accessible
-            if (organizer.toLowerCase() !== (await signer.getAddress()).toLowerCase()) {
-                throw new Error("Contract deployment verification failed.");
-            }
+            const organizer = await deployedContract.organizer();
+            if (organizer.toLowerCase() !== (await signer.getAddress()).toLowerCase()) throw new Error("Contract deployment verification failed.");
 
-            // Prepare tournament data for database
             const tournamentData = {
                 ...data,
                 startDate: startDateTimestamp * 1000,
@@ -162,56 +123,65 @@ export default function CreateTournament() {
             setIsDeploying(false);
             setIsModalOpen(true);
             console.log("Tournament created successfully with contract address:", contractAddress);
-        } catch (error: any) {
+        } catch (error: unknown) {
             setIsDeploying(false);
+
+            // Define a type for the error
+            type DeployError = Error | { code: number; message: string } | string;
+
             let errorMessage = "An error occurred while creating the tournament.";
-            if (error.code === 4001) {
-                errorMessage = "Transaction rejected by user.";
-            } else if (error.message?.includes("insufficient funds")) {
-                errorMessage = "Insufficient ETH for gas fees.";
-            } else if (error instanceof Error) {
-                errorMessage = error.message;
+            const typedError = error as DeployError;
+
+            if (typeof typedError === "object" && typedError !== null) {
+                if ("code" in typedError && typedError.code === 4001) {
+                    errorMessage = "Transaction rejected by user.";
+                } else if ("message" in typedError && typedError.message?.includes("insufficient funds")) {
+                    errorMessage = "Insufficient ETH for gas fees.";
+                } else if ("message" in typedError) {
+                    errorMessage = typedError.message;
+                }
+            } else {
+                errorMessage = typedError;
             }
+
             setDeploymentError(errorMessage);
             console.error("Error creating tournament:", error);
         }
     };
 
-    const formatPrizeMethod = (method: string) => {
-        return method
-            .split("-")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ");
-    };
+    const formatPrizeMethod = (method: string) =>
+        method.split("-").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
 
     return (
-        <div className={"w-full min-h-screen bg-[url(/assets/images/bg/create-tournament-bg.jpg)] bg-cover bg-bottom"}>
-            <div className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] py-[150px] mx-auto"}>
-                <div className={"text-[64px] text-white text-center w-full"}>
-                    <span className={"text-theme-crimson"}>Organize</span> a Tournament
+        <div className="w-full min-h-screen bg-[url(/assets/images/bg/create-tournament-bg.jpg)] bg-cover bg-bottom">
+            <div className="max-w-[1800px] w-full px-6 lg:px-[100px] py-[150px] mx-auto">
+                <div className="text-[45px] md:text-[64px] text-white text-center w-full">
+                    <span className="text-theme-crimson">Organize</span> a Tournament
                 </div>
-                <div className={"text-white text-center text-[32px] max-w-[675px] w-full mx-auto mb-[140px]"}>
+                <div
+                    className="text-white text-center text-[25px] md:text-[32px] max-w-[675px] w-full mx-auto mb-[140px]">
                     Set up and manage your blockchain-powered tournament with ease!
                 </div>
                 <FormProvider {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)}>
                         <div
-                            className={"border border-muted-gray rounded-[10px] px-[90px] py-[40px] bg-black/75 backdrop-blur-lg"}>
+                            className="border border-muted-gray rounded-[10px] px-6 lg:px-[90px] py-[40px] bg-black/75 backdrop-blur-lg">
                             <div>
+                                {/* Tournament Details */}
                                 <div
-                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px]"}>
+                                    className="font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px]">
                                     Tournament Details
                                 </div>
-                                <div className={"flex w-full gap-[30px] flex-wrap"}>
+                                <div className="flex flex-col md:flex-row w-full gap-6 md:gap-[30px] flex-wrap">
                                     <FormField
                                         control={form.control}
                                         name="tournamentName"
                                         render={({field}) => (
-                                            <FormItem className={"flex-[1_1_45%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Tournament
+                                            <FormItem className="w-full md:flex-[1_1_45%]">
+                                                <FormLabel className="text-white text-[16px] mb-[10px]">Tournament
                                                     Name</FormLabel>
                                                 <FormControl>
-                                                    <Input className={"h-[46px]"}
+                                                    <Input className="h-[46px]"
                                                            placeholder="Enter tournament name" {...field} />
                                                 </FormControl>
                                                 <FormMessage/>
@@ -222,12 +192,12 @@ export default function CreateTournament() {
                                         control={form.control}
                                         name="gameTitle"
                                         render={({field}) => (
-                                            <FormItem className={"flex-[1_1_45%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Game
+                                            <FormItem className="w-full md:flex-[1_1_45%]">
+                                                <FormLabel className="text-white text-[16px] mb-[10px]">Game
                                                     Title</FormLabel>
                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                     <FormControl>
-                                                        <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectTrigger className="h-[46px]">
                                                             <SelectValue placeholder="Select a game"/>
                                                         </SelectTrigger>
                                                     </FormControl>
@@ -252,9 +222,9 @@ export default function CreateTournament() {
                                     control={form.control}
                                     name="description"
                                     render={({field}) => (
-                                        <FormItem className={"flex-1 mt-10"}>
+                                        <FormItem className="w-full mt-10">
                                             <FormLabel
-                                                className={"text-white text-[16px] mb-[10px]"}>Description</FormLabel>
+                                                className="text-white text-[16px] mb-[10px]">Description</FormLabel>
                                             <FormControl>
                                                 <Textarea placeholder="Enter tournament description" {...field} />
                                             </FormControl>
@@ -262,30 +232,31 @@ export default function CreateTournament() {
                                         </FormItem>
                                     )}
                                 />
+
+                                {/* Tournament Types & Format */}
                                 <div
-                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>
+                                    className="font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]">
                                     Tournament Types & Format
                                 </div>
-                                <div className={"flex w-full gap-[30px] flex-wrap"}>
+                                <div className="flex flex-col md:flex-row w-full gap-6 md:gap-[30px] flex-wrap">
                                     <FormField
                                         control={form.control}
                                         name="tournamentType"
                                         render={({field}) => (
-                                            <FormItem className={"flex-[1_1_30%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Tournament
+                                            <FormItem className="w-full md:flex-[1_1_30%]">
+                                                <FormLabel className="text-white text-[16px] mb-[10px]">Tournament
                                                     Type</FormLabel>
                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                     <FormControl>
-                                                        <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectTrigger className="h-[46px]">
                                                             <SelectValue placeholder="Select tournament type"/>
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
                                                         <SelectItem value="single-elimination">Single
                                                             Elimination</SelectItem>
-                                                        <SelectItem value="double-elimination" disabled={true}>
-                                                            Double Elimination
-                                                        </SelectItem>
+                                                        <SelectItem value="double-elimination" disabled={true}>Double
+                                                            Elimination</SelectItem>
                                                         <SelectItem value="round-robin" disabled={true}>Round
                                                             Robin</SelectItem>
                                                     </SelectContent>
@@ -298,12 +269,12 @@ export default function CreateTournament() {
                                         control={form.control}
                                         name="teamSize"
                                         render={({field}) => (
-                                            <FormItem className={"flex-[1_1_30%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Team
+                                            <FormItem className="w-full md:flex-[1_1_30%]">
+                                                <FormLabel className="text-white text-[16px] mb-[10px]">Team
                                                     Size</FormLabel>
                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                     <FormControl>
-                                                        <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectTrigger className="h-[46px]">
                                                             <SelectValue placeholder="Select team size"/>
                                                         </SelectTrigger>
                                                     </FormControl>
@@ -321,12 +292,12 @@ export default function CreateTournament() {
                                         control={form.control}
                                         name="numberOfPlayersRequired"
                                         render={({field}) => (
-                                            <FormItem className={"flex-[1_1_30%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Number of
+                                            <FormItem className="w-full md:flex-[1_1_30%]">
+                                                <FormLabel className="text-white text-[16px] mb-[10px]">Number of
                                                     Players Required</FormLabel>
                                                 <Select onValueChange={(value) => field.onChange(parseInt(value, 10))}>
                                                     <FormControl>
-                                                        <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectTrigger className="h-[46px]">
                                                             <SelectValue placeholder="Select number of players"/>
                                                         </SelectTrigger>
                                                     </FormControl>
@@ -344,13 +315,13 @@ export default function CreateTournament() {
                                         control={form.control}
                                         name="startDate"
                                         render={({field}) => (
-                                            <FormItem className={"flex-[1_1_45%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Start
+                                            <FormItem className="w-full md:flex-[1_1_45%]">
+                                                <FormLabel className="text-white text-[16px] mb-[10px]">Start
                                                     Date</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         type="date"
-                                                        className={"h-[46px] w-full custom-date-input"}
+                                                        className="h-[46px] w-full custom-date-input"
                                                         {...field}
                                                         value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
                                                         onChange={(e) => field.onChange(new Date(e.target.value).getTime())}
@@ -364,13 +335,13 @@ export default function CreateTournament() {
                                         control={form.control}
                                         name="endDate"
                                         render={({field}) => (
-                                            <FormItem className={"flex-[1_1_45%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>End
+                                            <FormItem className="w-full md:flex-[1_1_45%]">
+                                                <FormLabel className="text-white text-[16px] mb-[10px]">End
                                                     Date</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         type="date"
-                                                        className={"h-[46px] custom-date-input"}
+                                                        className="h-[46px] custom-date-input"
                                                         {...field}
                                                         value={field.value ? new Date(field.value).toISOString().split("T")[0] : ""}
                                                         onChange={(e) => field.onChange(new Date(e.target.value).getTime())}
@@ -381,29 +352,29 @@ export default function CreateTournament() {
                                         )}
                                     />
                                 </div>
+
+                                {/* Entry Requirement & Registration */}
                                 <div
-                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>
+                                    className="font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]">
                                     Entry Requirement & Registration
                                 </div>
-                                <div className={"flex w-full gap-[30px] flex-wrap"}>
+                                <div className="flex flex-col md:flex-row w-full gap-6 md:gap-[30px] flex-wrap">
                                     <FormField
                                         control={form.control}
                                         name="entryFee"
                                         render={({field}) => (
-                                            <FormItem className={"flex-[1_1_45%]"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Entry Fee
+                                            <FormItem className="w-full md:flex-[1_1_45%]">
+                                                <FormLabel className="text-white text-[16px] mb-[10px]">Entry Fee
                                                     (ETH)</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         type="text"
-                                                        className={"h-[46px]"}
+                                                        className="h-[46px]"
                                                         placeholder="Enter entry fee (e.g., 0.005)"
                                                         {...field}
                                                         onChange={(e) => {
                                                             const value = e.target.value;
-                                                            if (/^-?\d*\.?\d*$/.test(value)) {
-                                                                field.onChange(value === "" ? "" : value);
-                                                            }
+                                                            if (/^-?\d*\.?\d*$/.test(value)) field.onChange(value === "" ? "" : value);
                                                         }}
                                                     />
                                                 </FormControl>
@@ -412,29 +383,29 @@ export default function CreateTournament() {
                                         )}
                                     />
                                 </div>
+
+                                {/* Prize Pool & Distribution */}
                                 <div
-                                    className={"font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]"}>
+                                    className="font-semibold text-[20px] text-white w-full pb-[20px] border-b border-b-muted-gray mb-[45px] mt-[60px]">
                                     Prize Pool & Distribution
                                 </div>
-                                <div className={"flex w-full gap-[30px] flex-wrap"}>
+                                <div className="flex flex-col md:flex-row w-full gap-6 md:gap-[30px] flex-wrap">
                                     <FormField
                                         control={form.control}
                                         name="totalPrizePool"
                                         render={({field}) => (
-                                            <FormItem className={"flex-1"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Total Prize
-                                                    Pool (ETH)</FormLabel>
+                                            <FormItem className="w-full md:flex-1">
+                                                <FormLabel className="text-white text-[16px] mb-[10px]">Total Prize Pool
+                                                    (ETH)</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         type="text"
-                                                        className={"h-[46px]"}
+                                                        className="h-[46px]"
                                                         placeholder="Enter total prize pool (e.g., 0.1)"
                                                         {...field}
                                                         onChange={(e) => {
                                                             const value = e.target.value;
-                                                            if (/^-?\d*\.?\d*$/.test(value)) {
-                                                                field.onChange(value === "" ? "" : value);
-                                                            }
+                                                            if (/^-?\d*\.?\d*$/.test(value)) field.onChange(value === "" ? "" : value);
                                                         }}
                                                     />
                                                 </FormControl>
@@ -446,12 +417,12 @@ export default function CreateTournament() {
                                         control={form.control}
                                         name="prizeDistributionMethod"
                                         render={({field}) => (
-                                            <FormItem className={"flex-1"}>
-                                                <FormLabel className={"text-white text-[16px] mb-[10px]"}>Prize
+                                            <FormItem className="w-full md:flex-1">
+                                                <FormLabel className="text-white text-[16px] mb-[10px]">Prize
                                                     Distribution Method</FormLabel>
                                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                     <FormControl>
-                                                        <SelectTrigger className={"h-[46px]"}>
+                                                        <SelectTrigger className="h-[46px]">
                                                             <SelectValue
                                                                 placeholder="Select prize distribution method"/>
                                                         </SelectTrigger>

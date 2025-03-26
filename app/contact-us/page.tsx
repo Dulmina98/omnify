@@ -1,15 +1,18 @@
 import {Button} from "@/components/ui/button";
+import Image from "next/image";
 
 export default function ContactUs() {
     return (
         <div className="relative w-full flex justify-center overflow-hidden bg-black z-10">
             <div className="max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-20 py-[200px]">
                 <div className="w-full flex justify-center">
-                    <div className="text-[90px] text-white text-center w-full mb-[35px] leading-[105px]">
-                        Get in <span className="text-theme-crimson">Touch</span> with Omnify
+                    <div
+                        className="text-[45px] md:text-[64px] lg:text-[90px] text-white text-center w-full mb-[15px] lg:mb-[35px] lg:leading-[105px]">
+                        <span className="text-theme-crimson">Get in Touch</span> with Omnify
                     </div>
                 </div>
-                <div className="text-white text-center text-[32px] max-w-[675px] w-full mx-auto mb-[70px]">
+                <div
+                    className="text-white text-center text-[28px] md:text-[35px] lg:text-[32px] max-w-[675px] w-full mx-auto mb-[70px]">
                     Ready to elevate your gaming tournaments? Reach out to us today!
                 </div>
                 <div className="w-full max-w-[600px] mx-auto bg-white/10 p-8 rounded-lg">
@@ -107,10 +110,12 @@ export default function ContactUs() {
                     won’t be shared with third parties.
                 </div>
             </div>
-            <img
+            <Image
                 src="/assets/images/bg/contact-bg.png"
                 alt="contact-bg"
                 className="absolute bottom-0 left-0 w-full z-10"
+                width={4000}
+                height={3000}
             />
         </div>
     );
