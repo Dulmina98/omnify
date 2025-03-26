@@ -123,12 +123,27 @@ export default function CreateTournament() {
             setIsDeploying(false);
             setIsModalOpen(true);
             console.log("Tournament created successfully with contract address:", contractAddress);
-        } catch (error: any) {
+        } catch (error: unknown) {
             setIsDeploying(false);
+
+            // Define a type for the error
+            type DeployError = Error | { code: number; message: string } | string;
+
             let errorMessage = "An error occurred while creating the tournament.";
-            if (error.code === 4001) errorMessage = "Transaction rejected by user.";
-            else if (error.message?.includes("insufficient funds")) errorMessage = "Insufficient ETH for gas fees.";
-            else if (error instanceof Error) errorMessage = error.message;
+            const typedError = error as DeployError;
+
+            if (typeof typedError === "object" && typedError !== null) {
+                if ("code" in typedError && typedError.code === 4001) {
+                    errorMessage = "Transaction rejected by user.";
+                } else if ("message" in typedError && typedError.message?.includes("insufficient funds")) {
+                    errorMessage = "Insufficient ETH for gas fees.";
+                } else if ("message" in typedError) {
+                    errorMessage = typedError.message;
+                }
+            } else {
+                errorMessage = typedError;
+            }
+
             setDeploymentError(errorMessage);
             console.error("Error creating tournament:", error);
         }

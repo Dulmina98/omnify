@@ -1,4 +1,5 @@
 import {Button} from "@/components/ui/button";
+import Image from "next/image";
 
 export default function ContactUs() {
     return (
@@ -7,7 +8,7 @@ export default function ContactUs() {
                 <div className="w-full flex justify-center">
                     <div
                         className="text-[45px] md:text-[64px] lg:text-[90px] text-white text-center w-full mb-[15px] lg:mb-[35px] lg:leading-[105px]">
-                        Get in <span className="text-theme-crimson">Touch</span> with Omnify
+                        <span className="text-theme-crimson">Get in Touch</span> with Omnify
                     </div>
                 </div>
                 <div
@@ -109,10 +110,12 @@ export default function ContactUs() {
                     won’t be shared with third parties.
                 </div>
             </div>
-            <img
+            <Image
                 src="/assets/images/bg/contact-bg.png"
                 alt="contact-bg"
                 className="absolute bottom-0 left-0 w-full z-10"
+                width={4000}
+                height={3000}
             />
         </div>
     );

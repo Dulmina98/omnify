@@ -26,52 +26,52 @@ export function JoinTournamentModal({open, onClose, tournament, user}: JoinTourn
 
     useEffect(() => {
         if (open && state === "idle" && user) {
+            const handlePayment = async () => {
+                try {
+                    if (!user || !user.walletId) {
+                        throw new Error("User is not connected or has no Ethereum address.");
+                    }
+
+                    setState("confirming");
+                    const contract = await getContractWithSigner(tournament.contractAddress);
+                    const entryFee = await contract.entryFee();
+                    const tx = await contract.payEntryFee({value: entryFee});
+                    setState("processing");
+
+                    const receipt = await tx.wait();
+                    const transactionHash = receipt.hash;
+                    const blockNumber = receipt.blockNumber;
+                    const amountInEth = parseFloat(ethers.formatEther(entryFee));
+
+                    const transactionId = await recordTransaction({
+                        transactionHash,
+                        tournamentId: tournament._id,
+                        userId: user.userId,
+                        amount: amountInEth,
+                        status: "confirmed",
+                        paymentType: PaymentTypes.ENTRY_FEE,
+                        blockNumber,
+                        fromAddress: user.walletId,
+                        toAddress: tournament.contractAddress,
+                    });
+
+                    await enterTournament({
+                        tournamentId: tournament._id,
+                        userId: user.userId,
+                        transactionId,
+                    });
+
+                    setState("success");
+                } catch (error: unknown) {
+                    setState("error");
+                    const message = error instanceof Error ? error.message : "Failed to join tournament. Please try again.";
+                    setErrorMessage(message);
+                }
+            };
+
             handlePayment();
         }
-    }, [open, state, user]);
-
-    const handlePayment = async () => {
-        try {
-            if (!user || !user.walletId) {
-                throw new Error("User is not connected or has no Ethereum address.");
-            }
-
-            setState("confirming");
-            const contract = await getContractWithSigner(tournament.contractAddress);
-            const entryFee = await contract.entryFee();
-            const tx = await contract.payEntryFee({value: entryFee});
-            setState("processing");
-
-            const receipt = await tx.wait();
-            const transactionHash = receipt.hash;
-            const blockNumber = receipt.blockNumber;
-            const amountInEth = parseFloat(ethers.formatEther(entryFee));
-
-            const transactionId = await recordTransaction({
-                transactionHash,
-                tournamentId: tournament._id,
-                userId: user.userId,
-                amount: amountInEth,
-                status: "confirmed",
-                paymentType: PaymentTypes.ENTRY_FEE,
-                blockNumber,
-                fromAddress: user.walletId,
-                toAddress: tournament.contractAddress,
-            });
-
-            await enterTournament({
-                tournamentId: tournament._id,
-                userId: user.userId,
-                transactionId,
-            });
-
-            setState("success");
-        } catch (error: unknown) {
-            setState("error");
-            const message = error instanceof Error ? error.message : "Failed to join tournament. Please try again.";
-            setErrorMessage(message);
-        }
-    };
+    }, [open, state, user, tournament, enterTournament, recordTransaction]); // Include all dependencies
 
     return (
         <Dialog open={open} onOpenChange={onClose}>

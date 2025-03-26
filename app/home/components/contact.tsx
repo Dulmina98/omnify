@@ -2,6 +2,7 @@
 
 import {Button} from "@/components/ui/button";
 import {useRouter} from "next/navigation";
+import Image from "next/image";
 
 export function Contact() {
     const router = useRouter();
@@ -26,7 +27,7 @@ export function Contact() {
                                                                               onClick={() => router.push("/contact-us")}>Contact
                     Us</Button></div>
             </div>
-            <img src="/assets/images/bg/contact-bg.png" alt="contact-bg"
+            <Image width={4000} height={4000} src="/assets/images/bg/contact-bg.png" alt="contact-bg"
                  className={"absolute bottom-0 left-0 w-full z-10"}/>
         </div>
     )

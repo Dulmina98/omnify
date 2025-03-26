@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useMemo, useState} from "react";
 import {
     fetchEntryFeeTransactions,
     fetchMatchResult,
@@ -23,7 +23,7 @@ import {MdOutlinePending} from "react-icons/md";
 import {ethers} from "ethers";
 import {useQuery} from "convex/react";
 import {api} from "@/convex/_generated/api";
-import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table";
+import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
 
 interface TournamentDetailsProps {
     contractAddress: string;
@@ -54,16 +54,6 @@ interface PrizeClaimedTransaction {
     blockNumber: number;
 }
 
-interface MatchResult {
-    matchId: number;
-    player1: string;
-    player2: string;
-    player1Submission: string;
-    player2Submission: string;
-    winner: string;
-    disputed: boolean;
-}
-
 interface Submission {
     matchId: number;
     player: string;
@@ -82,9 +72,8 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const convexMatchResults = useQuery(api.match_results.getMatchResultsByContract, {
-        contractAddress,
-    }) || [];
+    const convexMatchResultsRaw = useQuery(api.match_results.getMatchResultsByContract, {contractAddress});
+    const convexMatchResults = useMemo(() => convexMatchResultsRaw || [], [convexMatchResultsRaw]);
 
     useEffect(() => {
         const loadData = async () => {
@@ -291,8 +280,8 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                                         : "bg-red-500/20 text-red-400"
                             }`}
                         >
-              {statusLabels[tournamentData.status]}
-            </span>
+                            {statusLabels[tournamentData.status]}
+                        </span>
                     </p>
                 </div>
             </div>

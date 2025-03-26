@@ -45,7 +45,8 @@ export function DeleteTournamentModal({open, onClose, onConfirm, tournamentName}
                                 className="text-theme-crimson">Tournament</span></div>
                             <div className="mt-2 text-muted-white text-center">
                                 Are you sure you want to delete <span
-                                className={"font-semibold text-white"}>"{tournamentName}"</span>? This action cannot be
+                                className={"font-semibold text-white"}>&#34;{tournamentName}&#34;</span>? This action
+                                cannot be
                                 undone.
                             </div>
                             <div className="mt-8 w-full flex justify-center gap-4">

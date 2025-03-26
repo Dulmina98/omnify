@@ -149,7 +149,7 @@ export default function Page() {
         <div className={"w-full min-h-screen relative flex "}>
             <div
                 className={
-                    "absolute left-0 top-0 w-full md:w-1/2 bg-red-700 min-h-screen bg-[url(/assets/images/bg/become-member-bg.jpg)] bg-cover bg-right md:relative"
+                    "absolute left-0 top-0 w-full md:w-1/2  min-h-screen bg-[url(/assets/images/bg/become-member-bg.jpg)] bg-cover bg-right md:relative"
                 }
             >
                 <div className={"w-full h-full flex justify-end"}>

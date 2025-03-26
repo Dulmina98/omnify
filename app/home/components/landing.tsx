@@ -8,11 +8,12 @@ import {useUser} from "@clerk/nextjs";
 
 export function Landing() {
     const {role, isSignedIn: isConvexSigned} = useCurrentUser();
-    const {isClerkSigned} = useUser();
+    const {isSignedIn: isClerkSigned} = useUser();
 
     return (
         <div className={"w-full relative flex justify-center"}>
-            <img src={"/assets/images/bg/landing-bg.jpg"} className={"absolute left-0 top-0 w-full"}/>
+            <Image alt={"landing-bg"} src={"/assets/images/bg/landing-bg.jpg"}
+                   className={"absolute left-0 top-0 w-full"} width={4000} height={4000}/>
             <div className={"max-w-[1800px] h-screen w-full px-[25px] lg:px-[100px] flex justify-center relative z-10"}>
 
                 <div className={"w-full flex justify-center "}>
@@ -25,10 +26,11 @@ export function Landing() {
                                 The Future of Gaming Tournaments
                             </div>
                         </div>
-                        {!role && <div
+                        {!isClerkSigned && !isConvexSigned && <div
                             className={"items-center w-full flex justify-center gap-[20px] mt-10 pb-40 flex-col min-[470px]:flex-row"}>
                             <Link href={"/sign-up"}><Button
-                                className={"h-[40px] w-[175px] lg:h-[48px] lg:w-[215px] text-[14px]  lg:text-[18px]"}>Register</Button></Link>
+                                className={"h-[40px] w-[175px] lg:h-[48px] lg:w-[215px] text-[14px]  lg:text-[18px]"}>Sign
+                                Up Now</Button></Link>
                             <Link href={"/view-tournaments"}>
                                 <Button
                                     className={"h-[40px] w-[175px] lg:h-[48px] lg:w-[215px]  text-[14px] lg:text-[18px]"}
@@ -50,10 +52,10 @@ export function Landing() {
                         {isConvexSigned && <div
                             className={"items-center w-full flex justify-center gap-[20px] mt-10 pb-40 flex-col min-[470px]:flex-row"}>
                             {role === "player" && <Link href={"/join-tournament"}><Button
-                                className={"h-[40px] w-[175px] lg:h-[48px] lg:w-[215px] ttext-[14px]  lg:ext-[18px]"}>Join
+                                className={"h-[40px] w-[175px] lg:h-[48px] lg:w-[215px] text-[14px]  lg:text-[18px]"}>Join
                                 a Tournament</Button></Link>}
                             {role === "organizer" && <Link href={"/join-tournament"}><Button
-                                className={"h-[40px] w-[175px] lg:h-[48px] lg:w-[215px] t text-[14px] lg:ext-[18px]"}>Create
+                                className={"h-[40px] w-[175px] lg:h-[48px] lg:w-[215px]  text-[14px] lg:text-[18px]"}>Create
                                 a Tournament</Button></Link>}
                             <Link href={"/view-tournaments"}>
                                 <Button

@@ -53,8 +53,10 @@ export default function TournamentInfo() {
     const matchResults = useQuery(api.match_results.getMatchResults, {
         tournamentId: tournamentId as Id<"tournaments">,
     });
-    const submitMatchResult = useMutation(api.match_results.submitMatchResult);
     const resolveMatchDispute = useMutation(api.match_results.resolveMatchDispute);
+
+    // Replaced the first useEffect with a direct console.log
+    console.log(contractStatus);
 
     useEffect(() => {
         if (!playersInTournamentQuery) return;
@@ -128,7 +130,7 @@ export default function TournamentInfo() {
             }
         };
         if (tournamentQuery) fetchStatus();
-    }, [tournamentQuery?.contractAddress]);
+    }, [tournamentQuery]); // Updated dependency to tournamentQuery
 
     if (!tournamentId) {
         return <div>Invalid Tournament ID</div>;
@@ -154,7 +156,6 @@ export default function TournamentInfo() {
     }
 
     const tournament = tournamentQuery;
-    const playersInTournament = playersInTournamentQuery;
     const playerDetails = playerDetailsQuery;
 
     const playerIgnMap = new Map<string, string>();
@@ -167,7 +168,7 @@ export default function TournamentInfo() {
     const isTournamentOrganizer = isOrganizer && currentUserId === tournament.userId;
     const grandFinal = dynamicBracket[2];
     const grandFinalWinner = grandFinal.winner;
-    const canClaimPrize = grandFinalWinner && currentUserId === grandFinalWinner; // Removed isTournamentOver
+    const canClaimPrize = grandFinalWinner && currentUserId === grandFinalWinner;
     const winnerDetails = playerDetails.find((p) => p?.userId === grandFinalWinner);
     const winnerWalletId = winnerDetails?.walletId;
     const winnerIgn = playerIgnMap.get(grandFinalWinner || "") || "Unknown Player";
