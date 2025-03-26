@@ -3,7 +3,7 @@ import {useQuery} from "convex/react";
 import {api} from "@/convex/_generated/api";
 import {TabBar} from "@/app/components/tab-bar/tab-bar";
 import {useState} from "react";
-import {TournamentApprovalCard} from "@/app/user-profile/components/TournamentApprovalCard";
+import {TournamentApprovalCard} from "@/app/dashboard/components/TournamentApprovalCard";
 
 const tabs = [
     {name: "Pending"},

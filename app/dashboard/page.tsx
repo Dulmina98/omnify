@@ -2,8 +2,8 @@
 
 import {TabBar} from "@/app/components/tab-bar/tab-bar";
 import {useState} from "react";
-import {AccountDetails} from "@/app/user-profile/components/account-details";
-import {Dashboard} from "@/app/user-profile/components/dashboard";
+import {AccountDetails} from "@/app/dashboard/components/account-details";
+import {Dashboard} from "@/app/dashboard/components/dashboard";
 
 const tabs = [
     {name: "Dashboard"},
