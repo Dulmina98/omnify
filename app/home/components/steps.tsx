@@ -1,13 +1,13 @@
 export function Steps() {
 
     return (
-        <div className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[200px]"}>
+        <div className={"max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[100px] md:py-[200px]"}>
             <div className={"w-full relative"}>
-                <div className={"text-[64px] text-white w-full max-w-[750px] mb-[125px]"}>Your <span
+                <div className={"text-[45px] md:text-[64px] text-white w-full max-w-[750px] mb-[125px]"}>Your <span
                     className="text-theme-crimson">Journey</span> with Omnify in <span
                     className="text-theme-crimson">4</span> Simple <span className="text-theme-crimson">Steps</span>
                 </div>
-                <div className={"w-[calc(100%-525px)] absolute right-0 bottom-7 h-[1px] bg-white"}/>
+                <div className={"w-[calc(100%-525px)] hidden md:block absolute right-0 bottom-7 h-[1px] bg-white"}/>
             </div>
             <div className={"w-full flex items-center gap-[25px] flex-wrap justify-between"}>
                 <div

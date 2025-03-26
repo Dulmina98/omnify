@@ -29,7 +29,6 @@ export function DashboardTournamentCard({tournament, role = "player"}: JoinTourn
             tournamentId: tournament._id,
             userId: user?.id || ""
         });
-        // You might want to add some state management or redirect here
     };
 
     const canDelete = role === "organizer" && user?.id === tournament.userId && players.length === 0;
