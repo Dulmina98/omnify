@@ -1,7 +1,0 @@
-[build]
-command = "yarn build"  # Build command for Next.js
-publish = ".next"       # Directory containing the built files
-environment = { "NODE_ENV" = "production" }
-
-[[plugins]]
-package = "@netlify/plugin-nextjs"  # Essential Next.js plugin

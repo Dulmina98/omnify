@@ -5,7 +5,6 @@ const nextConfig: NextConfig = {
     images: {
         domains: ['images.unsplash.com', 'avatar.iran.liara.run'],
     },
-    output: 'export',
     webpack: (config, {isServer}) => {
         // Apply this only to client-side bundles
         if (!isServer) {
