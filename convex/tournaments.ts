@@ -113,3 +113,43 @@ export const getUserTournaments = query({
         return tournaments.filter((t): t is NonNullable<typeof t> => t !== null);
     },
 });
+
+export const getOrganizerTournaments = query({
+    args: {userId: v.string()},
+    handler: async (ctx, args) => {
+        return await ctx.db
+            .query("tournaments")
+            .filter((q) => q.eq(q.field("userId"), args.userId))
+            .collect();
+    },
+});
+
+export const deleteTournament = mutation({
+    args: {
+        tournamentId: v.id("tournaments"),
+        userId: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const tournament = await ctx.db.get(args.tournamentId);
+
+        if (!tournament) {
+            throw new Error("Tournament not found");
+        }
+
+        if (tournament.userId !== args.userId) {
+            throw new Error("Only the tournament organizer can delete it");
+        }
+
+        const entries = await ctx.db
+            .query("tournamentEntries")
+            .withIndex("by_tournament", (q) => q.eq("tournamentId", args.tournamentId))
+            .collect();
+
+        if (entries.length > 0) {
+            throw new Error("Cannot delete tournament with joined players");
+        }
+
+        await ctx.db.delete(args.tournamentId);
+        return true;
+    },
+});

@@ -3,102 +3,136 @@ import mk from "@/public/assets/images/games/mk.png";
 import sf from "@/public/assets/images/games/street-fighter.png";
 import injustice from "@/public/assets/images/games/injustice.png";
 import tekken from "@/public/assets/images/games/tekken.png";
-import {Tournament} from "@/types/tournaments-type";
-import {api} from "@/convex/_generated/api";
-import {useQuery} from "convex/react";
-import {getRemainingDays} from "@/utils/date-formatter";
+import {formatDate} from "@/utils/date-formatter";
 import {Button} from "@/components/ui/button";
-import {useTournamentPayment} from "@/hooks/use-tournament-payment";
-import {Id} from "@/convex/_generated/dataModel";
+import Link from "next/link";
+import {Doc} from "@/convex/_generated/dataModel";
+import {useUser} from "@clerk/nextjs";
+import {useState} from "react";
+import {useMutation, useQuery} from "convex/react";
+import {DeleteTournamentModal} from "@/app/components/modals/delete-tournament-modal";
+import {api} from "@/convex/_generated/api";
 
 type JoinTournamentCardProps = {
-    tournament: Tournament
-    status: string;
-    transactionId: Id<"transactions"> | undefined
-}
+    tournament: Doc<'tournaments'>;
+    role?: "admin" | "player" | "organizer" | null;
+};
 
-export function DashboardTournamentCard({tournament, status, transactionId}: JoinTournamentCardProps) {
-    const allParticipants = useQuery(
-        api.tournament_entries.getPlayersInTournament,
-        {tournamentId: tournament._id}
-    );
-    const {payEntryFee, isLoading, isSuccess, hasPaid} = useTournamentPayment(
-        tournament._id,
-        tournament.entryFee
-    )
+export function DashboardTournamentCard({tournament, role = "player"}: JoinTournamentCardProps) {
+    const {user} = useUser();
+    const deleteTournament = useMutation(api.tournaments.deleteTournament);
+    const players = useQuery(api.tournament_entries.getPlayersInTournament, {tournamentId: tournament._id}) || [];
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-    const handlePay = async () => {
-        try {
-            await payEntryFee?.()
-        } catch (error) {
-            console.error('Payment error:', error)
-        }
-    }
+    const handleDeleteConfirm = async () => {
+        await deleteTournament({
+            tournamentId: tournament._id,
+            userId: user?.id || ""
+        });
+        // You might want to add some state management or redirect here
+    };
 
-    return <div
-        className={"w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-black/30 backdrop-blur-lg"}
-    >
-        <div
-            className="absolute top-[-75px] right-[50px] z-0 w-[400px] flex justify-center items-center h-[150px] px-5">
-            {tournament.gameTitle === "mortal-kombat" && (
-                <Image src={mk} alt="mortal kombat" width={2000} height={2000} className="w-full image-border"/>
-            )}
-            {tournament.gameTitle === "street-fighter" && (
-                <Image src={sf} alt="street fighter" width={2000} height={2000} className="w-full image-border"/>
-            )}
-            {tournament.gameTitle === "injustice" && (
-                <Image src={injustice} alt="injustice" width={2000} height={2000} className="w-full image-border"/>
-            )}
-            {tournament.gameTitle === "tekken" && (
-                <Image src={tekken} alt="tekken" width={2000} height={2000} className="w-full mb-5 image-border"/>
-            )}
-        </div>
+    const canDelete = role === "organizer" && user?.id === tournament.userId && players.length === 0;
 
+    return (
+        <div className="w-full rounded-[10px] text-white border border-theme-crimson flex relative bg-black/40 mb-20">
+            {/* Game Banner */}
+            <div
+                className="absolute top-[-75px] right-[50px] z-0 w-[400px] flex justify-center items-center h-[150px] backdrop-blur-lg px-5">
+                {tournament.gameTitle === "mortal-kombat" && (
+                    <Image src={mk} alt="mortal kombat" width={2000} height={2000} className="w-full"/>
+                )}
+                {tournament.gameTitle === "street-fighter" && (
+                    <Image src={sf} alt="street fighter" width={2000} height={2000} className="w-full"/>
+                )}
+                {tournament.gameTitle === "injustice" && (
+                    <Image src={injustice} alt="injustice" width={2000} height={2000} className="w-full"/>
+                )}
+                {tournament.gameTitle === "tekken" && (
+                    <Image src={tekken} alt="tekken" width={2000} height={2000} className="w-full mb-5"/>
+                )}
+            </div>
 
-        <div className={"py-[30px] px-[30px] relative z-10 w-full text-white"}>
-            <div className={"font-bold text-white text-[30px]"}>{tournament.tournamentName}</div>
-            <div className={"text-muted-white text-[16px] mt-4"}>{tournament.description}</div>
-            <div className={"w-full flex justify-between mt-16 items-center gap-10"}>
-                <div className={"flex items-center gap-x-5"}>
-                    <div>
-                        Available seats: {(tournament.numberOfPlayersRequired - (allParticipants?.length ?? 0))}
+            {/* Tournament Details */}
+            <div className="py-[30px] px-[30px] relative z-10 w-full">
+                <div className="font-bold text-white text-[30px]">{tournament.tournamentName}</div>
+                <div className="text-muted-white text-[16px] mt-4">{tournament.description}</div>
+
+                <div className="flex justify-between mt-8">
+                    {/* Basic Info Section */}
+                    <div className="my-5">
+                        <div className="text-white text-[20px] font-semibold mb-3">Basic Info</div>
+                        <div className="flex flex-col gap-y-2">
+                            <li className="text-white text-[16px]">
+                                <span className="font-semibold">Game:</span> {tournament.gameTitle}
+                            </li>
+                            <li className="text-white text-[16px]">
+                                <span className="font-semibold">Start Date:</span> {formatDate(tournament.startDate)}
+                            </li>
+                            <li className="text-white text-[16px]">
+                                <span className="font-semibold">End Date:</span> {formatDate(tournament.endDate)}
+                            </li>
+                            <li className="text-white text-[16px]">
+                                <span className="font-semibold">Tournament Type:</span> {tournament.tournamentType}
+                            </li>
+                            <li className="text-white text-[16px]">
+                                <span className="font-semibold">Team Size:</span> {tournament.teamSize}
+                            </li>
+                            <li className="text-white text-[16px]">
+                                <span
+                                    className="font-semibold">Players Required:</span> {tournament.numberOfPlayersRequired}
+                            </li>
+                        </div>
                     </div>
-                    <div>
-                        Remaining days: {getRemainingDays(tournament.deadline)}
+
+                    {/* Entry Requirements Section */}
+                    <div className="my-5">
+                        <div className="text-white text-[20px] font-semibold mb-3">Entry Requirements</div>
+                        <div className="flex flex-col gap-y-2">
+                            <li className="text-white text-[16px]">
+                                <span className="font-semibold">Entry Fee:</span> {tournament.entryFee}
+                            </li>
+                        </div>
+                    </div>
+
+                    {/* Prize Pool & Distribution Section */}
+                    <div className="my-5">
+                        <div className="text-white text-[20px] font-semibold mb-3">Prize Pool & Distribution</div>
+                        <div className="flex flex-col gap-y-2">
+                            <li className="text-white text-[16px]">
+                                <span className="font-semibold">Total Prize Pool:</span> {tournament.totalPrizePool}
+                            </li>
+                            <li className="text-white text-[16px]">
+                                <span
+                                    className="font-semibold">Prize Distribution:</span> {tournament.prizeDistributionMethod}
+                            </li>
+                        </div>
                     </div>
                 </div>
-                <div className={"flex gap-x-5"}>
-                    {transactionId && (
-                        <div
-                            className={`capitalize h-[46px] rounded-[5px] border flex justify-center items-center px-8 font-bold text-green-500 bg-green-500/10 border-green-500`}>
-                            Payment Confirmed
-                        </div>
-                    )}
-                    {!transactionId && !hasPaid && (
+
+                <div className="w-full flex justify-end mt-16 items-center gap-5">
+                    {role === "organizer" && user?.id === tournament.userId && (
                         <Button
-                            className={"font-semibold text-[16px] h-[46px]"}
-                            onClick={handlePay}
-                            disabled={isLoading}
+                            onClick={() => setIsDeleteModalOpen(true)}
+                            variant="secondary"
+                            className="text-[16px]"
+                            disabled={!canDelete}
                         >
-                            {isLoading ? 'Processing Payment...' : `Pay ${tournament.entryFee} ETH`}
+                            Delete Tournament
                         </Button>
                     )}
-                    {hasPaid && !transactionId && (
-                        <div
-                            className={`capitalize h-[46px] rounded-[5px] border flex justify-center items-center px-8 font-bold text-yellow-500 bg-yellow-500/10 border-yellow-500`}>
-                            Payment Processing
-                        </div>
-                    )}
-                    <div
-                        className={`capitalize h-[46px] rounded-[5px] border flex justify-center items-center px-8 font-bold 
-        ${status === "pending" ? "text-yellow-500 bg-yellow-500/10 border-yellow-500" : ""}
-        ${status === "approved" ? "text-green-500 bg-green-500/10 border-green-500" : ""}
-        ${status === "rejected" ? "text-red-500 bg-red-500/10 border-red-500" : ""}`}
-                    >
-                        {status}
-                    </div>
+                    <Link href={`/view-tournaments/${tournament._id}`}>
+                        <Button className="text-[16px]">View Tournament</Button>
+                    </Link>
                 </div>
             </div>
+
+            <DeleteTournamentModal
+                open={isDeleteModalOpen}
+                onClose={() => setIsDeleteModalOpen(false)}
+                onConfirm={handleDeleteConfirm}
+                tournamentName={tournament.tournamentName}
+            />
         </div>
-    </div>;
+    );
 }

@@ -5,15 +5,21 @@ import {useState} from "react";
 import {AccountDetails} from "@/app/dashboard/components/account-details";
 import {Dashboard} from "@/app/dashboard/components/dashboard";
 import Transactions from "@/app/dashboard/components/transactions";
+import {useCurrentUser} from "@/services/user-service";
 
-const tabs = [
-    {name: "Dashboard"},
+const baseTabs = [
     {name: "Transactions"},
     {name: "Account details"},
 ];
 
 export default function Player() {
-    const [activeTab, setActiveTab] = useState("Dashboard");
+    const {role} = useCurrentUser();
+
+    const dashboardTabName = role === "organizer" ? "Created Tournaments" : "Joined Tournaments";
+
+    const tabs = [{name: dashboardTabName}, ...baseTabs];
+
+    const [activeTab, setActiveTab] = useState(dashboardTabName);
 
     return (
         <div className="w-full bg-[url(/assets/images/bg/general-bg-2.jpg)] bg-cover bg-no-repeat">
@@ -24,16 +30,16 @@ export default function Player() {
                 <div className={"w-full"}>
                     <TabBar
                         tabs={tabs}
-                        initialActiveTab="Dashboard"
+                        initialActiveTab={dashboardTabName}
                         onTabChange={(tabName) => setActiveTab(tabName)}
                     />
                     <div className={"w-full pt-6 pb-[100px]"}>
-                        {activeTab === "Dashboard" && <Dashboard/>}
+                        {activeTab === dashboardTabName && <Dashboard/>}
                         {activeTab === "Transactions" && <Transactions/>}
                         {activeTab === "Account details" && <AccountDetails/>}
                     </div>
                 </div>
             </div>
         </div>
-    )
+    );
 }
