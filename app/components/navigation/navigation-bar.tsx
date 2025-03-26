@@ -70,6 +70,11 @@ export function NavigationBar() {
                                 Become a member
                             </Button>
                         </Link>}
+                        {!isClerkSigned && <Link href="/sign-in" passHref>
+                            <Button className={"w-[150px] h-[36px]"} variant={"secondary"}>
+                                Sign in
+                            </Button>
+                        </Link>}
                         {!isClerkSigned && <Link href="/sign-up" passHref>
                             <Button className={"w-[150px] h-[36px]"}>
                                 Sign up

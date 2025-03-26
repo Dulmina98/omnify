@@ -64,7 +64,7 @@ export function ProfileDropdown() {
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className={'bg-background-light'}/>
                         <DropdownMenuGroup>
-                            <Link href={"/user-profile"}>
+                            <Link href={"/dashboard"}>
                                 <DropdownMenuItem
                                     className={'rounded-[10px] focus:bg-[#7047EB]/10 focus:text-brand-purple cursor-pointer'}
                                 >
