@@ -5,7 +5,7 @@ import {
     fetchEntryFeeTransactions,
     fetchMatchResult,
     fetchPrizeClaimedTransactions,
-    fetchTournamentData
+    fetchTournamentData,
 } from "@/lib/contract";
 import {
     FaCalendarAlt,
@@ -17,12 +17,13 @@ import {
     FaGift,
     FaTrophy,
     FaUsers,
-    FaUserTie
+    FaUserTie,
 } from "react-icons/fa";
 import {MdOutlinePending} from "react-icons/md";
 import {ethers} from "ethers";
 import {useQuery} from "convex/react";
 import {api} from "@/convex/_generated/api";
+import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table";
 
 interface TournamentDetailsProps {
     contractAddress: string;
@@ -130,9 +131,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         result.player2Submission !== ethers.ZeroAddress
                     ) {
                         playerStatus =
-                            result.player1Submission === result.player2Submission
-                                ? "Completed"
-                                : "Disputed";
+                            result.player1Submission === result.player2Submission ? "Completed" : "Disputed";
                     } else {
                         playerStatus = "Pending";
                     }
@@ -233,7 +232,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                             href={`${etherscanBaseUrl}/address/${contractAddress}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center text-blue-400 hover:text-blue-300 transition-colors mr-4"
+                            className="flex items-center text-theme-crimson hover:text-white transition-colors mr-4"
                         >
                             <FaExternalLinkAlt className="mr-1"/> View on Etherscan
                         </a>
@@ -241,7 +240,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                             href={`${sourcifyBaseUrl}/${contractAddress}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center text-blue-400 hover:text-blue-300 transition-colors mt-2"
+                            className="flex items-center text-theme-crimson hover:text-white transition-colors mt-2"
                         >
                             <FaExternalLinkAlt className="mr-1"/> View on Sourcify
                         </a>
@@ -292,171 +291,169 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                                         : "bg-red-500/20 text-red-400"
                             }`}
                         >
-                            {statusLabels[tournamentData.status]}
-                        </span>
+              {statusLabels[tournamentData.status]}
+            </span>
                     </p>
                 </div>
             </div>
 
+            {/* Match Results Table */}
             <div className="mt-6">
                 <h4 className="text-xl font-semibold mb-4 flex items-center">
                     <FaChessBoard className="mr-2 text-fuchsia-400"/> Match Results
                 </h4>
                 {submissions.length > 0 ? (
-                    <div className="overflow-x-auto bg-gray-900/50 rounded-lg p-4">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                            <tr className="bg-gray-800">
-                                <th className="px-4 py-2 text-left font-semibold">Match ID</th>
-                                <th className="px-4 py-2 text-left font-semibold">Player</th>
-                                <th className="px-4 py-2 text-left font-semibold">Submitted Winner</th>
-                                <th className="px-4 py-2 text-left font-semibold">Submitted By</th>
-                                <th className="px-4 py-2 text-left font-semibold">Status</th>
-                                <th className="px-4 py-2 text-left font-semibold">Winner</th>
-                                <th className="px-4 py-2 text-left font-semibold">Tx Hash</th>
-                            </tr>
-                            </thead>
-                            <tbody>
+                    <Table className="bg-black">
+                        <TableCaption className="text-white">Match submissions and results</TableCaption>
+                        <TableHeader>
+                            <TableRow className="border-b botext-theme-crimson">
+                                <TableHead className="text-white text-[16px] font-semibold">Match ID</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Player</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Submitted Winner</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Submitted By</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Status</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Winner</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Tx Hash</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {submissions.map((submission, index) => (
-                                <tr
+                                <TableRow
                                     key={index}
-                                    className="border-t border-gray-700 hover:bg-gray-800/50 transition-colors"
+                                    className="border-b botext-theme-crimson hover:bg-gray-800"
                                 >
-                                    <td className="px-4 py-2">{submission.matchId}</td>
-                                    <td className="px-4 py-2 truncate max-w-xs">{submission.player}</td>
-                                    <td className="px-4 py-2 truncate max-w-xs">{submission.submission}</td>
-                                    <td className="px-4 py-2 truncate max-w-xs">
+                                    <TableCell className="text-white">{submission.matchId}</TableCell>
+                                    <TableCell className="text-white truncate max-w-xs">{submission.player}</TableCell>
+                                    <TableCell
+                                        className="text-white truncate max-w-xs">{submission.submission}</TableCell>
+                                    <TableCell>
                                         <a
                                             href={`${etherscanBaseUrl}/address/${submission.submittedBy}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-blue-400 hover:text-blue-300"
+                                            className="text-theme-crimson hover:text-white transition-colors truncate max-w-xs block"
                                         >
-                                            {submission.submittedBy}
+                                            {submission.submittedBy.slice(0, 6)}...{submission.submittedBy.slice(-4)}
                                         </a>
-                                    </td>
-                                    <td className="px-4 py-2">
-                                            <span
-                                                className={`${
-                                                    submission.status === "Pending"
-                                                        ? "text-yellow-400"
-                                                        : submission.status === "Completed"
-                                                            ? "text-green-400"
-                                                            : submission.status === "Disputed"
-                                                                ? "text-red-400"
-                                                                : "text-blue-400"
-                                                }`}
-                                            >
-                                                {submission.status}
-                                            </span>
-                                    </td>
-                                    <td className="px-4 py-2 truncate max-w-xs">
+                                    </TableCell>
+                                    <TableCell
+                                        className={`${
+                                            submission.status === "Pending"
+                                                ? "text-yellow-400"
+                                                : submission.status === "Completed"
+                                                    ? "text-green-400"
+                                                    : submission.status === "Disputed"
+                                                        ? "text-red-400"
+                                                        : "text-blue-400"
+                                        }`}
+                                    >
+                                        {submission.status}
+                                    </TableCell>
+                                    <TableCell className="text-white truncate max-w-xs">
                                         {submission.winner || "N/A"}
-                                    </td>
-                                    <td className="px-4 py-2">
+                                    </TableCell>
+                                    <TableCell>
                                         <a
                                             href={`${etherscanBaseUrl}/tx/${submission.transactionHash}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-blue-400 hover:text-blue-300 truncate max-w-xs block"
+                                            className="text-theme-crimson hover:text-white transition-colors truncate max-w-xs block"
                                         >
-                                            {submission.transactionHash.slice(0, 6)}...
-                                            {submission.transactionHash.slice(-4)}
+                                            {submission.transactionHash.slice(0, 6)}...{submission.transactionHash.slice(-4)}
                                         </a>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                </TableRow>
                             ))}
-                            </tbody>
-                        </table>
-                    </div>
+                        </TableBody>
+                    </Table>
                 ) : (
                     <p className="text-gray-400">No match results found.</p>
                 )}
             </div>
 
+            {/* Entry Fee Transactions Table */}
             <div className="mt-6">
                 <h4 className="text-xl font-semibold mb-4 flex items-center">
                     <FaEthereum className="mr-2 text-blue-400"/> Entry Fee Transactions
                 </h4>
                 {transactions.length > 0 ? (
-                    <div className="overflow-x-auto bg-gray-900/50 rounded-lg p-4">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                            <tr className="bg-gray-800">
-                                <th className="px-4 py-2 text-left font-semibold">Player</th>
-                                <th className="px-4 py-2 text-left font-semibold">Amount (ETH)</th>
-                                <th className="px-4 py-2 text-left font-semibold">Transaction Hash</th>
-                                <th className="px-4 py-2 text-left font-semibold">Block Number</th>
-                            </tr>
-                            </thead>
-                            <tbody>
+                    <Table className="bg-black">
+                        <TableCaption className="text-white">Entry fee transactions</TableCaption>
+                        <TableHeader>
+                            <TableRow className="border-b botext-theme-crimson">
+                                <TableHead className="text-white text-[16px] font-semibold">Player</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Amount (ETH)</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Transaction Hash</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Block Number</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {transactions.map((tx, index) => (
-                                <tr
+                                <TableRow
                                     key={index}
-                                    className="border-t border-gray-700 hover:bg-gray-800/50 transition-colors"
+                                    className="border-b botext-theme-crimson hover:bg-gray-800"
                                 >
-                                    <td className="px-4 py-2 truncate max-w-xs">{tx.player}</td>
-                                    <td className="px-4 py-2">{tx.amount}</td>
-                                    <td className="px-4 py-2">
+                                    <TableCell className="text-white truncate max-w-xs">{tx.player}</TableCell>
+                                    <TableCell className="text-white">{tx.amount}</TableCell>
+                                    <TableCell>
                                         <a
                                             href={`${etherscanBaseUrl}/tx/${tx.transactionHash}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-blue-400 hover:text-blue-300 truncate max-w-xs block"
+                                            className="text-theme-crimson hover:text-white transition-colors truncate max-w-xs block"
                                         >
-                                            {tx.transactionHash}
+                                            {tx.transactionHash.slice(0, 6)}...{tx.transactionHash.slice(-4)}
                                         </a>
-                                    </td>
-                                    <td className="px-4 py-2">{tx.blockNumber}</td>
-                                </tr>
+                                    </TableCell>
+                                    <TableCell className="text-white">{tx.blockNumber}</TableCell>
+                                </TableRow>
                             ))}
-                            </tbody>
-                        </table>
-                    </div>
+                        </TableBody>
+                    </Table>
                 ) : (
                     <p className="text-gray-400">No entry fee transactions found.</p>
                 )}
             </div>
 
+            {/* Prize Claimed Transactions Table */}
             <div className="mt-6">
                 <h4 className="text-xl font-semibold mb-4 flex items-center">
                     <FaTrophy className="mr-2 text-yellow-400"/> Prize Claimed Transactions
                 </h4>
                 {prizeClaimedTransactions.length > 0 ? (
-                    <div className="overflow-x-auto bg-gray-900/50 rounded-lg p-4">
-                        <table className="min-w-full text-sm">
-                            <thead>
-                            <tr className="bg-gray-800">
-                                <th className="px-4 py-2 text-left font-semibold">Winner</th>
-                                <th className="px-4 py-2 text-left font-semibold">Amount (ETH)</th>
-                                <th className="px-4 py-2 text-left font-semibold">Transaction Hash</th>
-                                <th className="px-4 py-2 text-left font-semibold">Block Number</th>
-                            </tr>
-                            </thead>
-                            <tbody>
+                    <Table className="bg-black">
+                        <TableCaption className="text-white">Prize claimed transactions</TableCaption>
+                        <TableHeader>
+                            <TableRow className="border-b botext-theme-crimson">
+                                <TableHead className="text-white text-[16px] font-semibold">Winner</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Amount (ETH)</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Transaction Hash</TableHead>
+                                <TableHead className="text-white text-[16px] font-semibold">Block Number</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
                             {prizeClaimedTransactions.map((tx, index) => (
-                                <tr
+                                <TableRow
                                     key={index}
-                                    className="border-t border-gray-700 hover:bg-gray-800/50 transition-colors"
+                                    className="border-b botext-theme-crimson hover:bg-gray-800"
                                 >
-                                    <td className="px-4 py-2 truncate max-w-xs">{tx.winner}</td>
-                                    <td className="px-4 py-2">{tx.amount}</td>
-                                    <td className="px-4 py-2">
+                                    <TableCell className="text-white truncate max-w-xs">{tx.winner}</TableCell>
+                                    <TableCell className="text-white">{tx.amount}</TableCell>
+                                    <TableCell>
                                         <a
                                             href={`${etherscanBaseUrl}/tx/${tx.transactionHash}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-blue-400 hover:text-blue-300 truncate max-w-xs block"
+                                            className="text-theme-crimson hover:text-white transition-colors truncate max-w-xs block"
                                         >
-                                            {tx.transactionHash}
+                                            {tx.transactionHash.slice(0, 6)}...{tx.transactionHash.slice(-4)}
                                         </a>
-                                    </td>
-                                    <td className="px-4 py-2">{tx.blockNumber}</td>
-                                </tr>
+                                    </TableCell>
+                                    <TableCell className="text-white">{tx.blockNumber}</TableCell>
+                                </TableRow>
                             ))}
-                            </tbody>
-                        </table>
-                    </div>
+                        </TableBody>
+                    </Table>
                 ) : (
                     <p className="text-gray-400">No prize claimed transactions found.</p>
                 )}
