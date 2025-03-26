@@ -1,8 +1,15 @@
 import {HardhatUserConfig} from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
-import dotenv from "dotenv";
 
-dotenv.config();
+const ALCHEMY_API_KEY = process.env.NEXT_PUBLIC_ALCHEMY_API_KEY;
+const PRIVATE_KEY = process.env.PRIVATE_KEY;
+const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY;
+
+if (!ALCHEMY_API_KEY || !PRIVATE_KEY || !ETHERSCAN_API_KEY) {
+    throw new Error(
+        "Missing required environment variables (NEXT_PUBLIC_ALCHEMY_API_KEY, PRIVATE_KEY, ETHERSCAN_API_KEY). Check your .env file."
+    );
+}
 
 const config: HardhatUserConfig = {
     solidity: {
@@ -10,23 +17,23 @@ const config: HardhatUserConfig = {
         settings: {
             optimizer: {
                 enabled: true,
-                runs: 200
-            }
-        }
+                runs: 200,
+            },
+        },
     },
     networks: {
         hardhat: {},
         sepolia: {
-            url: `https://eth-sepolia.g.alchemy.com/v2/${process.env.NEXT_PUBLIC_ALCHEMY_API_KEY}`,
-            accounts: [process.env.PRIVATE_KEY as string]
-        }
+            url: `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
+            accounts: [PRIVATE_KEY],
+        },
     },
     etherscan: {
-        apiKey: process.env.ETHERSCAN_API_KEY as string
+        apiKey: ETHERSCAN_API_KEY,
     },
     sourcify: {
-        enabled: true
-    }
+        enabled: true,
+    },
 };
 
 export default config;
