@@ -1,0 +1,7 @@
+[build]
+command = "yarn build"  # Runs `next build`
+publish = ".next"       # Next.js build output
+environment = { "NODE_ENV" = "production" }
+
+[[plugins]]
+package = "@netlify/plugin-nextjs"  # Enables SSR and serverless
