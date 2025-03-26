@@ -149,14 +149,14 @@ export default function Page() {
         <div className={"w-full min-h-screen relative flex "}>
             <div
                 className={
-                    "w-1/2 bg-red-700 min-h-screen bg-[url(/assets/images/bg/become-member-bg.jpg)] bg-cover bg-right relative"
+                    "absolute left-0 top-0 w-full md:w-1/2 bg-red-700 min-h-screen bg-[url(/assets/images/bg/become-member-bg.jpg)] bg-cover bg-right md:relative"
                 }
             >
                 <div className={"w-full h-full flex justify-end"}>
                     <div className={"max-w-[900px] h-full w-full relative"}>
                         <div
                             className={
-                                "absolute left-0 bottom-14 text-white text-[48px] px-[25px] lg:px-[100px]"
+                                "lg:block hidden absolute left-0 bottom-14 text-white text-[48px] px-[25px] lg:px-[100px]"
                             }
                         >
                             Your Gateway to the World of Competitive Gaming.
@@ -165,11 +165,11 @@ export default function Page() {
                 </div>
             </div>
             <div
-                className={"w-1/2 min-h-screen h-full flex flex-col justify-center"}
+                className={"w-full md:w-1/2 min-h-screen h-full flex flex-col justify-center bg-black/80 backdrop-blur-lg"}
             >
-                <div className={"max-w-[900px] w-full px-[25px] lg:px-[100px] py-[200px]"}>
+                <div className={"max-w-[900px] w-full px-[25px] xl:px-[100px] py-[200px]"}>
                     <div className={"mb-[60px]"}>
-                        <div className={"text-[64px] text-white"}>
+                        <div className={"text-[45px] lg:text-[64px] text-white"}>
                             Become {activeTab === "Players" ? "a Player" : "an Organizer"}
                         </div>
                         <TabBar
