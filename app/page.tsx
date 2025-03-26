@@ -17,8 +17,8 @@ export default function Home() {
                   className={"bg-[url(/assets/images/bg/love-bg.jpg)] bg-cover bg-no-repeat w-full h-full absolute top-0 left-0 z-0"}/>
           </div>
           <Contact/>
-          <div
-              className={"bg-[url(/assets/images/bg/landing-bg.jpg)] bg-cover bg-no-repeat w-full h-full absolute top-0 left-0 z-0"}/>
+          {/*<div
+              className={"bg-[url(/assets/images/bg/landing-bg.jpg)] bg-cover bg-no-repeat w-full h-full absolute top-0 left-0 z-0"}/>*/}
       </div>
   );
 }
