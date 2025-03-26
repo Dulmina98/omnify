@@ -1,8 +1,24 @@
 "use client";
 
 import {useEffect, useState} from "react";
-import {fetchEntryFeeTransactions, fetchMatchResult, fetchTournamentData} from "@/lib/contract";
-import {FaCalendarAlt, FaEthereum, FaExternalLinkAlt, FaTrophy, FaUsers} from "react-icons/fa";
+import {
+    fetchEntryFeeTransactions,
+    fetchMatchResult,
+    fetchPrizeClaimedTransactions,
+    fetchTournamentData
+} from "@/lib/contract";
+import {
+    FaCalendarAlt,
+    FaChessBoard,
+    FaChessKnight,
+    FaEthereum,
+    FaExternalLinkAlt,
+    FaFlagCheckered,
+    FaGift,
+    FaTrophy,
+    FaUsers,
+    FaUserTie
+} from "react-icons/fa";
 import {MdOutlinePending} from "react-icons/md";
 import {ethers} from "ethers";
 import {useQuery} from "convex/react";
@@ -25,6 +41,13 @@ interface TournamentData {
 
 interface Transaction {
     player: string;
+    amount: string;
+    transactionHash: string;
+    blockNumber: number;
+}
+
+interface PrizeClaimedTransaction {
+    winner: string;
     amount: string;
     transactionHash: string;
     blockNumber: number;
@@ -53,6 +76,7 @@ interface Submission {
 export default function TournamentDetails({contractAddress}: TournamentDetailsProps) {
     const [tournamentData, setTournamentData] = useState<TournamentData | null>(null);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [prizeClaimedTransactions, setPrizeClaimedTransactions] = useState<PrizeClaimedTransaction[]>([]);
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -78,6 +102,9 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                 const txs = await fetchEntryFeeTransactions(contractAddress);
                 setTransactions(txs);
 
+                const prizeTxs = await fetchPrizeClaimedTransactions(contractAddress);
+                setPrizeClaimedTransactions(prizeTxs);
+
                 const matchIds = convexMatchResults.map((mr) =>
                     parseInt(mr.matchId.replace("match-", ""), 10)
                 );
@@ -97,7 +124,6 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                     );
                     const submissions: Submission[] = [];
 
-                    // Player submissions status
                     let playerStatus: "Pending" | "Completed" | "Disputed";
                     if (
                         result.player1Submission !== ethers.ZeroAddress &&
@@ -111,7 +137,6 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         playerStatus = "Pending";
                     }
 
-                    // Player 1 submission
                     if (result.player1Submission !== ethers.ZeroAddress) {
                         const txHash = convexResult?.player1TransactionHash || convexResult?.transactionHash;
                         if (txHash) {
@@ -127,7 +152,6 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         }
                     }
 
-                    // Player 2 submission
                     if (result.player2Submission !== ethers.ZeroAddress) {
                         const txHash = convexResult?.player2TransactionHash || convexResult?.transactionHash;
                         if (txHash) {
@@ -143,14 +167,13 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         }
                     }
 
-                    // Organizer resolution
                     if (convexResult?.resolutionTransactionHash && convexResult?.resolvedBy) {
                         submissions.push({
                             matchId: result.matchId,
-                            player: data.organizer, // Organizer address from tournament data
+                            player: data.organizer,
                             submission: result.winner,
                             transactionHash: convexResult.resolutionTransactionHash,
-                            submittedBy: data.organizer, // Use organizer’s address
+                            submittedBy: data.organizer,
                             status: "Resolved",
                             winner: result.winner,
                         });
@@ -196,7 +219,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
         <div
             className="bg-black/80 backdrop-blur-lg border border-gray-700 rounded-xl p-6 text-white shadow-lg mx-auto">
             <h3 className="text-2xl font-bold mb-6 flex items-center">
-                <FaTrophy className="mr-2 text-yellow-400"/> Tournament Details (On-Chain)
+                <FaChessKnight className="mr-2 text-teal-400"/> Tournament Details (On-Chain)
             </h3>
 
             <div className="bg-gray-900/50 p-4 rounded-lg mb-6">
@@ -233,6 +256,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                             className="font-semibold mr-2">Total Prize Pool:</span> {tournamentData.totalPrizePool} ETH
                     </p>
                     <p className="flex items-center">
+                        <FaUserTie className="mr-2 text-indigo-400"/>
                         <span className="font-semibold mr-2">Organizer:</span>
                         <span className="truncate">{tournamentData.organizer}</span>
                     </p>
@@ -252,10 +276,12 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         {tournamentData.numberOfPlayersRequired}
                     </p>
                     <p className="flex items-center">
+                        <FaGift className="mr-2 text-pink-400"/>
                         <span className="font-semibold mr-2">Prize Distribution:</span>
                         {prizeMethodLabels[tournamentData.prizeDistributionMethod]}
                     </p>
                     <p className="flex items-center">
+                        <FaFlagCheckered className="mr-2 text-cyan-400"/>
                         <span className="font-semibold mr-2">Status:</span>
                         <span
                             className={`px-2 py-1 rounded ${
@@ -274,7 +300,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
 
             <div className="mt-6">
                 <h4 className="text-xl font-semibold mb-4 flex items-center">
-                    <FaTrophy className="mr-2 text-yellow-400"/> Match Results
+                    <FaChessBoard className="mr-2 text-fuchsia-400"/> Match Results
                 </h4>
                 {submissions.length > 0 ? (
                     <div className="overflow-x-auto bg-gray-900/50 rounded-lg p-4">
@@ -318,7 +344,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                                                             ? "text-green-400"
                                                             : submission.status === "Disputed"
                                                                 ? "text-red-400"
-                                                                : "text-blue-400" // Resolved
+                                                                : "text-blue-400"
                                                 }`}
                                             >
                                                 {submission.status}
@@ -389,6 +415,50 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                     </div>
                 ) : (
                     <p className="text-gray-400">No entry fee transactions found.</p>
+                )}
+            </div>
+
+            <div className="mt-6">
+                <h4 className="text-xl font-semibold mb-4 flex items-center">
+                    <FaTrophy className="mr-2 text-yellow-400"/> Prize Claimed Transactions
+                </h4>
+                {prizeClaimedTransactions.length > 0 ? (
+                    <div className="overflow-x-auto bg-gray-900/50 rounded-lg p-4">
+                        <table className="min-w-full text-sm">
+                            <thead>
+                            <tr className="bg-gray-800">
+                                <th className="px-4 py-2 text-left font-semibold">Winner</th>
+                                <th className="px-4 py-2 text-left font-semibold">Amount (ETH)</th>
+                                <th className="px-4 py-2 text-left font-semibold">Transaction Hash</th>
+                                <th className="px-4 py-2 text-left font-semibold">Block Number</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {prizeClaimedTransactions.map((tx, index) => (
+                                <tr
+                                    key={index}
+                                    className="border-t border-gray-700 hover:bg-gray-800/50 transition-colors"
+                                >
+                                    <td className="px-4 py-2 truncate max-w-xs">{tx.winner}</td>
+                                    <td className="px-4 py-2">{tx.amount}</td>
+                                    <td className="px-4 py-2">
+                                        <a
+                                            href={`${etherscanBaseUrl}/tx/${tx.transactionHash}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-blue-400 hover:text-blue-300 truncate max-w-xs block"
+                                        >
+                                            {tx.transactionHash}
+                                        </a>
+                                    </td>
+                                    <td className="px-4 py-2">{tx.blockNumber}</td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : (
+                    <p className="text-gray-400">No prize claimed transactions found.</p>
                 )}
             </div>
 
