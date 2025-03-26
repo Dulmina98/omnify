@@ -20,7 +20,11 @@ export default function Page() {
     return (
         <div className={'min-h-[calc(100vh-200px)] flex flex-col items-center justify-center'}>
             {!signUpComplete ? (
-                <SignUp/>
+                <SignUp
+                    routing="path"
+                    path="/sign-up"
+                    signInUrl="/sign-in"
+                />
             ) : (
                 <div className='flex justify-center items-center'>
                     <Loading/>

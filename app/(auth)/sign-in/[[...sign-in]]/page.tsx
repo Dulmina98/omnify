@@ -7,7 +7,11 @@ export default function Page() {
     return (
 
         <div className={'min-h-[calc(100vh-200px)] flex flex-col items-center justify-center'}>
-            <SignIn/>
+            <SignIn
+                routing="path"
+                path="/sign-in"
+                signUpUrl="/sign-up"
+            />
         </div>
     )
 }
