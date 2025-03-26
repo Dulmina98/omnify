@@ -91,3 +91,25 @@ export const approveTournament = mutation({
         })
     }
 })
+
+export const getUserTournaments = query({
+    args: {userId: v.string()},
+    handler: async (ctx, args) => {
+        const entries = await ctx.db
+            .query("tournamentEntries")
+            .withIndex("by_user", (q) => q.eq("userId", args.userId))
+            .collect();
+
+        const tournaments = await Promise.all(
+            entries.map(async (entry) => {
+                const tournament = await ctx.db
+                    .query("tournaments")
+                    .filter((q) => q.eq(q.field("_id"), entry.tournamentId))
+                    .first();
+                return tournament;
+            })
+        );
+
+        return tournaments.filter((t): t is NonNullable<typeof t> => t !== null);
+    },
+});
