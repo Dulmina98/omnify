@@ -13,7 +13,7 @@ if (!ALCHEMY_API_KEY || !PRIVATE_KEY || !ETHERSCAN_API_KEY) {
 
 const config: HardhatUserConfig = {
     solidity: {
-        version: "0.8.20",
+        version: "0.8.28",
         settings: {
             optimizer: {
                 enabled: true,
