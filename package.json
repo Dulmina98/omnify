@@ -7,7 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "export": "next export"
+    "export": "next export",
+    "test": "vitest",
+    "test:once": "vitest run",
+    "test:debug": "vitest --inspect-brk --no-file-parallelism",
+    "test:coverage": "vitest run --coverage --coverage.reporter=text"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.10.3",
@@ -45,11 +49,13 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
     "@eslint/eslintrc": "^3",
     "@types/node": "^22.13.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/webpack": "^5.28.5",
+    "convex-test": "^0.0.36",
     "dotenv": "^16.4.7",
     "eslint": "^9.23.0",
     "eslint-config-next": "15.1.6",
@@ -57,6 +63,7 @@
     "tailwindcss": "^3.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
+    "vitest": "^3.0.9",
     "webpack": "^5.98.0"
   }
 }
