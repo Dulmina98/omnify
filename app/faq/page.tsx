@@ -4,7 +4,6 @@ import React from "react";
 import {Accordion, AccordionContent, AccordionItem, AccordionTrigger,} from "@/components/ui/accordion";
 import Image from "next/image";
 
-// Object for "Getting Started" card
 const gettingStarted = {
     title: "Getting Started",
     items: [
@@ -26,7 +25,6 @@ const gettingStarted = {
     ],
 };
 
-// Object for "Blockchain and Wallets" card
 const blockchainAndWallets = {
     title: "Blockchain and Wallets",
     items: [
@@ -48,7 +46,6 @@ const blockchainAndWallets = {
     ],
 };
 
-// Object for "Support" card
 const support = {
     title: "Support",
     items: [
@@ -71,7 +68,7 @@ export default function FAQ() {
             <Image
                 src="/assets/images/bg/general-bg.jpg"
                 alt="contact-bg"
-                className="absolute top-0 left-0 h-full z-10 opacity-40 object-cover"
+                className="absolute top-0 left-0 h-full z-10 opacity-50 object-cover rotate-180"
                 width={4000}
                 height={3000}
             />
@@ -86,7 +83,7 @@ export default function FAQ() {
                     Find answers to common questions about our blockchain-powered
                     tournament system.
                 </p>
-                <div className=" p-6  backdrop-blur-xl bg-black/20 bg-black/20">
+                <div className=" p-6  backdrop-blur-xl bg-black/20">
                     <h2 className="font-medium text-[30px] text-theme-crimson w-full pb-[20px] border-b border-b-muted-gray mb-[45px]">
                         {gettingStarted.title}
                     </h2>
