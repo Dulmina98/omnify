@@ -21,7 +21,7 @@ export function NavigationBar() {
         <div className={"fixed top-0 left-0 w-full h-[68px] flex justify-center backdrop-blur-lg z-50"}>
             <div className={"w-full h-full max-w-[1800px] px-[25px] lg:px-[100px] flex items-center"}>
                 {/* Desktop Layout */}
-                <div className="hidden lg:flex items-center w-full">
+                <div className="hidden min-[1150px]:flex items-center w-full">
                     <Link href={"/"}>
                         <Image
                             src={"/assets/images/logo/logo.png"}
@@ -56,6 +56,8 @@ export function NavigationBar() {
                                   className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>
                                 Contact Us
                             </Link>
+                            <Link href={"/faq"}
+                                  className={"text-white hover:text-theme-crimson text-[16px] font-medium"}>FAQ</Link>
                         </div>
                         <div className={"flex items-center gap-[20px]"}>
                             {(isConvexSigned && isClerkSigned) && (
@@ -110,7 +112,7 @@ export function NavigationBar() {
                 </div>
 
                 {/* Mobile Layout */}
-                <div className="flex lg:hidden items-center justify-between w-full">
+                <div className="flex min-[1150px]:hidden items-center justify-between w-full">
                     <Link href={"/"}>
                         <Image
                             src={"/assets/images/logo/logo.png"}
@@ -193,6 +195,8 @@ export function NavigationBar() {
                                       className={"text-white hover:text-theme-crimson text-[16px] border-b border-b-muted-gray font-medium mb-20"}>
                                     Contact Us
                                 </Link>
+                                <Link href={"/faq"}
+                                      className={"text-white hover:text-theme-crimson text-[16px] border-b border-b-muted-gray font-medium mb-20"}>FAQ</Link>
                                 {(isConvexSigned && isClerkSigned) && (
                                     <Button
                                         variant={"secondary"}

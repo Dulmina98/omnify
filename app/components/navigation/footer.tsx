@@ -31,7 +31,7 @@ export function Footer() {
                         <div>
                             <div className={"text-[24px] text-white font-medium mb-[20px]"}>Contact Us</div>
                             <div className={"text-[20px] text-muted-white"}>+94 76 12 34 567</div>
-                            <div className={"text-[20px] text-muted-white"}>hello@omnify.com</div>
+                            <div className={"text-[20px] text-muted-white"}>support@omnify.com</div>
                         </div>
                         <div>
                             <div className={"text-[24px] text-white font-medium mb-[20px]"}>Location</div>
