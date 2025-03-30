@@ -23,7 +23,8 @@ import {MdOutlinePending} from "react-icons/md";
 import {ethers} from "ethers";
 import {useQuery} from "convex/react";
 import {api} from "@/convex/_generated/api";
-import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow} from "@/components/ui/table";
+import {Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow,} from "@/components/ui/table";
+import {Button} from "@/components/ui/button";
 
 interface TournamentDetailsProps {
     contractAddress: string;
@@ -71,6 +72,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
     const [submissions, setSubmissions] = useState<Submission[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const convexMatchResultsRaw = useQuery(api.match_results.getMatchResultsByContract, {contractAddress});
     const convexMatchResults = useMemo(() => convexMatchResultsRaw || [], [convexMatchResultsRaw]);
@@ -180,7 +182,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
         };
 
         loadData();
-    }, [contractAddress, convexMatchResults]);
+    }, [contractAddress, convexMatchResults, refreshKey]); // Added refreshKey to dependencies
 
     if (loading) {
         return (
@@ -307,10 +309,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         </TableHeader>
                         <TableBody>
                             {submissions.map((submission, index) => (
-                                <TableRow
-                                    key={index}
-                                    className="border-b botext-theme-crimson hover:bg-gray-800"
-                                >
+                                <TableRow key={index} className="border-b botext-theme-crimson hover:bg-gray-800">
                                     <TableCell className="text-white">{submission.matchId}</TableCell>
                                     <TableCell className="text-white truncate max-w-xs">{submission.player}</TableCell>
                                     <TableCell
@@ -356,7 +355,19 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         </TableBody>
                     </Table>
                 ) : (
-                    <p className="text-gray-400">No match results found.</p>
+                    <div className="text-gray-400">
+                        <p>
+                            No match results found yet. Blockchain data may take a moment to update after transactions
+                            are submitted. Please refresh to check for updates.
+                        </p>
+                        <Button
+                            onClick={() => setRefreshKey((prev) => prev + 1)}
+                            className="mt-3"
+                            variant={"secondary"}
+                        >
+                            Refresh Data
+                        </Button>
+                    </div>
                 )}
             </div>
 
@@ -378,10 +389,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         </TableHeader>
                         <TableBody>
                             {transactions.map((tx, index) => (
-                                <TableRow
-                                    key={index}
-                                    className="border-b botext-theme-crimson hover:bg-gray-800"
-                                >
+                                <TableRow key={index} className="border-b botext-theme-crimson hover:bg-gray-800">
                                     <TableCell className="text-white truncate max-w-xs">{tx.player}</TableCell>
                                     <TableCell className="text-white">{tx.amount}</TableCell>
                                     <TableCell>
@@ -422,10 +430,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         </TableHeader>
                         <TableBody>
                             {prizeClaimedTransactions.map((tx, index) => (
-                                <TableRow
-                                    key={index}
-                                    className="border-b botext-theme-crimson hover:bg-gray-800"
-                                >
+                                <TableRow key={index} className="border-b botext-theme-crimson hover:bg-gray-800">
                                     <TableCell className="text-white truncate max-w-xs">{tx.winner}</TableCell>
                                     <TableCell className="text-white">{tx.amount}</TableCell>
                                     <TableCell>
