@@ -254,3 +254,19 @@ test("resolve match dispute - non-disputed match fails", async () => {
         })
     ).rejects.toThrow("Can only resolve disputed matches");
 });
+
+test("submit match result - 1000 concurrent submissions", async () => {
+    const t = convexTest(schema);
+    const tournamentId = await t.mutation(api.tournaments.createTournament, tournamentData);
+    const promises = Array.from({length: 1000}).map((_, i) =>
+        t.mutation(api.match_results.submitMatchResult, {
+            ...matchResultData,
+            matchId: `match_${i}`,
+            submittedBy: `player_${i % 2 ? 1 : 2}`,
+            tournamentId,
+        })
+    );
+    await Promise.all(promises);
+    const results = await t.query(api.match_results.getMatchResults, {tournamentId});
+    expect(results).toHaveLength(1000);
+});
