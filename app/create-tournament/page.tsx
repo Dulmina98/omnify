@@ -6,7 +6,7 @@ import {useApiMutation} from "@/hooks/use-api-mutation";
 import {api} from "@/convex/_generated/api";
 import {useCurrentUser} from "@/services/user-service";
 import {CreateTournamentSuccessModal} from "@/app/components/modals/create-tournament-success-modal";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {ethers} from "ethers";
 import TournamentArtifact from "../../smart-contract/artifacts/contracts/Tournament.sol/Tournament.json";
 import {FormControl, FormField, FormItem, FormLabel, FormMessage} from "@/components/ui/form";
@@ -14,6 +14,7 @@ import {Input} from "@/components/ui/input";
 import {Textarea} from "@/components/ui/textarea";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select";
 import {GameTypes} from "@/types/game-types";
+import {useAuth} from "@clerk/nextjs";
 
 const prizeDistributionMethods = ["winner-takes-all", "top-3"] as const;
 type PrizeDistributionMethod = typeof prizeDistributionMethods[number];
@@ -38,6 +39,16 @@ export default function CreateTournament() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isDeploying, setIsDeploying] = useState(false);
     const [deploymentError, setDeploymentError] = useState<string | null>(null);
+    const {getToken} = useAuth();
+
+    const fetchToken = async () => {
+        const token = await getToken();
+        console.log(token);
+    };
+
+    useEffect(() => {
+        fetchToken();
+    }, []);
 
     const form = useForm<TournamentFormData>({
         defaultValues: {

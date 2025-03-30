@@ -1,6 +1,8 @@
 import {HardhatUserConfig} from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
+import "hardhat-gas-reporter";
+import "./tasks/loadTest";
 
 dotenv.config({path: ".env.local"});
 
@@ -36,6 +38,11 @@ const config: HardhatUserConfig = {
     },
     sourcify: {
         enabled: true,
+    },
+    gasReporter: {
+        enabled: true,
+        currency: "USD",
+        outputFile: "gas-report.txt",
     },
 };
 
