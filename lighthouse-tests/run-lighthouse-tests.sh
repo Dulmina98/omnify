@@ -22,21 +22,19 @@ PAGES=(
   "/join-tournament"             # Join tournament page
   "/view-tournaments"            # View tournaments listing page
   "/view-tournaments/$TOURNAMENT_ID" # View specific tournament page
+   "/faq"                        # View Faq page
 )
 
-# Function to sanitize page name for filename
 sanitize_filename() {
   echo "$1" | sed 's/\//-/g' | sed 's/^-//'
 }
 
-# Check if Lighthouse CLI is installed
 if ! command -v lighthouse &> /dev/null; then
   echo "Lighthouse CLI is not installed. Please install it globally using:"
   echo "npm install -g lighthouse"
   exit 1
 fi
 
-# Loop through each page and run Lighthouse
 for PAGE in "${PAGES[@]}"; do
   OUTPUT_FILE="./lighthouse-tests/lighthouse-report-$(sanitize_filename "$PAGE").html"
   echo "Running Lighthouse for $BASE_URL$PAGE..."
@@ -49,3 +47,4 @@ for PAGE in "${PAGES[@]}"; do
 done
 
 echo "All Lighthouse tests completed!"
+
