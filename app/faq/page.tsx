@@ -52,7 +52,7 @@ const support = {
         {
             question: "How do I contact support?",
             answer:
-                "Email us at ssupport@omnify.com or join our Discord community for assistance. Include details like your wallet address or tournament ID for faster help.",
+                "Email us at support@omnify.com or join our Discord community for assistance. Include details like your wallet address or tournament ID for faster help.",
         },
         {
             question: "What if I encounter an issue (e.g., transaction failure)?",
@@ -80,8 +80,7 @@ export default function FAQ() {
                     <span className="text-theme-crimson">Questions</span>
                 </h1>
                 <p className="text-[25px] md:text-[32px] text-white text-center max-w-[675px] w-full mx-auto mb-[140px]">
-                    Find answers to common questions about our blockchain-powered
-                    tournament system.
+                    Find answers to common questions about Omnify.
                 </p>
                 <div className=" p-6  backdrop-blur-xl bg-black/20">
                     <h2 className="font-medium text-[30px] text-theme-crimson w-full pb-[20px] border-b border-b-muted-gray mb-[45px]">
@@ -107,7 +106,6 @@ export default function FAQ() {
                     </Accordion>
                 </div>
                 <div className="xl:flex gap-[20px] w-full mt-[20px]">
-                    {/* Blockchain and Wallets Card */}
                     <div className="flex-1  p-6  backdrop-blur-xl bg-black/20">
                         <h2 className="font-medium text-[30px] text-theme-crimson w-full pb-[20px] border-b border-b-muted-gray mb-[45px]">
                             {blockchainAndWallets.title}
@@ -132,7 +130,6 @@ export default function FAQ() {
                         </Accordion>
                     </div>
 
-                    {/* Support Card */}
                     <div className="flex-1  p-6  backdrop-blur-xl bg-black/20">
                         <h2 className="font-medium text-[30px] text-theme-crimson w-full pb-[20px] border-b border-b-muted-gray mb-[45px]">
                             {support.title}
