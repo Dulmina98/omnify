@@ -18,11 +18,12 @@ export default function Page() {
     }, [isLoaded, isSignedIn, router]);
 
     return (
-        <div className={'min-h-[calc(100vh-200px)] flex flex-col items-center justify-center px-[25px] xl:px-[100px]'}>
+        <div
+            className={'min-h-[calc(100vh-200px)] flex flex-col items-center justify-center px-[25px] xl:px-[100px] my-[100px]'}>
             <div className={"text-[45px] md:text-[64px] text-white w-full text-center"}>Sign Up
             </div>
             <div
-                className={"text-white text-center text-[25px] md:text-[32px] max-w-[675px] w-full mx-auto mb-[75px]"}>Join
+                className={"text-white text-center text-[25px] md:text-[32px] max-w-[675px] w-full mx-auto mb-[35px] lg:mb-[75px]"}>Join
                 us today!
             </div>
             {!signUpComplete ? (

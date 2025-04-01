@@ -16,7 +16,7 @@ const AuthLayout = ({children}: { children: React.ReactNode }) => {
                                 className={
                                     "lg:block hidden absolute left-0 bottom-14 text-white text-[48px] px-[25px] lg:px-[100px]"
                                 }
-                            >Where Champions Begin Their Legacy.
+                            >Where Champions <br/>Begin Their Legacy.
                             </div>
                         </div>
                     </div>

@@ -10,7 +10,7 @@ export default function Page() {
             <div className={"text-[45px] md:text-[64px] text-white text-center w-full"}>Sign In
             </div>
             <div
-                className={"text-white text-center text-[25px] md:text-[32px] max-w-[675px] w-full mx-auto mb-[75px]"}>
+                className={"text-white text-center text-[25px] md:text-[32px] max-w-[675px] w-full mx-auto mb-[35px] lg:mb-[75px]"}>
                 Welcome back!
             </div>
             <SignIn
