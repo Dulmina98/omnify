@@ -192,7 +192,7 @@ export function NavigationBar() {
                                     Dashboard
                                 </Link>}
                                 <Link href={"/contact-us"}
-                                      className={"text-white hover:text-theme-crimson text-[16px] border-b border-b-muted-gray font-medium mb-20"}>
+                                      className={"text-white hover:text-theme-crimson text-[16px] border-b border-b-muted-gray font-medium mb-5"}>
                                     Contact Us
                                 </Link>
                                 <Link href={"/faq"}
