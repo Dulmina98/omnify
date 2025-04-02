@@ -10,7 +10,7 @@ export default function ViewTournaments() {
     const allTournaments = useQuery(api.tournaments.getAllTournaments);
 
     return (
-        <div className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
+        <div className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-2.jpg)] bg-cover bg-left">
             <div className={"max-w-[1800px] mx-auto w-full px-[25px] lg:px-[100px] py-[150px]"}>
                 <div className={"text-[45px] md:text-[64px] text-white text-center w-full"}>
                     <span className={"text-theme-crimson"}>Witness</span> the Clash

@@ -30,8 +30,8 @@ export function Steps() {
                             className={"w-[63px] h-[63px] rounded-full bg-white/10 flex items-center justify-center font-semibold text-[28px] text-white"}>2
                         </div>
                         <div className={"text-white text-[24px] mt-5"}>Play and Verify Matches</div>
-                        <div className={"text-muted-white text-[16px] mt-5"}>Match results are submitted by organizers
-                            and verified by players, ensuring accuracy and fairness.
+                        <div className={"text-muted-white text-[16px] mt-5"}>Each player submits results; organizers
+                            settle disputes by picking winners if conflicts arise.
                         </div>
                     </div>
                 </div>
@@ -53,7 +53,7 @@ export function Steps() {
                         <div
                             className={"w-[63px] h-[63px] rounded-full bg-white/10 flex items-center justify-center font-semibold text-[28px] text-white"}>4
                         </div>
-                        <div className={"text-white text-[24px] mt-5"}>Play and Verify Matches</div>
+                        <div className={"text-white text-[24px] mt-5"}>See Blockchain Proof</div>
                         <div className={"text-muted-white text-[16px] mt-5"}>All transactions and match results are
                             recorded on the blockchain, visible to all participants.
                         </div>
