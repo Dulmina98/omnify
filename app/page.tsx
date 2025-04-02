@@ -6,7 +6,7 @@ import {Contact} from "@/app/home/components/contact";
 
 export default function Home() {
   return (
-      <div className={"w-full min-h-screen relative overflow-visible flex flex-col items-center"}>
+      <div className={"w-full min-h-screen relative overflow-visible flex flex-col items-center overflow-x-hidden"}>
 
           <Landing/>
           <WhyOmnify/>

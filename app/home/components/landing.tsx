@@ -13,7 +13,8 @@ export function Landing() {
     return (
         <div className={"w-full relative flex justify-center"}>
             <Image alt={"landing-bg"} src={"/assets/images/bg/landing-bg.jpg"}
-                   className={"absolute left-0 top-0 w-full"} width={4000} height={4000}/>
+                   className={"absolute left-0 top-40 md:top-0 min-w-[1200px] md:min-w-full w-full"} width={4000}
+                   height={4000}/>
             <div className={"max-w-[1800px] h-screen w-full px-[25px] lg:px-[100px] flex justify-center relative z-10"}>
 
                 <div className={"w-full flex justify-center "}>

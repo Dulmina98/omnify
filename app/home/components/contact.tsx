@@ -28,7 +28,7 @@ export function Contact() {
                     Us</Button></div>
             </div>
             <Image width={4000} height={4000} src="/assets/images/bg/contact-bg.png" alt="contact-bg"
-                 className={"absolute bottom-0 left-0 w-full z-10"}/>
+                   className={"absolute bottom-0 left-[-150px] md:left-0 min-w-[1800px] md:min-w-full w-full z-10"}/>
         </div>
     )
 }
