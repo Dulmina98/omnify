@@ -19,6 +19,7 @@ contract Tournament {
 
     struct MatchResult {
         uint256 matchId;
+        uint256 round;  // Added to track the round of the match
         address player1;
         address player2;
         address player1Submission;
@@ -27,6 +28,8 @@ contract Tournament {
         bool disputed;
     }
     mapping(uint256 => MatchResult) public matchResults;
+    mapping(uint256 => uint256[]) public roundMatchIds;  // Tracks match IDs per round
+    address public overallWinner;  // Stores the final tournament winner
 
     event PlayerPaid(address indexed player, uint256 amount);
     event ContributionReceived(address indexed contributor, uint256 amount);
@@ -103,6 +106,7 @@ contract Tournament {
         for (uint256 i = 0; i < winners.length; i++) {
             payable(winners[i]).transfer(amounts[i]);
         }
+        overallWinner = winners[0];  // Set the final winner (first in the array)
         status = TournamentStatus.Distributed;
         emit PrizesDistributed(winners, amounts);
     }
@@ -136,6 +140,7 @@ contract Tournament {
 
     function submitMatchResult(
         uint256 matchId,
+        uint256 round,  // Added parameter for round
         address player1,
         address player2,
         address winner
@@ -149,8 +154,10 @@ contract Tournament {
 
         if (matchResult.player1 == address(0) && matchResult.player2 == address(0)) {
             matchResult.matchId = matchId;
+            matchResult.round = round;  // Set the round
             matchResult.player1 = player1;
             matchResult.player2 = player2;
+            roundMatchIds[round].push(matchId);  // Record match ID for this round
         }
 
         require(matchResult.player1 == player1 && matchResult.player2 == player2, "Player mismatch");
@@ -188,7 +195,19 @@ contract Tournament {
         emit DisputeResolved(matchId, matchResult.player1, matchResult.player2, winner);
     }
 
-    function claimPrize() external {
+    function getRoundWinners(uint256 round`) external view returns (address[] memory) {
+uint256[] memory matchIds = roundMatchIds[round];
+address[] memory winners = new address[](matchIds.length);
+for (uint256 i = 0; i < matchIds.length; i++) {
+MatchResult storage matchResult = matchResults[matchIds[i]];
+require(!matchResult.disputed, "Some matches in this round are disputed");
+require(matchResult.winner != address(0), "Match winner not set");
+winners[i] = matchResult.winner;
+}
+return winners;
+}
+
+function claimPrize() external {
         require(status == TournamentStatus.Ongoing, "Tournament not ongoing or already distributed");
         require(prizeDistributionMethod == PrizeDistributionMethod.WinnerTakesAll, "Only WinnerTakesAll supported");
         require(msg.sender == matchResults[3].winner, "Only the grand final winner can claim");
