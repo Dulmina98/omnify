@@ -149,7 +149,9 @@ export function SubmitMatchResultsModal({
                                     seconds...</p>
                             )}
                             {state === "error" && (
-                                <p className="text-red-400">{errorMessage}</p>
+                                <p className="text-red-400 text-center mt-5 break-all overflow-hidden max-w-full">
+                                    {errorMessage}
+                                </p>
                             )}
                             <div className="w-full flex gap-5 items-center justify-between mt-8">
                                 <Button
