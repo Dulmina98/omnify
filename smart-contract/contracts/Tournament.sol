@@ -19,7 +19,7 @@ contract Tournament {
 
     struct MatchResult {
         uint256 matchId;
-        uint256 round;  // Added to track the round of the match
+        uint256 round;
         address player1;
         address player2;
         address player1Submission;
@@ -28,8 +28,8 @@ contract Tournament {
         bool disputed;
     }
     mapping(uint256 => MatchResult) public matchResults;
-    mapping(uint256 => uint256[]) public roundMatchIds;  // Tracks match IDs per round
-    address public overallWinner;  // Stores the final tournament winner
+    mapping(uint256 => uint256[]) public roundMatchIds;
+    address public overallWinner;
 
     event PlayerPaid(address indexed player, uint256 amount);
     event ContributionReceived(address indexed contributor, uint256 amount);
@@ -106,7 +106,7 @@ contract Tournament {
         for (uint256 i = 0; i < winners.length; i++) {
             payable(winners[i]).transfer(amounts[i]);
         }
-        overallWinner = winners[0];  // Set the final winner (first in the array)
+        overallWinner = winners[0];
         status = TournamentStatus.Distributed;
         emit PrizesDistributed(winners, amounts);
     }
@@ -140,7 +140,7 @@ contract Tournament {
 
     function submitMatchResult(
         uint256 matchId,
-        uint256 round,  // Added parameter for round
+        uint256 round,
         address player1,
         address player2,
         address winner
@@ -154,10 +154,10 @@ contract Tournament {
 
         if (matchResult.player1 == address(0) && matchResult.player2 == address(0)) {
             matchResult.matchId = matchId;
-            matchResult.round = round;  // Set the round
+            matchResult.round = round;
             matchResult.player1 = player1;
             matchResult.player2 = player2;
-            roundMatchIds[round].push(matchId);  // Record match ID for this round
+            roundMatchIds[round].push(matchId);
         }
 
         require(matchResult.player1 == player1 && matchResult.player2 == player2, "Player mismatch");
@@ -215,7 +215,6 @@ contract Tournament {
         require(address(this).balance >= totalPrizePool, "Insufficient contract balance");
 
         uint256 prizeAmount = totalPrizePool;
-        totalPrizePool = 0;
         status = TournamentStatus.Distributed;
 
         payable(msg.sender).transfer(prizeAmount);
