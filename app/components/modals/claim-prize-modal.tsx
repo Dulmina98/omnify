@@ -49,7 +49,7 @@ export function ClaimPrizeModal({
             const receipt = await tx.wait();
 
             await createTransaction({
-                transactionHash: receipt.transactionHash,
+                transactionHash: receipt.hash,
                 tournamentId: tournament._id,
                 userId: winnerUserId,
                 amount: Number(ethers.formatEther(prizePoolInWei)),
