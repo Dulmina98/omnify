@@ -41,14 +41,13 @@ export default function CreateTournament() {
     const [deploymentError, setDeploymentError] = useState<string | null>(null);
     const {getToken} = useAuth();
 
-    const fetchToken = async () => {
-        const token = await getToken();
-        console.log(token);
-    };
-
     useEffect(() => {
+        const fetchToken = async () => {
+            const token = await getToken();
+            console.log(token);
+        };
         fetchToken();
-    }, []);
+    }, [getToken]);
 
     const form = useForm<TournamentFormData>({
         defaultValues: {
@@ -67,7 +66,6 @@ export default function CreateTournament() {
     });
 
     const onSubmit = async (data: TournamentFormData) => {
-        // Same as original, no changes needed here for responsiveness
         try {
             if (!user) throw new Error("User is not signed in.");
             setIsDeploying(true);
@@ -137,7 +135,6 @@ export default function CreateTournament() {
         } catch (error: unknown) {
             setIsDeploying(false);
 
-            // Define a type for the error
             type DeployError = Error | { code: number; message: string } | string;
 
             let errorMessage = "An error occurred while creating the tournament.";
