@@ -38,7 +38,7 @@ interface TournamentData {
     startDate: number;
     endDate: number;
     organizer: string;
-    status: number;
+    status: number | null;
     prizeDistributionMethod: number;
     overallWinner: string;
 }
@@ -332,11 +332,13 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                                     ? "bg-green-500/20 text-green-400"
                                     : tournamentData.status === 1
                                         ? "bg-blue-500/20 text-blue-400"
-                                        : "bg-red-500/20 text-red-400"
+                                        : tournamentData.status === 2
+                                            ? "bg-red-500/20 text-red-400"
+                                            : "bg-gray-500/20 text-gray-400"
                             }`}
                         >
-                            {statusLabels[tournamentData.status]}
-                        </span>
+    {tournamentData.status !== null ? statusLabels[tournamentData.status] : "Unknown"}
+</span>
                     </p>
                 </div>
             </div>

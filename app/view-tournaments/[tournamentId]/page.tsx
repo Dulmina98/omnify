@@ -444,6 +444,7 @@ export default function TournamentInfo() {
                         </Accordion>
                     </div>
                 </div>
+                {contractStatus && <div className={"absolute hidden opacity-0"}>{contractStatus}</div>}
 
                 <SubmitMatchResultsModal
                     open={isSubmitModalOpen}
