@@ -55,7 +55,7 @@ export function Landing() {
                             {role === "player" && <Link href={"/join-tournament"}><Button
                                 className={"h-[40px] w-[175px] lg:h-[48px] lg:w-[215px] text-[14px]  lg:text-[18px]"}>Join
                                 a Tournament</Button></Link>}
-                            {role === "organizer" && <Link href={"/join-tournament"}><Button
+                            {role === "organizer" && <Link href={"/create-tournament"}><Button
                                 className={"h-[40px] w-[175px] lg:h-[48px] lg:w-[215px]  text-[14px] lg:text-[18px]"}>Create
                                 a Tournament</Button></Link>}
                             <Link href={"/view-tournaments"}>
