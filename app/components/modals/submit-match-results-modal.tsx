@@ -71,8 +71,11 @@ export function SubmitMatchResultsModal({
 
             const contract = await getContractWithSigner(contractAddress);
             const matchIdNum = parseInt(matchId.replace("match-", ""));
+            const round = matchIdNum <= 2 ? 1 : 2;
+
             const tx = await contract.submitMatchResult(
                 matchIdNum,
+                round,
                 player1Details.walletId,
                 player2Details.walletId,
                 winnerWalletAddress
