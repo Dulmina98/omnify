@@ -20,7 +20,7 @@ export default function ViewTournaments() {
                     Explore epic blockchain battles unfolding now!
                 </div>
                 {allTournaments && allTournaments?.length > 0 ? (
-                    allTournaments.map((tournament, index) => (
+                    [...allTournaments].reverse().map((tournament, index) => (
                         <ViewTournamentCard key={index} tournament={tournament as Doc<'tournaments'>}/>
                     ))
                 ) : (

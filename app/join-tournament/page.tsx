@@ -20,7 +20,7 @@ export default function JoinTournament() {
                     Join the ultimate blockchain-powered tournaments and rise to the top!
                 </div>
                 {allTournaments && allTournaments?.length > 0 ? (
-                    allTournaments.map((tournament, index) => (
+                    [...allTournaments].reverse().map((tournament, index) => (
                         <JoinTournamentCard key={index} tournament={tournament as Doc<'tournaments'>}/>
                     ))
                 ) : (

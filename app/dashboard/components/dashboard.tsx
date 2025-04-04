@@ -22,7 +22,7 @@ export function Dashboard() {
             </h1>
             <div>
                 {tournaments && tournaments.length > 0 ? (
-                    tournaments.map((tournament) => (
+                    [...tournaments].reverse().map((tournament) => (
                         <DashboardTournamentCard
                             key={tournament._id}
                             tournament={tournament}

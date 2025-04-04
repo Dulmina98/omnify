@@ -18,6 +18,7 @@ import {Accordion, AccordionContent, AccordionItem, AccordionTrigger} from "@/co
 import {fetchTournamentData, getContractWithSigner} from "@/lib/contract";
 import {SubmitMatchResultsModal} from "@/app/components/modals/submit-match-results-modal";
 import {ClaimPrizeModal} from "@/app/components/modals/claim-prize-modal";
+import {ethers} from "ethers";
 
 interface Match {
     match: number;
@@ -36,6 +37,7 @@ export default function TournamentInfo() {
     const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
     const [dynamicBracket, setDynamicBracket] = useState<Match[]>([]);
     const [contractStatus, setContractStatus] = useState<number | null>(null);
+    const [contractError, setContractError] = useState<string | null>(null);
 
     const {user, role} = useCurrentUser();
     const currentUserId = user?.userId;
@@ -54,9 +56,6 @@ export default function TournamentInfo() {
         tournamentId: tournamentId as Id<"tournaments">,
     });
     const resolveMatchDispute = useMutation(api.match_results.resolveMatchDispute);
-
-    // Replaced the first useEffect with a direct console.log
-    console.log(contractStatus);
 
     useEffect(() => {
         if (!playersInTournamentQuery) return;
@@ -122,15 +121,23 @@ export default function TournamentInfo() {
 
     useEffect(() => {
         const fetchStatus = async () => {
+            if (!tournamentQuery?.contractAddress || !ethers.isAddress(tournamentQuery.contractAddress)) {
+                setContractError("Invalid contract address provided.");
+                return;
+            }
+
             try {
-                const data = await fetchTournamentData(tournamentQuery?.contractAddress as string);
-                setContractStatus(data.status);
+                console.log("Fetching tournament data for address:", tournamentQuery.contractAddress);
+                const data = await fetchTournamentData(tournamentQuery.contractAddress);
+                setContractStatus(data.status); // Use null if status fetch failed
+                setContractError(null); // Clear error on success
             } catch (error) {
                 console.error("Failed to fetch contract status:", error);
+                setContractError("Unable to fetch tournament contract data. Please check the contract address.");
             }
         };
         if (tournamentQuery) fetchStatus();
-    }, [tournamentQuery]); // Updated dependency to tournamentQuery
+    }, [tournamentQuery]);
 
     if (!tournamentId) {
         return <div>Invalid Tournament ID</div>;
@@ -279,22 +286,27 @@ export default function TournamentInfo() {
             <div
                 className="min-h-screen text-white bg-[url(/assets/images/bg/view-tournament-bg.jpg)] bg-cover bg-left">
                 <div className="max-w-[1800px] w-full px-[25px] lg:px-[100px] relative z-10 py-[100px] mx-auto">
+                    {contractError && (
+                        <div className="text-red-500 text-center mb-4">
+                            {contractError}
+                        </div>
+                    )}
                     <div className="w-full flex flex-col items-center justify-center">
                         {tournament.gameTitle === "mortal-kombat" && (
                             <Image src={mk} alt="mortal kombat" width={2000} height={2000}
-                                   className=" w-[60%] lg:w-[700px]"/>
+                                   className="w-[60%] lg:w-[700px]"/>
                         )}
                         {tournament.gameTitle === "street-fighter" && (
                             <Image src={sf} alt="street fighter" width={2000} height={2000}
-                                   className=" w-60%[] lg:w-[700px]"/>
+                                   className="w-[60%] lg:w-[700px]"/>
                         )}
                         {tournament.gameTitle === "injustice" && (
                             <Image src={injustice} alt="injustice" width={2000} height={2000}
-                                   className=" w-60%[] lg:w-[700px]"/>
+                                   className="w-[60%] lg:w-[700px]"/>
                         )}
                         {tournament.gameTitle === "tekken" && (
                             <Image src={tekken} alt="tekken" width={2000} height={2000}
-                                   className=" w-60%[] lg:w-[700px]"/>
+                                   className="w-[60%] lg:w-[700px]"/>
                         )}
                         <div className="flex gap-x-5 items-center">
                             <div className="text-[30px] lg:text-[40px] text-center">
