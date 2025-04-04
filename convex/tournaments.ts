@@ -63,7 +63,6 @@ export const getTournamentById = query({
     },
 });
 
-
 export const getUserTournaments = query({
     args: {userId: v.string()},
     handler: async (ctx, args) => {

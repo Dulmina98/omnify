@@ -39,48 +39,92 @@ export async function getContractWithSigner(contractAddress: string) {
     }
 }
 
-export async function fetchTournamentData(contractAddress: string) {
-    const contract = getContractReadOnly(contractAddress);
-
-    try {
-        const [
-            entryFee,
-            totalPrizePool,
-            numberOfPlayersRequired,
-            startDate,
-            endDate,
-            organizer,
-            status,
-            prizeDistributionMethod,
-            overallWinner
-        ] = await Promise.all([
-            contract.entryFee(),
-            contract.totalPrizePool(),
-            contract.numberOfPlayersRequired(),
-            contract.startDate(),
-            contract.endDate(),
-            contract.organizer(),
-            contract.status(),
-            contract.prizeDistributionMethod(),
-            contract.overallWinner()
-        ]);
-
-        return {
-            entryFee: ethers.formatEther(entryFee),
-            totalPrizePool: ethers.formatEther(totalPrizePool),
-            numberOfPlayersRequired: Number(numberOfPlayersRequired),
-            startDate: Number(startDate),
-            endDate: Number(endDate),
-            organizer: organizer.toLowerCase(),
-            status: Number(status),
-            prizeDistributionMethod: Number(prizeDistributionMethod),
-            overallWinner: overallWinner.toLowerCase()
-        };
-    } catch (error) {
-        throw new Error(`Failed to fetch tournament data: ${error instanceof Error ? error.message : "Unknown error"}`);
-    }
+interface TournamentData {
+    entryFee: string;
+    totalPrizePool: string;
+    numberOfPlayersRequired: number;
+    startDate: number;
+    endDate: number;
+    organizer: string;
+    status: number | null;
+    prizeDistributionMethod: number;
+    overallWinner: string;
 }
 
+export async function fetchTournamentData(contractAddress: string) {
+    if (!ethers.isAddress(contractAddress)) {
+        console.error(`Invalid contract address: ${contractAddress}`);
+        throw new Error("Invalid contract address provided.");
+    }
+
+    const contract = getContractReadOnly(contractAddress);
+    const result: TournamentData = {
+        entryFee: "0",
+        totalPrizePool: "0",
+        numberOfPlayersRequired: 0,
+        startDate: 0,
+        endDate: 0,
+        organizer: ethers.ZeroAddress,
+        status: null,
+        prizeDistributionMethod: 0,
+        overallWinner: ethers.ZeroAddress,
+    };
+
+    try {
+        const calls = {
+            entryFee: contract.entryFee(),
+            totalPrizePool: contract.totalPrizePool(),
+            numberOfPlayersRequired: contract.numberOfPlayersRequired(),
+            startDate: contract.startDate(),
+            endDate: contract.endDate(),
+            organizer: contract.organizer(),
+            status: contract.status(),
+            prizeDistributionMethod: contract.prizeDistributionMethod(),
+            overallWinner: contract.overallWinner(),
+        };
+
+        for (const [key, promise] of Object.entries(calls)) {
+            try {
+                const value = await promise;
+                console.log(`Fetched ${key}:`, value);
+                switch (key) {
+                    case "entryFee":
+                    case "totalPrizePool":
+                        result[key] = ethers.formatEther(value);
+                        break;
+                    case "numberOfPlayersRequired":
+                    case "startDate":
+                    case "endDate":
+                    case "prizeDistributionMethod":
+                        result[key] = Number(value);
+                        break;
+                    case "organizer":
+                    case "overallWinner":
+                        result[key] = value.toLowerCase();
+                        break;
+                    case "status":
+                        result[key] = Number(value);
+                        break;
+                }
+            } catch (error) {
+                if (error instanceof Error) {
+                    console.error(`Failed to fetch ${key}:`, error.message);
+                } else {
+                    console.error(`Failed to fetch ${key}:`, error);
+                }
+            }
+        }
+
+        return result;
+    } catch (error) {
+        if (error instanceof Error) {
+            console.error("Unexpected error in fetchTournamentData:", error.message);
+        } else {
+            console.error("Unexpected error in fetchTournamentData:", error);
+        }
+        return result;
+    }
+}
 export async function fetchEntryFeeTransactions(contractAddress: string) {
     const contract = getContractReadOnly(contractAddress);
     const filter = contract.filters.PlayerPaid();
