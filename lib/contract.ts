@@ -43,7 +43,17 @@ export async function fetchTournamentData(contractAddress: string) {
     const contract = getContractReadOnly(contractAddress);
 
     try {
-        const [entryFee, totalPrizePool, numberOfPlayersRequired, startDate, endDate, organizer, status, prizeDistributionMethod] = await Promise.all([
+        const [
+            entryFee,
+            totalPrizePool,
+            numberOfPlayersRequired,
+            startDate,
+            endDate,
+            organizer,
+            status,
+            prizeDistributionMethod,
+            overallWinner
+        ] = await Promise.all([
             contract.entryFee(),
             contract.totalPrizePool(),
             contract.numberOfPlayersRequired(),
@@ -52,6 +62,7 @@ export async function fetchTournamentData(contractAddress: string) {
             contract.organizer(),
             contract.status(),
             contract.prizeDistributionMethod(),
+            contract.overallWinner()
         ]);
 
         return {
@@ -63,6 +74,7 @@ export async function fetchTournamentData(contractAddress: string) {
             organizer: organizer.toLowerCase(),
             status: Number(status),
             prizeDistributionMethod: Number(prizeDistributionMethod),
+            overallWinner: overallWinner.toLowerCase()
         };
     } catch (error) {
         throw new Error(`Failed to fetch tournament data: ${error instanceof Error ? error.message : "Unknown error"}`);
@@ -76,10 +88,10 @@ export async function fetchEntryFeeTransactions(contractAddress: string) {
     const eventLogs = logs.filter(log => 'args' in log) as ethers.EventLog[];
 
     return eventLogs.map(event => ({
-        player: event.args.player,
+        player: event.args.player.toLowerCase(),
         amount: ethers.formatEther(event.args.amount),
         transactionHash: event.transactionHash,
-        blockNumber: event.blockNumber,
+        blockNumber: event.blockNumber
     }));
 }
 
@@ -89,15 +101,26 @@ export async function fetchMatchResult(contractAddress: string, matchId: number)
         const result = await contract.matchResults(matchId);
         return {
             matchId: Number(result.matchId),
-            player1: result.player1,
-            player2: result.player2,
-            player1Submission: result.player1Submission,
-            player2Submission: result.player2Submission,
-            winner: result.winner,
-            disputed: result.disputed,
+            round: Number(result.round),
+            player1: result.player1.toLowerCase(),
+            player2: result.player2.toLowerCase(),
+            player1Submission: result.player1Submission.toLowerCase(),
+            player2Submission: result.player2Submission.toLowerCase(),
+            winner: result.winner.toLowerCase(),
+            disputed: result.disputed
         };
     } catch (error) {
         throw new Error(`Failed to fetch match result: ${error instanceof Error ? error.message : "Unknown error"}`);
+    }
+}
+
+export async function fetchRoundWinners(contractAddress: string, round: number) {
+    const contract = getContractReadOnly(contractAddress);
+    try {
+        const winners = await contract.getRoundWinners(round);
+        return winners.map((winner: string) => winner.toLowerCase());
+    } catch (error) {
+        throw new Error(`Failed to fetch round winners: ${error instanceof Error ? error.message : "Unknown error"}`);
     }
 }
 
@@ -108,9 +131,9 @@ export async function fetchPrizeClaimedTransactions(contractAddress: string) {
     const eventLogs = logs.filter(log => 'args' in log) as ethers.EventLog[];
 
     return eventLogs.map(event => ({
-        winner: event.args.winner,
+        winner: event.args.winner.toLowerCase(),
         amount: ethers.formatEther(event.args.amount),
         transactionHash: event.transactionHash,
-        blockNumber: event.blockNumber,
+        blockNumber: event.blockNumber
     }));
 }
