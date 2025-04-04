@@ -195,19 +195,19 @@ contract Tournament {
         emit DisputeResolved(matchId, matchResult.player1, matchResult.player2, winner);
     }
 
-    function getRoundWinners(uint256 round`) external view returns (address[] memory) {
-uint256[] memory matchIds = roundMatchIds[round];
-address[] memory winners = new address[](matchIds.length);
-for (uint256 i = 0; i < matchIds.length; i++) {
-MatchResult storage matchResult = matchResults[matchIds[i]];
-require(!matchResult.disputed, "Some matches in this round are disputed");
-require(matchResult.winner != address(0), "Match winner not set");
-winners[i] = matchResult.winner;
-}
-return winners;
-}
+    function getRoundWinners(uint256 round) external view returns (address[] memory) {
+        uint256[] memory matchIds = roundMatchIds[round];
+        address[] memory winners = new address[](matchIds.length);
+        for (uint256 i = 0; i < matchIds.length; i++) {
+            MatchResult storage matchResult = matchResults[matchIds[i]];
+            require(!matchResult.disputed, "Some matches in this round are disputed");
+            require(matchResult.winner != address(0), "Match winner not set");
+            winners[i] = matchResult.winner;
+        }
+        return winners;
+    }
 
-function claimPrize() external {
+    function claimPrize() external {
         require(status == TournamentStatus.Ongoing, "Tournament not ongoing or already distributed");
         require(prizeDistributionMethod == PrizeDistributionMethod.WinnerTakesAll, "Only WinnerTakesAll supported");
         require(msg.sender == matchResults[3].winner, "Only the grand final winner can claim");
