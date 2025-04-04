@@ -6,6 +6,7 @@ import {
     fetchMatchResult,
     fetchPrizeClaimedTransactions,
     fetchTournamentData,
+    getContractReadOnly,
 } from "@/lib/contract";
 import {
     FaCalendarAlt,
@@ -39,6 +40,7 @@ interface TournamentData {
     organizer: string;
     status: number;
     prizeDistributionMethod: number;
+    overallWinner: string;
 }
 
 interface Transaction {
@@ -57,6 +59,7 @@ interface PrizeClaimedTransaction {
 
 interface Submission {
     matchId: number;
+    round: number;
     player: string;
     submission: string;
     transactionHash: string;
@@ -70,6 +73,9 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [prizeClaimedTransactions, setPrizeClaimedTransactions] = useState<PrizeClaimedTransaction[]>([]);
     const [submissions, setSubmissions] = useState<Submission[]>([]);
+    const [roundWinners, setRoundWinners] = useState<{ [round: number]: string[] }>({});
+    const [disputedRounds, setDisputedRounds] = useState<Set<number>>(new Set());
+    const [rounds, setRounds] = useState<number[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [refreshKey, setRefreshKey] = useState(0);
@@ -132,6 +138,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         if (txHash) {
                             submissions.push({
                                 matchId: result.matchId,
+                                round: result.round,
                                 player: result.player1,
                                 submission: result.player1Submission,
                                 transactionHash: txHash,
@@ -147,6 +154,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         if (txHash) {
                             submissions.push({
                                 matchId: result.matchId,
+                                round: result.round,
                                 player: result.player2,
                                 submission: result.player2Submission,
                                 transactionHash: txHash,
@@ -160,6 +168,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                     if (convexResult?.resolutionTransactionHash && convexResult?.resolvedBy) {
                         submissions.push({
                             matchId: result.matchId,
+                            round: result.round,
                             player: data.organizer,
                             submission: result.winner,
                             transactionHash: convexResult.resolutionTransactionHash,
@@ -173,6 +182,41 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                 });
 
                 setSubmissions(submissionList);
+
+                const uniqueRounds = [...new Set(filteredResults.map((result) => result.round))];
+                setRounds(uniqueRounds);
+                const roundWinnersData: { [round: number]: string[] } = {};
+                const disputedRoundsSet = new Set<number>();
+
+                for (const round of uniqueRounds) {
+                    const roundMatches = filteredResults.filter((result) => result.round === round);
+                    const hasDisputes = roundMatches.some((result) => result.disputed);
+
+                    const winners = roundMatches
+                        .filter((result) => result.winner !== ethers.ZeroAddress && !result.disputed)
+                        .map((result) => result.winner);
+                    if (winners.length > 0) {
+                        roundWinnersData[round] = [...new Set(winners)];
+                    }
+
+                    if (hasDisputes) {
+                        disputedRoundsSet.add(round);
+                    }
+
+                    if (!hasDisputes) {
+                        try {
+                            const contract = getContractReadOnly(contractAddress);
+                            const contractWinners = await contract.getRoundWinners(round);
+                            roundWinnersData[round] = contractWinners.filter((w: string) => w !== ethers.ZeroAddress);
+                        } catch (err) {
+                            console.error(`Failed to fetch winners for round ${round} from contract:`, err);
+                        }
+                    }
+                }
+
+                setRoundWinners(roundWinnersData);
+                setDisputedRounds(disputedRoundsSet);
+
                 setError(null);
             } catch (err) {
                 setError(err instanceof Error ? err.message : "Failed to fetch tournament data.");
@@ -182,7 +226,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
         };
 
         loadData();
-    }, [contractAddress, convexMatchResults, refreshKey]); // Added refreshKey to dependencies
+    }, [contractAddress, convexMatchResults, refreshKey]);
 
     if (loading) {
         return (
@@ -211,6 +255,15 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
             <h3 className="text-2xl font-bold mb-6 flex items-center">
                 <FaChessKnight className="mr-2 text-teal-400"/> Tournament Details (On-Chain)
             </h3>
+
+            {tournamentData.overallWinner && tournamentData.overallWinner !== ethers.ZeroAddress && (
+                <div className="bg-gray-900/50 p-4 rounded-lg mb-6">
+                    <h4 className="text-xl font-semibold mb-2 flex items-center">
+                        <FaTrophy className="mr-2 text-yellow-400"/> Overall Winner
+                    </h4>
+                    <p className="text-white truncate">{tournamentData.overallWinner}</p>
+                </div>
+            )}
 
             <div className="bg-gray-900/50 p-4 rounded-lg mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,7 +341,79 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                 </div>
             </div>
 
-            {/* Match Results Table */}
+            <div className="mt-6">
+                <h4 className="text-xl font-semibold mb-4 flex items-center">
+                    <FaChessBoard className="mr-2 text-fuchsia-400"/> Round Winners
+                </h4>
+                {rounds.length > 0 ? (
+                    rounds.map((round) => (
+                        <div key={round} className="mb-6">
+                            <h5 className="text-lg font-medium mb-2">Round {round}</h5>
+                            {(roundWinners[round]?.length > 0 || disputedRounds.has(round)) ? (
+                                <>
+                                    {roundWinners[round]?.length > 0 && (
+                                        <Table className="bg-black mb-4">
+                                            <TableCaption className="text-white">
+                                                Completed and resolved matches and winners for Round {round}
+                                            </TableCaption>
+                                            <TableHeader>
+                                                <TableRow className="border-b botext-theme-crimson">
+                                                    <TableHead className="text-white text-[16px] font-semibold">Match
+                                                        ID</TableHead>
+                                                    <TableHead
+                                                        className="text-white text-[16px] font-semibold">Winner</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {Array.from(
+                                                    new Map(
+                                                        submissions
+                                                            .filter(
+                                                                (submission) =>
+                                                                    submission.round === round &&
+                                                                    (submission.status === "Completed" || submission.status === "Resolved") &&
+                                                                    submission.winner
+                                                            )
+                                                            .map((submission) => [submission.matchId, submission])
+                                                    ).values()
+                                                ).map((submission) => (
+                                                    <TableRow
+                                                        key={submission.matchId}
+                                                        className="border-b botext-theme-crimson hover:bg-gray-800"
+                                                    >
+                                                        <TableCell
+                                                            className="text-white">{submission.matchId}</TableCell>
+                                                        <TableCell>
+                                                            <a
+                                                                href={`${etherscanBaseUrl}/address/${submission.winner}`}
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                                className="text-theme-crimson hover:text-white transition-colors truncate max-w-xs block"
+                                                            >
+                                                                {submission.winner}
+                                                            </a>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                    )}
+                                    {disputedRounds.has(round) && (
+                                        <p className="text-red-400">
+                                            Some matches in this round are disputed and unresolved.
+                                        </p>
+                                    )}
+                                </>
+                            ) : (
+                                <p className="text-gray-400">No winners determined yet for this round.</p>
+                            )}
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-gray-400">No round winners determined yet.</p>
+                )}
+            </div>
+
             <div className="mt-6">
                 <h4 className="text-xl font-semibold mb-4 flex items-center">
                     <FaChessBoard className="mr-2 text-fuchsia-400"/> Match Results
@@ -298,6 +423,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         <TableCaption className="text-white">Match submissions and results</TableCaption>
                         <TableHeader>
                             <TableRow className="border-b botext-theme-crimson">
+                                <TableHead className="text-white text-[16px] font-semibold">Round</TableHead>
                                 <TableHead className="text-white text-[16px] font-semibold">Match ID</TableHead>
                                 <TableHead className="text-white text-[16px] font-semibold">Player</TableHead>
                                 <TableHead className="text-white text-[16px] font-semibold">Submitted Winner</TableHead>
@@ -310,6 +436,7 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                         <TableBody>
                             {submissions.map((submission, index) => (
                                 <TableRow key={index} className="border-b botext-theme-crimson hover:bg-gray-800">
+                                    <TableCell className="text-white">{submission.round}</TableCell>
                                     <TableCell className="text-white">{submission.matchId}</TableCell>
                                     <TableCell className="text-white truncate max-w-xs">{submission.player}</TableCell>
                                     <TableCell
@@ -371,7 +498,6 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                 )}
             </div>
 
-            {/* Entry Fee Transactions Table */}
             <div className="mt-6">
                 <h4 className="text-xl font-semibold mb-4 flex items-center">
                     <FaEthereum className="mr-2 text-blue-400"/> Entry Fee Transactions
@@ -412,7 +538,6 @@ export default function TournamentDetails({contractAddress}: TournamentDetailsPr
                 )}
             </div>
 
-            {/* Prize Claimed Transactions Table */}
             <div className="mt-6">
                 <h4 className="text-xl font-semibold mb-4 flex items-center">
                     <FaTrophy className="mr-2 text-yellow-400"/> Prize Claimed Transactions
