@@ -1,4 +1,4 @@
-import {loadFixture, time,} from "@nomicfoundation/hardhat-toolbox/network-helpers";
+import {loadFixture, time} from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import {expect} from "chai";
 import hre from "hardhat";
 
@@ -52,7 +52,7 @@ describe("Tournament", function () {
             player6,
             player7,
             player8,
-            contributor
+            contributor,
         };
     }
 
@@ -215,7 +215,7 @@ describe("Tournament", function () {
             const {tournament, player1, player2} = await loadFixture(deployTournamentFixture);
             const matchId = 1;
 
-            await expect(tournament.connect(player1).submitMatchResult(matchId, player1.address, player2.address, player1.address))
+            await expect(tournament.connect(player1).submitMatchResult(matchId, 1, player1.address, player2.address, player1.address))
                 .to.emit(tournament, "MatchResultSubmitted")
                 .withArgs(matchId, player1.address, player2.address, player1.address);
         });
@@ -224,8 +224,8 @@ describe("Tournament", function () {
             const {tournament, player1, player2} = await loadFixture(deployTournamentFixture);
             const matchId = 1;
 
-            await tournament.connect(player1).submitMatchResult(matchId, player1.address, player2.address, player1.address);
-            await tournament.connect(player2).submitMatchResult(matchId, player1.address, player2.address, player1.address);
+            await tournament.connect(player1).submitMatchResult(matchId, 1, player1.address, player2.address, player1.address);
+            await tournament.connect(player2).submitMatchResult(matchId, 1, player1.address, player2.address, player1.address);
 
             const matchResult = await tournament.matchResults(matchId);
             expect(matchResult.winner).to.equal(player1.address);
@@ -236,8 +236,8 @@ describe("Tournament", function () {
             const {tournament, player1, player2} = await loadFixture(deployTournamentFixture);
             const matchId = 1;
 
-            await tournament.connect(player1).submitMatchResult(matchId, player1.address, player2.address, player1.address);
-            await tournament.connect(player2).submitMatchResult(matchId, player1.address, player2.address, player2.address);
+            await tournament.connect(player1).submitMatchResult(matchId, 1, player1.address, player2.address, player1.address);
+            await tournament.connect(player2).submitMatchResult(matchId, 1, player1.address, player2.address, player2.address);
 
             const matchResult = await tournament.matchResults(matchId);
             expect(matchResult.disputed).to.equal(true);
@@ -247,8 +247,8 @@ describe("Tournament", function () {
             const {tournament, organizer, player1, player2} = await loadFixture(deployTournamentFixture);
             const matchId = 1;
 
-            await tournament.connect(player1).submitMatchResult(matchId, player1.address, player2.address, player1.address);
-            await tournament.connect(player2).submitMatchResult(matchId, player1.address, player2.address, player2.address);
+            await tournament.connect(player1).submitMatchResult(matchId, 1, player1.address, player2.address, player1.address);
+            await tournament.connect(player2).submitMatchResult(matchId, 1, player1.address, player2.address, player2.address);
 
             await expect(tournament.connect(organizer).resolveDispute(matchId, player1.address))
                 .to.emit(tournament, "DisputeResolved")
@@ -263,7 +263,7 @@ describe("Tournament", function () {
             const {tournament, player1, player2, player3} = await loadFixture(deployTournamentFixture);
             const matchId = 1;
 
-            await expect(tournament.connect(player3).submitMatchResult(matchId, player1.address, player2.address, player1.address))
+            await expect(tournament.connect(player3).submitMatchResult(matchId, 1, player1.address, player2.address, player1.address))
                 .to.be.revertedWith("Only match players can submit");
         });
 
@@ -271,8 +271,8 @@ describe("Tournament", function () {
             const {tournament, player1, player2, player3} = await loadFixture(deployTournamentFixture);
             const matchId = 1;
 
-            await tournament.connect(player1).submitMatchResult(matchId, player1.address, player2.address, player1.address);
-            await tournament.connect(player2).submitMatchResult(matchId, player1.address, player2.address, player2.address);
+            await tournament.connect(player1).submitMatchResult(matchId, 1, player1.address, player2.address, player1.address);
+            await tournament.connect(player2).submitMatchResult(matchId, 1, player1.address, player2.address, player2.address);
 
             await expect(tournament.connect(player3).resolveDispute(matchId, player1.address))
                 .to.be.revertedWith("Only organizer can resolve disputes");
@@ -286,7 +286,7 @@ describe("Tournament", function () {
                 organizer,
                 player1,
                 END_DATE,
-                PRIZE_POOL
+                PRIZE_POOL,
             } = await loadFixture(deployTournamentFixture);
 
             // Fund the contract with the prize pool amount
@@ -375,7 +375,7 @@ describe("Tournament", function () {
                 player1,
                 player2,
                 END_DATE,
-                PRIZE_POOL
+                PRIZE_POOL,
             } = await loadFixture(deployTournamentFixture);
 
             // Move time forward past the end date
@@ -453,10 +453,7 @@ describe("Tournament", function () {
 
             // Check balance change when tournament is canceled
             await expect(tournament.connect(organizer).cancelTournament())
-                .to.changeEtherBalances(
-                    [player1, tournament],
-                    [ENTRY_FEE, -ENTRY_FEE]
-                );
+                .to.changeEtherBalances([player1, tournament], [ENTRY_FEE, -ENTRY_FEE]);
         });
 
         it("Should refund contributions when tournament is canceled", async function () {
@@ -468,10 +465,7 @@ describe("Tournament", function () {
 
             // Check balance change when tournament is canceled
             await expect(tournament.connect(organizer).cancelTournament())
-                .to.changeEtherBalances(
-                    [contributor, tournament],
-                    [contribution, -contribution]
-                );
+                .to.changeEtherBalances([contributor, tournament], [contribution, -contribution]);
         });
 
         it("Should fail if non-organizer tries to cancel tournament", async function () {
@@ -509,13 +503,13 @@ describe("Tournament", function () {
                 player2,
                 organizer,
                 ENTRY_FEE,
-                PRIZE_POOL
+                PRIZE_POOL,
             } = await loadFixture(deployTournamentFixture);
 
             // Set up a match with player1 as winner (matchId 3 is the grand final per contract)
             const matchId = 3;
-            await tournament.connect(player1).submitMatchResult(matchId, player1.address, player2.address, player1.address);
-            await tournament.connect(player2).submitMatchResult(matchId, player1.address, player2.address, player1.address);
+            await tournament.connect(player1).submitMatchResult(matchId, 3, player1.address, player2.address, player1.address);
+            await tournament.connect(player2).submitMatchResult(matchId, 3, player1.address, player2.address, player1.address);
 
             // Fund the contract: player1 pays entry fee, organizer contributes the rest
             await tournament.connect(player1).payEntryFee({value: ENTRY_FEE});
@@ -535,8 +529,8 @@ describe("Tournament", function () {
 
             // Set up a match with player1 as winner
             const matchId = 3;
-            await tournament.connect(player1).submitMatchResult(matchId, player1.address, player2.address, player1.address);
-            await tournament.connect(player2).submitMatchResult(matchId, player1.address, player2.address, player1.address);
+            await tournament.connect(player1).submitMatchResult(matchId, 3, player1.address, player2.address, player1.address);
+            await tournament.connect(player2).submitMatchResult(matchId, 3, player1.address, player2.address, player1.address);
 
             // Player3 tries to claim
             await expect(tournament.connect(player3).claimPrize())
@@ -567,8 +561,8 @@ describe("Tournament", function () {
 
             // Set up a match with player1 as winner
             const matchId = 3;
-            await top3Tournament.connect(player1).submitMatchResult(matchId, player1.address, player2.address, player1.address);
-            await top3Tournament.connect(player2).submitMatchResult(matchId, player1.address, player2.address, player1.address);
+            await top3Tournament.connect(player1).submitMatchResult(matchId, 3, player1.address, player2.address, player1.address);
+            await top3Tournament.connect(player2).submitMatchResult(matchId, 3, player1.address, player2.address, player1.address);
 
             await expect(top3Tournament.connect(player1).claimPrize())
                 .to.be.revertedWith("Only WinnerTakesAll supported");
